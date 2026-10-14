@@ -46,3 +46,8 @@ class HintGate:
 
     def undo(self) -> None:
         self._last = self._previous
+
+    def pause(self) -> None:
+        """An explicit answer just started: no hint on top of it for the next interval."""
+        key = self._last[0] if self._last else ""
+        self._previous, self._last = self._last, (key, self._clock())

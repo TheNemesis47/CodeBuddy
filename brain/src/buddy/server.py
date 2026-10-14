@@ -80,6 +80,7 @@ class Brain:
     async def handle_ide_message(self, message: dict[str, Any]) -> None:
         match message["type"]:
             case "trigger":
+                self.hints.pause()  # a hint must not replace the answer the student asked for
                 self._spawn(self._answer(message))
             case "project_map":
                 self.project = ProjectMap(message["tree"], message["symbols"])

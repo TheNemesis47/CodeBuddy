@@ -45,6 +45,15 @@ def test_undo_gives_the_slot_back() -> None:
     assert gate.try_start(window_key(idle("x = 3")))  # x = 1 is still the last real hint
 
 
+def test_an_explicit_answer_pauses_hints_for_the_interval() -> None:
+    clock = Clock()
+    gate = HintGate(clock=clock)
+    gate.pause()
+    assert not gate.try_start(window_key(idle("x = 1")))
+    clock.now += 180
+    assert gate.try_start(window_key(idle("x = 1")))
+
+
 @pytest.mark.parametrize(
     ("env", "expected"),
     [

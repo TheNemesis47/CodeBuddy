@@ -326,3 +326,13 @@ async def test_a_trigger_still_goes_to_the_cloud_with_a_local_engine_up(cloud: F
     await send(brain, example("trigger.question"))
     assert len(cloud.prompts) == 1
     assert local.prompts == []
+
+
+@pytest.mark.anyio
+async def test_no_hint_right_after_a_trigger(cloud: FakeModel) -> None:
+    """`#?` + Enter, then 4 s of no typing: the idle hint must not replace the answer."""
+    local = FakeModel(is_local=True)
+    brain, notch, _ = make_brain(cloud, local)
+    await send(brain, example("trigger.question"), idle_event(1))
+    assert local.prompts == []
+    assert {m["id"] for m in notch.received} == {example("trigger.question")["id"]}
