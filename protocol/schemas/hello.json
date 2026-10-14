@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "codebuddy/protocol/v0/hello.json",
+  "title": "hello",
+  "description": "client → brain. First frame of every connection; anything else first closes it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "v",
+    "type",
+    "role",
+    "token",
+    "client"
+  ],
+  "properties": {
+    "v": {
+      "const": 0
+    },
+    "type": {
+      "const": "hello"
+    },
+    "role": {
+      "enum": [
+        "ide",
+        "notch"
+      ]
+    },
+    "token": {
+      "type": "string",
+      "minLength": 32,
+      "maxLength": 128
+    },
+    "client": {
+      "type": "string",
+      "description": "e.g. pycharm-plugin/0.1.0"
+    }
+  }
+}

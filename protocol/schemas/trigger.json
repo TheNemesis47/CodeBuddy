@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "codebuddy/protocol/v0/trigger.json",
+  "title": "trigger",
+  "description": "ide → brain. An explicit request written in the code: `#? …` or `#!teoria …`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "v",
+    "type",
+    "id",
+    "kind",
+    "text",
+    "file",
+    "line",
+    "language",
+    "window",
+    "scope",
+    "project"
+  ],
+  "properties": {
+    "v": {
+      "const": 0
+    },
+    "type": {
+      "const": "trigger"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "kind": {
+      "enum": [
+        "question",
+        "theory"
+      ]
+    },
+    "text": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "file": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Path relative to the project root"
+    },
+    "line": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "1-based line of the cursor or trigger"
+    },
+    "language": {
+      "type": "string",
+      "minLength": 1
+    },
+    "window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "code"
+      ],
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "code": {
+          "type": "string",
+          "maxLength": 200000
+        }
+      }
+    },
+    "scope": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Source of the enclosing function/class, or null"
+    },
+    "project": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Hash of the last project_map sent, or null"
+    }
+  }
+}

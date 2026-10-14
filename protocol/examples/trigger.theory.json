@@ -1,0 +1,7 @@
+{
+  "v": 0, "type": "trigger", "id": "0d7e5b40-3c2a-4f61-8a9e-2b3c4d5e6f70",
+  "kind": "theory", "text": "context manager",
+  "file": "src/load.py", "line": 4, "language": "python",
+  "window": {"start": 1, "code": "import json\n\ndef load(path):\n    #!teoria context manager\n    data = json.load(open(path))\n"},
+  "scope": null, "project": null
+}

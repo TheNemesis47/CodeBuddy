@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "codebuddy/protocol/v0/answer_start.json",
+  "title": "answer_start",
+  "description": "brain → notch. An answer begins.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "v",
+    "type",
+    "id",
+    "kind",
+    "title"
+  ],
+  "properties": {
+    "v": {
+      "const": 0
+    },
+    "type": {
+      "const": "answer_start"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "kind": {
+      "enum": [
+        "question",
+        "theory",
+        "hint"
+      ]
+    },
+    "title": {
+      "type": "string"
+    }
+  }
+}

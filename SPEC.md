@@ -57,7 +57,13 @@ PyCharm plugin ──ws──▶ brain (Python daemon, 127.0.0.1:8790) ──ws�
 
 ### Protocol v0 (JSON over WebSocket, one message per frame)
 
+The source of truth is [`protocol/`](protocol/README.md) (JSON Schemas + examples). Summary:
+
 ```jsonc
+// any client → brain (first frame), brain → client
+{"v":0,"type":"hello","role":"ide|notch","token":"<local token>","client":"pycharm-plugin/0.1.0"}
+{"v":0,"type":"welcome","brain":"0.1.0"}
+
 // plugin → brain
 {"v":0,"type":"trigger","id":"uuid","kind":"question|theory","text":"why ...",
  "file":"src/load.py","line":12,"language":"python",
@@ -68,8 +74,8 @@ PyCharm plugin ──ws──▶ brain (Python daemon, 127.0.0.1:8790) ──ws�
 // brain → notch
 {"v":0,"type":"answer_start","id":"uuid","kind":"question|theory|hint","title":"..."}
 {"v":0,"type":"answer_delta","id":"uuid","text":"..."}
-{"v":0,"type":"answer_end","id":"uuid","model":"claude-sonnet-5-5","latency_ms":1830,"tokens":{"in":0,"out":0}}
-{"v":0,"type":"error","id":"uuid","message":"..."}
+{"v":0,"type":"answer_end","id":"uuid","model":"claude-sonnet-5-5","first_token_ms":1930,"total_ms":2590,"tokens":{"in":0,"out":0}}
+{"v":0,"type":"error","id":"uuid|null","message":"..."}
 ```
 
 ## Tech stack
@@ -170,7 +176,7 @@ def build_question_prompt(trigger: Trigger, project: ProjectMap) -> list[Message
 ## Success criteria (MVP)
 
 1. US1: from pressing Enter on `#?` to the **first answer token in the notch: ≤ 3 s** (p50 over 10
-   runs, Claude, measured by the brain and written in `answer_end.latency_ms`).
+   runs, Claude, measured by the brain and written in `answer_end.first_token_ms`).
 2. US3: proactive hint with the local model **≤ 8 s**, at most **1 every 3 minutes**, never sent
    to the cloud. A test proves that no cloud request leaves the brain for `idle` events.
 3. Context sent per trigger is **≤ 8k input tokens** on this repo (the brain logs it).

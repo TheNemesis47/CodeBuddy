@@ -1,0 +1,8 @@
+{
+  "v": 0, "type": "trigger", "id": "7f1c2e9a-0b1d-4c8e-9f00-1a2b3c4d5e6f",
+  "kind": "question", "text": "perché non chiude il file?",
+  "file": "src/load.py", "line": 4, "language": "python",
+  "window": {"start": 1, "code": "import json\n\ndef load(path):\n    #? perché non chiude il file?\n    data = json.load(open(path))\n    return data\n"},
+  "scope": "def load(path):\n    #? perché non chiude il file?\n    data = json.load(open(path))\n    return data",
+  "project": "a1b2c3"
+}

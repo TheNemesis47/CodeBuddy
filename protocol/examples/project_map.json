@@ -1,0 +1,5 @@
+{
+  "v": 0, "type": "project_map", "hash": "a1b2c3",
+  "tree": ["src/load.py", "src/main.py", "tests/test_load.py"],
+  "symbols": {"src/load.py": ["def load(path)"], "src/main.py": ["def main()", "class App"]}
+}

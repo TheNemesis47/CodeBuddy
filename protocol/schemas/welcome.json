@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "codebuddy/protocol/v0/welcome.json",
+  "title": "welcome",
+  "description": "brain → client. Sent after a valid hello.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "v",
+    "type",
+    "brain"
+  ],
+  "properties": {
+    "v": {
+      "const": 0
+    },
+    "type": {
+      "const": "welcome"
+    },
+    "brain": {
+      "type": "string",
+      "description": "brain version"
+    }
+  }
+}

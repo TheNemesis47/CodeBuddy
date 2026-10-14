@@ -1,0 +1,7 @@
+{
+  "v": 0, "type": "idle", "id": "c3d4e5f6-0000-4000-8000-000000000001",
+  "file": "src/load.py", "line": 6, "language": "python",
+  "window": {"start": 1, "code": "import json\n\ndef load(path):\n    with open(path) as f:\n        data = json.load(f)\n    \n"},
+  "scope": "def load(path):\n    with open(path) as f:\n        data = json.load(f)",
+  "project": "a1b2c3"
+}
