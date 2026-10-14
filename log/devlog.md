@@ -48,10 +48,13 @@ Newest first. Terse. Written at the end of every task so the next agent can pick
   `docs/screenshots/notch/demo-{1-hidden,2-peek,3-expanded-streaming,4-expanded-done,5-peek-after,6-hidden-after}.png`
   and `docs/screenshots/notch/e2e-claude-answer.png`. The first round showed a transparent strip
   at the top of the island (Coucou's ear path leaves the top edge at y = radius). The shape was
-  redrawn flush with the screen top. All six post-fix demo shots were opened afterwards (the 5th
-  and 6th only on a later check). Two defects are visible in `demo-5-peek-after.png`: Sprout shows
-  as a seed with no stem although the mood is happy (the expanded header shows the sprout), and
-  the ✓ in the right ear sits ~5 pt above Sprout. Not fixed: see G11.
+  redrawn flush with the screen top. A later full review (the 5th and 6th shots had been skipped at
+  first) found two defects in peek-after: Sprout drawn as a seed with no stem although happy
+  (`growth` was `@State` set in `onAppear`, so a fresh view drew the stale value), and the bare
+  seed sitting low so the ✓ looked misaligned. Both fixed in `fix(notch): draw Sprout's stage…`;
+  all six shots regenerated and each one opened and checked: hidden (notch-sized), peek (seed
+  centred), expanded streaming (half-grown sprout, partial text), expanded done (full sprout,
+  footer metrics), peek after (sprout with leaves, ✓ aligned), hidden after.
 - **E2E** (`BUDDY_PORT=8798 buddy serve` + `swift run CodeBuddy --snapshots …` + a Python client
   sending `hello(ide)`, `project_map` and `trigger` exactly as the plugin will): notch log
   `brain connected → answer_start → island expanded → answer_end first_token_ms=1265
