@@ -27,7 +27,7 @@ Read this file first, then the files below.
 
 ```text
 protocol/      JSON Schemas (v0) + example messages: the contract between all processes
-brain/         Python daemon on 127.0.0.1:8790: context, model routing, streaming   (G2, not created yet)
+brain/         Python daemon on 127.0.0.1:8790: context, model routing, streaming   (see brain/README.md)
 notch/         Swift package: notch panel, states, Sprout, markdown answers         (G3, not created yet)
 ide-pycharm/   Kotlin plugin: PSI context, #? / #!cmd triggers, idle detection      (G4, not created yet)
 evals/         snippets + expected outcomes, scores suggestion quality               (G10, later)

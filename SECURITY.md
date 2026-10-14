@@ -26,5 +26,7 @@ Personal project: open a note in `docs/gaps.md` with the tag `security`.
 
 ## Current limitations
 
-Nothing above is implemented yet: `brain/` doesn't exist (G2). Until it does, there is no exposed
-surface.
+Implemented in `brain/` (G2): loopback bind, Origin refusal, token hello with a 5 s timeout,
+600 token file, `--tools ""`. Each one has a test that fails when the protection is removed
+(checked by mutation on 2026-10-14). Not done yet: the `proactive_cloud` setting itself (G6;
+today `idle` is simply ignored), and rate limiting of hello attempts (low risk on loopback).

@@ -1,0 +1,43 @@
+[project]
+name = "buddy"
+version = "0.1.0"
+description = "CodeBuddy brain: context, model routing and streaming for the notch tutor"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi>=0.143.1",
+    "jsonschema>=4.26.0",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[project.scripts]
+buddy = "buddy:main"
+
+[build-system]
+requires = ["uv_build>=0.12.18,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "httpx2>=2.13.1",
+    "pyright>=1.1.414",
+    "pytest>=9.1.1",
+    "ruff>=0.17.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "ASYNC", "RUF"]
+
+[tool.pyright]
+include = ["src", "tests"]
+typeCheckingMode = "basic"
+pythonVersion = "3.14"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-p no:cacheprovider"
+markers = ["live: calls the real claude CLI (run by hand: pytest -m live)"]

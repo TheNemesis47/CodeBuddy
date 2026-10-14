@@ -1,0 +1,10 @@
+{"type":"system","subtype":"init","model":"claude-sonnet-5-5","tools":[]}
+{"type":"stream_event","event":{"type":"message_start"}}
+{"type":"stream_event","event":{"type":"content_block_start","index":0}}
+{"type":"stream_event","event":{"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"`open(path)` "}}}
+{"type":"stream_event","event":{"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"non viene chiuso."}}}
+{"type":"assistant","message":{"content":[{"type":"text","text":"`open(path)` non viene chiuso."}]}}
+{"type":"stream_event","event":{"type":"content_block_stop","index":0}}
+{"type":"stream_event","event":{"type":"message_stop"}}
+{"type":"rate_limit_event"}
+{"type":"result","subtype":"success","is_error":false,"result":"`open(path)` non viene chiuso.","usage":{"input_tokens":2,"cache_creation_input_tokens":617,"cache_read_input_tokens":100,"output_tokens":8},"modelUsage":{"claude-sonnet-5-5":{}}}

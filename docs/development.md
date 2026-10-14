@@ -22,8 +22,10 @@ in `~/Work/testM5/MODELS.md`.
 
 ## Running the parts
 
-The commands per module are in SPEC.md → Commands. Each one exists once its gap is closed (G2,
-G3, G4).
+The commands per module are in SPEC.md → Commands. Brain: see `brain/README.md`. Notch and
+plugin exist once G3 and G4 are closed.
+
+`uv run pytest -m live` with `BUDDY_LIVE=1` runs the one test that calls the real `claude` CLI.
 
 ## Driving it as an agent
 

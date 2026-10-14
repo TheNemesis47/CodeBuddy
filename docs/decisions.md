@@ -2,6 +2,17 @@
 
 Newest first. One entry per non-obvious decision.
 
+## 2026-10-14: Brain details chosen while building G2
+
+**Decision.** (1) The JSON Schemas in `protocol/` are the source of truth, and the brain validates
+every incoming message against them at runtime (tests validate every outgoing one). There are no
+hand-written pydantic copies. (2) `answer_end` reports `first_token_ms` and `total_ms` (instead of a single
+`latency_ms`), because criterion 1 is about the first token. (3) `claude -p` runs from an empty temp
+directory with the prompt on stdin. (4) `httpx2` instead of `httpx` for tests (Starlette deprecates
+`httpx`). **Why.** One schema avoids drift between three languages; stdin keeps code out of `ps`
+and ARG_MAX; an empty directory means no CLAUDE.md is loaded. **Rollback.** Each one is local to
+`brain/`.
+
 ## 2026-10-14: Proactive suggestions stay local by default
 
 **Decision.** `idle`, bug, function-completed and save events go only to the local engine. A

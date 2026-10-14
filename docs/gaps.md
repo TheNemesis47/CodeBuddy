@@ -1,6 +1,6 @@
 # Where CodeBuddy falls short of the MVP
 
-> **Last reviewed:** 2026-10-14 · **Last updated:** 2026-10-14 · **Change:** first list
+> **Last reviewed:** 2026-10-14 · **Last updated:** 2026-10-14 · **Change:** G1 and G2 closed; latency risk added to G5
 
 Every known shortfall, one entry each, ranked by impact. This is the work list agents pick from:
 take the highest-ranked open entry, and when you close part of one, update its evidence and
@@ -10,20 +10,23 @@ estimate here. **Human** marks what an agent can't finish alone.
 
 | # | Gap | Kind | Impact | Estimate | Owner |
 |---|---|---|---|---:|---|
-| G1 | Protocol v0 schemas + examples + validator | feature | blocks next stage | 2 h | agent |
-| G2 | Brain: daemon, `buddy ask` CLI, Claude CLI provider, WebSocket with token | feature | blocks next stage | 6 h | agent |
+| ~~G1~~ | ~~Protocol v0 schemas + examples + validator~~ (done 2026-10-14) | feature | — | — | agent |
+| ~~G2~~ | ~~Brain: daemon, `buddy ask` CLI, Claude CLI provider, WebSocket with token~~ (done 2026-10-14) | feature | — | — | agent |
 | G3 | Notch: extract panel from Coucou, Sprout placeholder, `--demo` | feature | blocks next stage | 8 h | agent + **Human** (xcode-select) |
 | G4 | PyCharm plugin: skeleton, trigger detection, context, send | feature | blocks next stage | 8 h | agent |
-| G5 | End-to-end wiring + latency and token logging (criteria 1, 3, 4) | feature | blocks next stage | 3 h | agent + **Human** (real test) |
+| G5 | End-to-end wiring + latency p50 (criteria 1, 3, 4). **Risk: first token is 1.6–5.8 s today** | feature/perf | blocks next stage | 4 h | agent + **Human** (real test) |
 | G6 | Proactive idle hint on the local engine + rate limit + no-cloud test (criterion 2) | feature | blocks next stage | 4 h | agent |
 | G7 | Enforce module boundaries automatically | tooling | medium | 1 h | agent |
 | G8 | Sprout final design | feature | medium | — | **Human** |
 | G9 | CI on GitHub Actions | tooling | low | 1 h | **Human** (create remote) |
 | G10 | Evals: snippet set + scorer for suggestion quality | tooling | high (after MVP) | 6 h | agent |
 
-## G1: Protocol v0
+## G1: Protocol v0 (closed 2026-10-14)
 
-**Evidence.** `protocol/schemas/` and `protocol/examples/` are empty. SPEC.md → "Protocol v0"
+Done: 9 schemas + 11 examples in `protocol/`, validated by `brain/tests/test_protocol.py` (run by
+`scripts/check`). The original entry is kept below for reference.
+
+**Evidence (at the time).** `protocol/schemas/` and `protocol/examples/` are empty. SPEC.md → "Protocol v0"
 describes the messages.
 **Done when.** One JSON Schema per message type, one or more examples each, and `scripts/check`
 validates every example (Python `jsonschema` inside `brain`'s test suite, which is the first
@@ -31,9 +34,13 @@ consumer).
 **Approach.** Write the schemas from SPEC.md. Add a `hello` message carrying the local token
 (see SECURITY.md).
 
-## G2: Brain daemon
+## G2: Brain daemon (closed 2026-10-14)
 
-**Evidence.** `brain/` doesn't exist.
+Done: `buddy ask` and `buddy serve` work. 79 offline tests. Mutation-checked: removing the Origin
+check, the token check or the hello timeout, or routing `idle` to the cloud, each fails a test. Real
+run in `log/devlog.md`. The original entry is kept below.
+
+**Evidence (at the time).** `brain/` doesn't exist.
 **Done when.** `cd brain && uv run buddy ask some.py:12 "why …"` streams a Claude answer in the
 terminal. `uv run buddy serve` accepts a WebSocket with a valid token and rejects a bad token or a
 browser `Origin`. Tests run with a fake model, without network.
@@ -64,6 +71,10 @@ on Enter. Context comes from PSI (enclosing function and class, ±60 lines). All
 
 ## G5: End-to-end
 
+**Evidence.** `buddy ask` against Claude through the subscription (Sonnet 5.5, ~1.0k input
+tokens): first token p50 2.9 s, range 1.6–5.8 s, over 15 runs on 2026-10-14: large run-to-run variance.
+Criterion 1 (p50 ≤ 3 s) is **at risk**. Ideas to measure: `--model haiku` for `#?`, a warm process,
+a shorter system prompt. `--effort low` made no clear difference (3 runs).
 **Done when.** In the sandbox PyCharm, `#?` produces an answer in the notch. The brain logs
 first-token latency and input tokens. Criteria 1, 3 and 4 are measured over 10 runs and written in
 ROADMAP.md.
