@@ -1,12 +1,14 @@
 #!/usr/bin/env sh
-# Golden rule 3: no Coucou name or assets in source folders (THIRD_PARTY.md and docs may name them).
+# Golden rule 3: no Coucou name or assets in source folders. Docs, and attribution comments that
+# point to THIRD_PARTY.md, may name it.
 set -eu
 cd "$(dirname "$0")/.."
 fail=0
 dirs=""
 for d in brain notch ide-pycharm protocol; do [ -d "$d" ] && dirs="$dirs $d"; done
 if [ -n "$dirs" ]; then
-  hits=$(grep -rniE 'mochi|coucou' $dirs --exclude-dir=.build --exclude-dir=.venv --exclude-dir=build --exclude-dir=.gradle --exclude-dir=LICENSES || true)
+  # Attribution lines are allowed (the MIT licence wants credit): they must point to THIRD_PARTY.md.
+  hits=$(grep -rniE 'mochi|coucou' $dirs --exclude-dir=.build --exclude-dir=.venv --exclude-dir=build --exclude-dir=.gradle --exclude-dir=LICENSES | grep -v 'THIRD_PARTY.md' || true)
   if [ -n "$hits" ]; then echo "guard-assets: Coucou name found in source:"; echo "$hits"; fail=1; fi
 fi
 if [ -d notch ]; then

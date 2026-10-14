@@ -30,5 +30,6 @@ plugin exist once G3 and G4 are closed.
 ## Driving it as an agent
 
 - Brain: `uv run buddy ask file.py:LINE "question"` prints the answer. No UI or IDE needed.
-- Notch: `swift run CodeBuddy --demo`, then `screencapture -x /tmp/notch.png` and look at the image.
+- Notch: `swift run CodeBuddy --demo --snapshots /tmp/shots` saves a PNG of every state (no Screen
+  Recording permission needed); look at them. `screencapture` needs that permission (G12).
 - Plugin: `./gradlew runIde` opens a sandbox PyCharm. The full end-to-end check needs a human (G5).

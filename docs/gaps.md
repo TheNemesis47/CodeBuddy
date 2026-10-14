@@ -1,6 +1,6 @@
 # Where CodeBuddy falls short of the MVP
 
-> **Last reviewed:** 2026-10-14 · **Last updated:** 2026-10-14 · **Change:** G1 and G2 closed; latency risk added to G5
+> **Last reviewed:** 2026-10-14 · **Last updated:** 2026-10-14 · **Change:** G3 closed (notch app)
 
 Every known shortfall, one entry each, ranked by impact. This is the work list agents pick from:
 take the highest-ranked open entry, and when you close part of one, update its evidence and
@@ -12,7 +12,7 @@ estimate here. **Human** marks what an agent can't finish alone.
 |---|---|---|---|---:|---|
 | ~~G1~~ | ~~Protocol v0 schemas + examples + validator~~ (done 2026-10-14) | feature | — | — | agent |
 | ~~G2~~ | ~~Brain: daemon, `buddy ask` CLI, Claude CLI provider, WebSocket with token~~ (done 2026-10-14) | feature | — | — | agent |
-| G3 | Notch: extract panel from Coucou, Sprout placeholder, `--demo` | feature | blocks next stage | 8 h | agent + **Human** (xcode-select) |
+| ~~G3~~ | ~~Notch: extract panel from Coucou, Sprout placeholder, `--demo`~~ (done 2026-10-14) | feature | — | — | agent |
 | G4 | PyCharm plugin: skeleton, trigger detection, context, send | feature | blocks next stage | 8 h | agent |
 | G5 | End-to-end wiring + latency p50 (criteria 1, 3, 4). **Risk: first token is 1.6–5.8 s today** | feature/perf | blocks next stage | 4 h | agent + **Human** (real test) |
 | G6 | Proactive idle hint on the local engine + rate limit + no-cloud test (criterion 2) | feature | blocks next stage | 4 h | agent |
@@ -20,6 +20,8 @@ estimate here. **Human** marks what an agent can't finish alone.
 | G8 | Sprout final design | feature | medium | — | **Human** |
 | G9 | CI on GitHub Actions | tooling | low | 1 h | **Human** (create remote) |
 | G10 | Evals: snippet set + scorer for suggestion quality | tooling | high (after MVP) | 6 h | agent |
+| G11 | Real-screen check of the notch: hover, click, Spaces, full-screen apps, a second monitor | UX | medium | 1 h | **Human** |
+| G12 | Grant Screen Recording to the terminal so agents can `screencapture` the real screen (today: view snapshots only) | tooling | low | 5 min | **Human** |
 
 ## G1: Protocol v0 (closed 2026-10-14)
 
@@ -48,9 +50,13 @@ browser `Origin`. Tests run with a fake model, without network.
 `ClaudeCliModel` wrapping the command in SPEC.md → "Cloud provider". Prompts in
 `src/buddy/prompts/*.md`.
 
-## G3: Notch app
+## G3: Notch app (closed 2026-10-14)
 
-**Evidence.** `notch/` doesn't exist. Coucou source to extract: `IslandWindowController.swift`
+Done: `notch/` SwiftPM (`CodeBuddyKit` logic + `CodeBuddy` app), 36 tests. `--demo` and
+`--demo --snapshots DIR` work. The real e2e run (brain + notch + plugin-like client) showed a Claude
+answer in the notch (`docs/screenshots/notch/e2e-claude-answer.png`). Open follow-ups: G11, G12.
+
+**Evidence (at the time).** `notch/` doesn't exist. Coucou source to extract: `IslandWindowController.swift`
 (`IslandPanel`), `IslandStateMachine.swift`, `CoucouKit/IslandScreenGeometry.swift`,
 `ChatMarkdownView.swift`. Xcode is installed but `xcode-select` points to the Command Line Tools.
 **Done when.** `swift run CodeBuddy --demo` shows hidden → peek → expanded with a streamed answer
@@ -101,6 +107,18 @@ Concept: a seed → sprout → plant → tree that grows with the skill map. Nee
 
 The gate is local only (`scripts/check` + `pre-push`). Once there is a GitHub remote, add one
 Actions job on macOS that runs `./scripts/check`.
+
+## G11: Notch on the real screen (Human)
+
+**Evidence.** Agents only see view snapshots (`--snapshots`). They don't see the menu bar around the
+island, hover over it, or check it on a screen without a notch.
+**Done when.** You have run `swift run CodeBuddy --demo`, hovered and clicked it, and noted anything
+off in the devlog.
+
+## G12: Screen Recording for agents (Human)
+
+`screencapture` fails with "could not create image from display": the terminal has no Screen
+Recording permission (System Settings → Privacy & Security → Screen Recording).
 
 ## G10: Evals
 

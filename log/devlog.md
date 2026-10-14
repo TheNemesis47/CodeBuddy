@@ -2,6 +2,33 @@
 
 Newest first. Terse. Written at the end of every task so the next agent can pick up.
 
+## 2026-10-14 21:15: G3 notch app (branch feat/notch-app)
+
+- **Landed:** `notch/` SwiftPM. `CodeBuddyKit` holds the logic: a 3-state island machine
+  (adapted from Coucou) on an injectable clock, screen geometry, the markdown parser, protocol
+  decoding, `AnswerStore`, `NotchModel`, `BrainClient` (reconnects with backoff, reads the token
+  file) and the demo script. `CodeBuddy` is the app: panel over the notch, island shape, Sprout
+  placeholder in Canvas (seed → sprout, moods), markdown view. Licence and file list in
+  `THIRD_PARTY.md`.
+- **Bug found by the e2e run:** the notch sent its hello as a *binary* frame and the brain only read
+  text frames, so it dropped the connection. Fixed on both sides: the notch sends text, and the
+  brain accepts UTF-8 JSON in binary frames (2 new tests).
+- **Numbers:** notch tests 0 → 36 (state machine, geometry, markdown, protocol decoding against
+  `protocol/examples`, answer store, model, a full demo replay on a manual clock). Brain 79 → 81.
+  Floors raised.
+- **Screenshots** (view snapshots via `--snapshots`, looked at; the desktop isn't included):
+  `docs/screenshots/notch/demo-{1-hidden,2-peek,3-expanded-streaming,4-expanded-done,5-peek-after,6-hidden-after}.png`
+  and `docs/screenshots/notch/e2e-claude-answer.png`. The first round showed a transparent strip
+  at the top of the island (Coucou's ear path leaves the top edge at y = radius). The shape was
+  redrawn flush with the screen top.
+- **E2E** (`BUDDY_PORT=8798 buddy serve` + `swift run CodeBuddy --snapshots …` + a Python client
+  sending `hello(ide)`, `project_map` and `trigger` exactly as the plugin will): notch log
+  `brain connected → answer_start → island expanded → answer_end first_token_ms=1265
+  total_ms=5481 → island peek (20 s) → hidden (8 s)`. ~343 input tokens.
+- **Still open:** G11 (Human: try it on the real screen), G12 (Human: Screen Recording permission for
+  real screenshots). `pkill -f .build/debug/CodeBuddy` misses the binary under
+  `.build/out/Products/Debug/`: use `pkill -f "Debug/CodeBuddy|debug/CodeBuddy"`.
+
 ## 2026-10-14 21:30: G1 protocol v0 + G2 brain daemon (branches feat/protocol-v0, feat/brain-daemon)
 
 - **Landed:** `protocol/` with 9 JSON Schemas (hello, welcome, trigger, idle, project_map,
