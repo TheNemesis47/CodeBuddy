@@ -1,0 +1,36 @@
+#!/usr/bin/env sh
+# The single gate. Every step either passes, fails, or says "skip" with the gap that will add it.
+set -eu
+cd "$(dirname "$0")/.."
+
+step() { printf '\n== %s\n' "$1"; }
+skip() { printf 'skip: %s\n' "$1"; }
+
+step "guards"
+scripts/guard-assets
+scripts/guard-no-edits
+
+step "brain (Python)"
+if [ -f brain/pyproject.toml ]; then
+  (cd brain && uv run ruff format --check . && uv run ruff check . && uv run pyright && uv run pytest -q)
+else skip "brain/ not created yet (G2)"; fi
+
+step "protocol examples"
+if [ -f brain/pyproject.toml ] && ls protocol/schemas/*.json >/dev/null 2>&1; then
+  (cd brain && uv run pytest -q tests/test_protocol.py)
+else skip "schemas or their validator not created yet (G1, G2)"; fi
+
+step "notch (Swift)"
+if [ -f notch/Package.swift ]; then
+  (cd notch && swift build && swift test)
+else skip "notch/ not created yet (G3)"; fi
+
+step "ide-pycharm (Kotlin)"
+if [ -f ide-pycharm/gradlew ]; then
+  (cd ide-pycharm && ./gradlew --quiet test buildPlugin)
+else skip "ide-pycharm/ not created yet (G4)"; fi
+
+step "ratchet"
+python3 -I scripts/ratchet.py
+
+printf '\ncheck: OK\n'

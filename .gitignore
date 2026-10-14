@@ -1,0 +1,24 @@
+.DS_Store
+.env
+*.local.*
+
+# Python
+__pycache__/
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Swift
+.build/
+.swiftpm/
+DerivedData/
+
+# Gradle / IntelliJ
+.gradle/
+build/
+.idea/
+*.iml
+
+# models never live here
+*.gguf
+*.safetensors

@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+# Golden rule 2: the plugin never edits the user's code, except in ClearTriggersAction.kt.
+set -eu
+cd "$(dirname "$0")/.."
+src=ide-pycharm/src/main
+if [ ! -d "$src" ]; then echo "guard-no-edits: ok (no plugin sources yet)"; exit 0; fi
+hits=$(grep -rnE 'insertString|replaceString|deleteString|\.setText\(|WriteCommandAction|runWriteAction|WriteAction\.' "$src" | grep -v 'ClearTriggersAction.kt' || true)
+if [ -n "$hits" ]; then
+  echo "guard-no-edits: document writes outside ClearTriggersAction.kt:"; echo "$hits"; exit 1
+fi
+echo "guard-no-edits: ok"

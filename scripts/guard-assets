@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+# Golden rule 3: no Coucou name or assets in source folders (THIRD_PARTY.md and docs may name them).
+set -eu
+cd "$(dirname "$0")/.."
+fail=0
+dirs=""
+for d in brain notch ide-pycharm protocol; do [ -d "$d" ] && dirs="$dirs $d"; done
+if [ -n "$dirs" ]; then
+  hits=$(grep -rniE 'mochi|coucou' $dirs --exclude-dir=.build --exclude-dir=.venv --exclude-dir=build --exclude-dir=.gradle --exclude-dir=LICENSES || true)
+  if [ -n "$hits" ]; then echo "guard-assets: Coucou name found in source:"; echo "$hits"; fail=1; fi
+fi
+if [ -d notch ]; then
+  audio=$(find notch -type f \( -iname '*.aiff' -o -iname '*.aif' -o -iname '*.wav' -o -iname '*.mp3' -o -iname '*.m4a' -o -iname '*.caf' \) -not -path '*/.build/*' || true)
+  if [ -n "$audio" ]; then echo "guard-assets: audio files under notch/ (Coucou sounds are not allowed):"; echo "$audio"; fail=1; fi
+fi
+[ "$fail" -eq 0 ] && echo "guard-assets: ok"
+exit "$fail"
