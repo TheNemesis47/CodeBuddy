@@ -134,7 +134,7 @@ def create_app(cloud: Model, token: str, answer_language: str = "italiano") -> F
             if role == "notch":
                 brain.notch.add(ws)
                 while True:  # v0: the notch only listens; keep reading to notice disconnects
-                    await ws.receive_text()
+                    await _receive_frame(ws)
             else:
                 await _ide_loop(ws, brain)
         except WebSocketDisconnect:
@@ -148,8 +148,8 @@ def create_app(cloud: Model, token: str, answer_language: str = "italiano") -> F
 async def _handshake(ws: WebSocket, token: str) -> str | None:
     try:
         async with asyncio.timeout(HELLO_TIMEOUT_S):
-            hello = validate(json.loads(await ws.receive_text()))
-    except TimeoutError, json.JSONDecodeError, ProtocolError, WebSocketDisconnect:
+            hello = validate(json.loads(await _receive_frame(ws)))
+    except TimeoutError, ValueError, WebSocketDisconnect:  # ValueError: UTF-8, JSON, protocol
         await _close(ws)
         return None
     if hello["type"] != "hello" or not token_matches(token, hello["token"]):
@@ -161,11 +161,22 @@ async def _handshake(ws: WebSocket, token: str) -> str | None:
 
 async def _ide_loop(ws: WebSocket, brain: Brain) -> None:
     while True:
-        raw = await ws.receive_text()
         try:
+            raw = await _receive_frame(ws)
             await brain.handle_ide_message(validate(json.loads(raw)))
-        except (json.JSONDecodeError, ProtocolError) as error:
+        except ValueError as error:  # bad UTF-8, bad JSON, or a ProtocolError
             await ws.send_json({"v": 0, "type": "error", "id": None, "message": str(error)})
+
+
+async def _receive_frame(ws: WebSocket) -> str:
+    """One frame as text. The protocol uses text frames, but UTF-8 JSON in a binary frame is
+    accepted too (Foundation's WebSocket sends `Data` as binary)."""
+    message = await ws.receive()
+    if message["type"] == "websocket.disconnect":
+        raise WebSocketDisconnect(message.get("code", 1000))
+    if message.get("text") is not None:
+        return message["text"]
+    return (message.get("bytes") or b"").decode("utf-8")
 
 
 async def _close(ws: WebSocket) -> None:

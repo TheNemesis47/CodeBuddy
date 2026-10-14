@@ -77,7 +77,7 @@ class SilentSocket:
     def __init__(self) -> None:
         self.closed_with: int | None = None
 
-    async def receive_text(self) -> str:
+    async def receive(self) -> dict:
         await anyio.sleep_forever()
         raise AssertionError("unreachable")
 
@@ -103,6 +103,18 @@ def receive_until_end(notch: WebSocketTestSession, answer_id: str) -> list[dict]
         received.append(message)
         if message["type"] in ("answer_end", "error") and message["id"] == answer_id:
             return received
+
+
+def test_binary_frames_with_utf8_json_are_accepted(client: TestClient) -> None:
+    with client.websocket_connect("/ws") as ws:
+        ws.send_bytes(json.dumps(example("hello.notch")).encode())
+        assert validate(ws.receive_json())["type"] == "welcome"
+
+
+def test_binary_garbage_from_the_ide_gets_an_error(client: TestClient) -> None:
+    with connect(client, "ide") as ide:
+        ide.send_bytes(b"\xff\xfe not utf-8")
+        assert validate(ide.receive_json())["type"] == "error"
 
 
 def test_trigger_streams_the_answer_to_the_notch(client: TestClient, cloud: FakeModel) -> None:
