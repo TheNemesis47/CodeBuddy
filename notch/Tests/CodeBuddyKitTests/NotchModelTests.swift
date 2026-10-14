@@ -54,6 +54,38 @@ struct NotchModelTests {
         #expect(model.peekStatus == "off")
     }
 
+    @Test func aHintPeeksWithAPreviewAndOpensOnClick() {
+        model.handle(.answerStart(id: "h", kind: .hint, title: "load.py:6"))
+        #expect(model.islandState == .peek)  // a hint never opens the panel by itself
+        #expect(model.peekPreview == "…")
+        model.handle(.answerDelta(id: "h", text: "Guarda la riga 6: **chi chiude** il file `f`?"))
+        #expect(model.peekPreview == "Guarda la riga 6: chi chiude il file f?")
+        #expect(model.layout == IslandLayout(state: .peek, notch: notch, preview: true))
+        model.handle(.answerEnd(id: "h", model: "qwen", firstTokenMs: 400, totalMs: 900))
+        clock.advance(by: 7)
+        #expect(model.islandState == .peek)
+        model.click()
+        #expect(model.islandState == .expanded)
+        #expect(model.answers.current?.text.contains("chi chiude") == true)
+    }
+
+    @Test func aHintThatIsNotOpenedHidesAfterThePeekDelay() {
+        model.handle(.answerStart(id: "h", kind: .hint, title: "t"))
+        model.handle(.answerDelta(id: "h", text: "x"))
+        model.handle(.answerEnd(id: "h", model: "qwen", firstTokenMs: 1, totalMs: 2))
+        clock.advance(by: 8)
+        #expect(model.islandState == .hidden)
+    }
+
+    @Test func explicitAnswersAndFailedHintsHaveNoPreview() {
+        model.handle(.answerStart(id: "a", kind: .question, title: "q"))
+        model.handle(.answerDelta(id: "a", text: "Perché…"))
+        #expect(model.peekPreview == nil)
+        model.handle(.answerStart(id: "h", kind: .hint, title: "t"))
+        model.handle(.error(id: "h", message: "local engine: HTTP 500"))
+        #expect(model.peekPreview == nil)
+    }
+
     @Test func pointerAndButtons() {
         model.pointer(inside: true)
         #expect(model.islandState == .peek)
@@ -76,17 +108,24 @@ struct DemoScriptTests {
                 switch step {
                 case .hover(let inside): model.pointer(inside: inside)
                 case .message(let message): model.handle(message)
+                case .click: model.click()
                 }
             }
         }
         var t = 0.0
-        while t < 30 {
+        var answerBeforeHint: String?
+        while t < 40 {
             clock.advance(by: 0.05)
             t += 0.05
             if states.last != model.islandState { states.append(model.islandState) }
+            if answerBeforeHint == nil, t >= 20 { answerBeforeHint = model.answers.current?.text }
+            if abs(t - 23) < 0.01 { #expect(model.peekPreview?.hasPrefix("Alla riga 6") == true) }
         }
-        #expect(states == [.hidden, .peek, .expanded, .peek, .hidden])
-        #expect(model.answers.current?.text == DemoScript.answer)
+        // question: peek on hover, expanded, folds, hides; hint: peek, click → expanded, folds, hides
+        #expect(states == [.hidden, .peek, .expanded, .peek, .hidden, .peek, .expanded, .peek, .hidden])
+        #expect(answerBeforeHint == DemoScript.answer)
+        #expect(model.answers.current?.text == DemoScript.hint)
+        #expect(model.answers.current?.kind == .hint)
         #expect(model.mood == .happy)
     }
 

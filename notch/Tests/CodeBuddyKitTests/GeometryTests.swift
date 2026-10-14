@@ -34,5 +34,9 @@ struct GeometryTests {
         #expect(hidden.width == notch.width && hidden.height == notch.height)
         #expect(peek.width == notch.width + 2 * IslandLayout.earWidth && peek.height == notch.height)
         #expect(expanded.width >= peek.width && expanded.height > peek.height)
+        let hint = IslandLayout(state: .peek, notch: notch, preview: true)
+        #expect(hint.width >= peek.width && hint.height == notch.height + IslandLayout.previewHeight)
+        #expect(hint.width < expanded.width || hint.height < expanded.height)
+        #expect(IslandLayout(state: .hidden, notch: notch, preview: true) == hidden)
     }
 }

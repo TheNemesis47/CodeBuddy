@@ -30,7 +30,17 @@ public final class NotchModel {
         machine.onTransition = { [weak self] _, new in self?.islandState = new }
     }
 
-    public var layout: IslandLayout { IslandLayout(state: islandState, notch: notch) }
+    public var layout: IslandLayout { IslandLayout(state: islandState, notch: notch, preview: peekPreview != nil) }
+
+    /// A hint's opening words, shown under the notch while the island peeks; a click opens the
+    /// whole hint. Nil for explicit answers, which open the panel themselves.
+    public var peekPreview: String? {
+        guard let current = answers.current, current.kind == .hint else { return nil }
+        if case .failed = current.status { return nil }
+        return Markdown.preview(current.text, maxCharacters: Self.previewCharacters) ?? "…"
+    }
+
+    static let previewCharacters = 70
 
     public var mood: SproutMood {
         switch answers.current?.status {

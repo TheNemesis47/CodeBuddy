@@ -35,6 +35,9 @@ public struct IslandLayout: Equatable, Sendable {
     public static let earWidth: CGFloat = 76
     public static let expandedWidth: CGFloat = 520
     public static let expandedHeight: CGFloat = 380
+    /// Peek with a hint: a line of text under the notch.
+    public static let previewWidth: CGFloat = 460
+    public static let previewHeight: CGFloat = 30
 
     public let width: CGFloat
     public let height: CGFloat
@@ -43,10 +46,13 @@ public struct IslandLayout: Equatable, Sendable {
     /// > 0: convex top corners; < 0: concave "ears" that melt into the menu bar (see IslandShape).
     public let topRadius: CGFloat
 
-    public init(state: IslandStateMachine.State, notch: IslandScreenGeometry) {
+    public init(state: IslandStateMachine.State, notch: IslandScreenGeometry, preview: Bool = false) {
         switch state {
         case .hidden:
             self.init(width: notch.width, height: notch.height, cornerRadius: 8, topRadius: -6)
+        case .peek where preview:
+            self.init(width: max(Self.previewWidth, notch.width + 2 * Self.earWidth),
+                      height: notch.height + Self.previewHeight, cornerRadius: 14, topRadius: -6)
         case .peek:
             self.init(width: notch.width + 2 * Self.earWidth, height: notch.height,
                       cornerRadius: 10, topRadius: -6)

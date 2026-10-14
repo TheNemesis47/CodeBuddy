@@ -43,21 +43,34 @@ struct IslandView: View {
     }
 }
 
-/// Notch + ears: Sprout in the left ear, a one-character status in the right one.
+/// Notch + ears: Sprout in the left ear, a one-character status in the right one. A hint adds
+/// its opening words on a line under the notch; a click opens the whole hint.
 private struct PeekContent: View {
     let model: NotchModel
 
     var body: some View {
-        HStack(spacing: 0) {
-            SproutView(mood: model.mood, size: max(16, model.notch.height - 8))
-                .frame(width: IslandLayout.earWidth, alignment: .center)
-            Spacer(minLength: model.notch.width)
-            Text(model.peekStatus)
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundStyle(statusColor)
-                .frame(width: IslandLayout.earWidth, alignment: .center)
+        VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                SproutView(mood: model.mood, size: max(16, model.notch.height - 8))
+                    .frame(width: IslandLayout.earWidth, alignment: .center)
+                Spacer(minLength: model.notch.width)
+                Text(model.peekStatus)
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(statusColor)
+                    .frame(width: IslandLayout.earWidth, alignment: .center)
+            }
+            .frame(height: model.notch.height)
+            if let preview = model.peekPreview {
+                Text(preview)
+                    .font(.system(size: 12.5))
+                    .foregroundStyle(Palette.body)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .padding(.horizontal, 18)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .accessibilityLabel("Suggerimento: \(preview). Clicca per aprirlo.")
+            }
         }
-        .frame(height: model.notch.height)
     }
 
     private var statusColor: Color {

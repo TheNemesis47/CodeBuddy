@@ -48,4 +48,13 @@ struct MarkdownTests {
     @Test func emptyInput() {
         #expect(Markdown.parse("").isEmpty)
     }
+
+    @Test func previewIsOnePlainLineCutOnAWord() {
+        #expect(Markdown.preview("", maxCharacters: 20) == nil)
+        #expect(Markdown.preview("  \n ", maxCharacters: 20) == nil)
+        #expect(Markdown.preview("- Usa **`with`**\n- poi `json.load`", maxCharacters: 80)
+                == "Usa with poi json.load")
+        #expect(Markdown.preview("Guarda bene la riga sei del file", maxCharacters: 20) == "Guarda bene la riga…")
+        #expect(Markdown.preview("Supercalifragilistic", maxCharacters: 5) == "Super…")
+    }
 }

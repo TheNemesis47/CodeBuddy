@@ -15,6 +15,23 @@ public enum MarkdownBlock: Equatable, Sendable {
 }
 
 public enum Markdown {
+    /// One plain line for a tight space: markup dropped, whitespace collapsed, cut on a word
+    /// boundary with "…". Nil when there is no text yet.
+    public static func preview(_ markdown: String, maxCharacters: Int) -> String? {
+        let plain = markdown
+            .replacingOccurrences(of: "```", with: " ")
+            .replacingOccurrences(of: "**", with: "")
+            .replacingOccurrences(of: "`", with: "")
+            .split(whereSeparator: \.isWhitespace)
+            .filter { !["-", "*", "•", ">", "#", "##", "###"].contains($0) }
+            .joined(separator: " ")
+        guard !plain.isEmpty else { return nil }
+        guard plain.count > maxCharacters else { return plain }
+        let cut = plain.prefix(maxCharacters)
+        let word = cut.lastIndex(of: " ").map { cut[..<$0] } ?? cut
+        return word.trimmingCharacters(in: .punctuationCharacters.union(.whitespaces)) + "…"
+    }
+
     public static func parse(_ input: String) -> [MarkdownBlock] {
         var blocks: [MarkdownBlock] = []
         let lines = input.components(separatedBy: "\n")

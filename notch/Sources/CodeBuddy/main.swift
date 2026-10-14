@@ -6,12 +6,14 @@ import CodeBuddyKit
 /// `swift run CodeBuddy --demo --snapshots DIR`   play it once, ignoring the real pointer, save
 ///                                                a PNG of each state in DIR, then quit
 /// `swift run CodeBuddy --snapshots DIR`          brain mode; saves a PNG after every answer
+///                                                (for a hint, a second one after clicking it open)
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     /// (seconds into the demo, file name): one moment per state of DemoScript.
     static let snapshotMoments: [(TimeInterval, String)] = [
         (0.5, "1-hidden"), (2.0, "2-peek"), (5.2, "3-expanded-streaming"),
         (9.5, "4-expanded-done"), (15.0, "5-peek-after"), (20.0, "6-hidden-after"),
+        (22.8, "7-hint-peek"), (25.0, "8-hint-expanded"),
     ]
 
     private let demo: Bool
@@ -72,13 +74,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     switch step {
                     case .hover(let inside): model.pointer(inside: inside)
                     case .message(let message): model.handle(message)
+                    case .click: model.click()
                     }
                 }
             }
         }
         log("demo: script started at \(start)")
         guard loop else { return }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 24) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 36) { [weak self] in
             MainActor.assumeIsolated { self?.playDemo(model, loop: true) }
         }
     }
@@ -108,14 +111,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
             MainActor.assumeIsolated {
-                let url = dir.appendingPathComponent("answer-\(id).png")
-                do {
-                    try self?.controller?.snapshot(to: url)
-                    log("snapshot \(url.path)")
-                } catch {
-                    log("snapshot failed: \(error)")
+                self?.snapshot(dir.appendingPathComponent("answer-\(id).png"))
+                // A hint only peeks: also click it open, as a person would, and save that too.
+                guard let model = self?.model, model.answers.current?.kind == .hint else { return }
+                model.click()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                    MainActor.assumeIsolated { self?.snapshot(dir.appendingPathComponent("answer-\(id)-opened.png")) }
                 }
             }
+        }
+    }
+
+    private func snapshot(_ url: URL) {
+        do {
+            try controller?.snapshot(to: url)
+            log("snapshot \(url.path) (island \(model?.islandState.rawValue ?? "?"))")
+        } catch {
+            log("snapshot failed: \(error)")
         }
     }
 

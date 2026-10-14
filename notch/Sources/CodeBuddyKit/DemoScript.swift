@@ -4,10 +4,17 @@ import Foundation
 public enum DemoStep: Equatable, Sendable {
     case hover(Bool)              // pointer enters / leaves the notch
     case message(BrainMessage)    // as if the brain had sent it
+    case click                    // a click on the island
 }
 
 public enum DemoScript {
     public static let answerID = "demo-1"
+    public static let hintID = "demo-hint"
+
+    static let hint = """
+    Alla riga 6 il file resta aperto se `json.load` fallisce: \
+    quale costrutto di Python chiude le risorse anche in caso di errore?
+    """
 
     static let answer = """
     Alla riga 6 `open(path)` crea un file che **nessuno chiude**: lo passi a `json.load`, \
@@ -41,6 +48,17 @@ public enum DemoScript {
         }
         steps.append((t + 0.2, .message(.answerEnd(id: answerID, model: "demo", firstTokenMs: 500,
                                                    totalMs: Int((t - 4.0) * 1000)))))
+
+        // A proactive hint once the island has hidden again: it only peeks, a click opens it.
+        steps.append((21.0, .message(.answerStart(id: hintID, kind: .hint, title: "load.py:6"))))
+        t = 21.3
+        for chunk in chunks(of: hint, size: chunkSize) {
+            steps.append((t, .message(.answerDelta(id: hintID, text: chunk))))
+            t += 0.03
+        }
+        steps.append((t + 0.1, .message(.answerEnd(id: hintID, model: "demo-local", firstTokenMs: 300,
+                                                   totalMs: Int((t - 21.0) * 1000)))))
+        steps += [(23.8, .hover(true)), (24.0, .click), (24.2, .hover(false))]
         return steps
     }
 
