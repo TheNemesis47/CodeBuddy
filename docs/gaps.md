@@ -20,7 +20,7 @@ estimate here. **Human** marks what an agent can't finish alone.
 | G8 | Sprout final design | feature | medium | — | **Human** |
 | G9 | CI on GitHub Actions | tooling | low | 1 h | **Human** (create remote) |
 | G10 | Evals: snippet set + scorer for suggestion quality | tooling | high (after MVP) | 6 h | agent |
-| G11 | Real-screen check of the notch: hover, click, Spaces, full-screen apps, a second monitor | UX | medium | 1 h | **Human** |
+| G11 | Real-screen check of the notch (hover, click, Spaces, full screen) + 2 peek defects seen in snapshots | UX | medium | 1 h | **Human** + agent |
 | G13 | Install the plugin in your real PyCharm and use `#?` / `#!teoria` on real code | feature | blocks next stage | 30 min | **Human** |
 | G12 | Grant Screen Recording to the terminal so agents can `screencapture` the real screen (today: view snapshots only) | tooling | low | 5 min | **Human** |
 
@@ -126,6 +126,9 @@ Actions job on macOS that runs `./scripts/check`.
 
 **Evidence.** Agents only see view snapshots (`--snapshots`). They don't see the menu bar around the
 island, hover over it, or check it on a screen without a notch.
+**Known defects** (from `docs/screenshots/notch/demo-5-peek-after.png`): in peek after an answer,
+Sprout is drawn as a seed with no stem although its mood is happy, and the ✓ sits ~5 pt above
+Sprout. An agent can fix these. Check whether they also show on the real screen.
 **Done when.** You have run `swift run CodeBuddy --demo`, hovered and clicked it, and noted anything
 off in the devlog.
 
