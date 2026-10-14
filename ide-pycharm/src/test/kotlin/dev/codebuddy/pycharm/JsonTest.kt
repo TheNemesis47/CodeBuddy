@@ -19,7 +19,7 @@ class JsonTest {
         val a = ProjectMap(listOf("a.py"), emptyMap())
         val b = ProjectMap(listOf("a.py", "b.py"), emptyMap())
         assertEquals(2, tracker.messagesFor(a, "t1").size)
-        assertEquals(listOf("t2"), tracker.messagesFor(a, "t3".replace("3", "2")))
+        assertEquals(listOf("t2"), tracker.messagesFor(a, "t2"))
         assertEquals(2, tracker.messagesFor(b, "t3").size)
         tracker.reset()
         assertEquals(2, tracker.messagesFor(b, "t4").size)
