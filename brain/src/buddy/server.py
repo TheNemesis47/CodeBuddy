@@ -9,6 +9,8 @@ leaks to whoever is probing.
 import asyncio
 import json
 import logging
+import time
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -17,8 +19,10 @@ from starlette.websockets import WebSocketState
 from buddy import __version__
 from buddy.answers import Message, run_answer
 from buddy.auth import token_matches
+from buddy.hints import HintGate, window_key
+from buddy.local import detect_local_model
 from buddy.models import Model
-from buddy.prompting import ProjectMap, Request, build_prompt
+from buddy.prompting import ProjectMap, Request, RequestKind, build_prompt
 from buddy.protocol import ProtocolError, validate
 
 log = logging.getLogger("buddy.server")
@@ -47,43 +51,64 @@ class NotchHub:
                 self._clients.discard(ws)
 
 
+type DetectLocal = Callable[[], Awaitable[Model | None]]
+
+
 class Brain:
-    def __init__(self, cloud: Model, answer_language: str = "italiano") -> None:
+    """Routes IDE events to models. Explicit triggers go to the cloud model; `idle` goes to the
+    local engine, or to the cloud only when `proactive_cloud` is on (docs/decisions.md)."""
+
+    def __init__(
+        self,
+        cloud: Model,
+        answer_language: str = "italiano",
+        *,
+        detect_local: DetectLocal = detect_local_model,
+        proactive_cloud: bool = False,
+        hints: HintGate | None = None,
+    ) -> None:
         self.cloud = cloud
         self.answer_language = answer_language
+        self.detect_local = detect_local
+        self.proactive_cloud = proactive_cloud
+        self.hints = hints or HintGate()
         self.notch = NotchHub()
         self.project: ProjectMap | None = None
         self.project_hash: str | None = None
-        self._tasks: set[asyncio.Task[Message]] = set()
+        self._tasks: set[asyncio.Task[Message | None]] = set()
 
     async def handle_ide_message(self, message: dict[str, Any]) -> None:
         match message["type"]:
             case "trigger":
-                self._start_answer(message)
+                self._spawn(self._answer(message))
             case "project_map":
                 self.project = ProjectMap(message["tree"], message["symbols"])
                 self.project_hash = message["hash"]
             case "idle":
-                # Proactive hints run on the local model only (G6). Until then: nothing, and
-                # never the cloud (docs/decisions.md, proactive_cloud = false).
-                pass
+                # Checked here, in order: two idle events can't both pass the gate.
+                if self.hints.try_start(window_key(message)):
+                    self._spawn(self._hint(message))
             case other:
                 raise ProtocolError(f"{other} is not an ide → brain message")
 
-    def _start_answer(self, trigger: dict[str, Any]) -> None:
-        project = self.project if trigger.get("project") == self.project_hash else None
-        request = Request(
-            kind=trigger["kind"],
-            text=trigger["text"],
-            file=trigger["file"],
-            line=trigger["line"],
-            language=trigger["language"],
-            window_start=trigger["window"]["start"],
-            window_code=trigger["window"]["code"],
-            scope=trigger.get("scope"),
+    def _request(self, event: dict[str, Any], kind: RequestKind, text: str) -> Request:
+        project = self.project if event.get("project") == self.project_hash else None
+        return Request(
+            kind=kind,
+            text=text,
+            file=event["file"],
+            line=event["line"],
+            language=event["language"],
+            window_start=event["window"]["start"],
+            window_code=event["window"]["code"],
+            scope=event.get("scope"),
             project=project,
         )
-        prompt = build_prompt(request, self.answer_language)
+
+    async def _answer(self, trigger: dict[str, Any]) -> Message:
+        prompt = build_prompt(
+            self._request(trigger, trigger["kind"], trigger["text"]), self.answer_language
+        )
         log.info(
             "trigger %s %s:%s ~%d tokens in",
             trigger["kind"],
@@ -91,16 +116,45 @@ class Brain:
             trigger["line"],
             prompt.estimated_tokens(),
         )
-        task = asyncio.create_task(
-            run_answer(
-                self.cloud,
-                prompt,
-                id=trigger["id"],
-                kind=trigger["kind"],
-                title=trigger["text"] or trigger["file"],
-                emit=self.notch.broadcast,
-            )
+        return await run_answer(
+            self.cloud,
+            prompt,
+            id=trigger["id"],
+            kind=trigger["kind"],
+            title=trigger["text"] or trigger["file"],
+            emit=self.notch.broadcast,
         )
+
+    async def _hint(self, idle: dict[str, Any]) -> Message | None:
+        started = time.monotonic()
+        model = await self.detect_local()
+        if model is None and self.proactive_cloud:
+            model = self.cloud
+        if model is None:
+            self.hints.undo()  # nothing was shown: the next changed window may try again
+            log.info("idle %s:%s: no local engine, no hint", idle["file"], idle["line"])
+            return None
+        prompt = build_prompt(self._request(idle, "hint", ""), self.answer_language)
+        log.info(
+            "idle %s:%s → hint on %s ~%d tokens in",
+            idle["file"],
+            idle["line"],
+            model.name,
+            prompt.estimated_tokens(),
+        )
+        final = await run_answer(
+            model,
+            prompt,
+            id=idle["id"],
+            kind="hint",
+            title=f"{idle['file']}:{idle['line']}",
+            emit=self.notch.broadcast,
+        )
+        log.info("hint %s in %d ms", final["type"], round((time.monotonic() - started) * 1000))
+        return final
+
+    def _spawn(self, work: Awaitable[Message | None]) -> None:
+        task: asyncio.Task[Message | None] = asyncio.ensure_future(work)
         self._tasks.add(task)
         task.add_done_callback(self._tasks.discard)
 
@@ -110,7 +164,15 @@ class Brain:
             await asyncio.gather(*list(self._tasks), return_exceptions=True)
 
 
-def create_app(cloud: Model, token: str, answer_language: str = "italiano") -> FastAPI:
+def create_app(
+    cloud: Model,
+    token: str,
+    answer_language: str = "italiano",
+    *,
+    detect_local: DetectLocal = detect_local_model,
+    proactive_cloud: bool = False,
+    hints: HintGate | None = None,
+) -> FastAPI:
     app = FastAPI(
         title="CodeBuddy brain",
         version=__version__,
@@ -118,7 +180,13 @@ def create_app(cloud: Model, token: str, answer_language: str = "italiano") -> F
         redoc_url=None,
         openapi_url=None,
     )
-    brain = Brain(cloud, answer_language)
+    brain = Brain(
+        cloud,
+        answer_language,
+        detect_local=detect_local,
+        proactive_cloud=proactive_cloud,
+        hints=hints,
+    )
     app.state.brain = brain
 
     @app.websocket("/ws")
