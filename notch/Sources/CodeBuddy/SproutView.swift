@@ -8,9 +8,9 @@ struct SproutView: View {
     let mood: SproutMood
     var size: CGFloat = 22
 
-    @State private var growth: Double = 0
-
-    private var targetGrowth: Double {
+    /// Derived from the mood, not stored: a freshly created view (e.g. the peek after an answer)
+    /// must draw the right stage on its first frame.
+    private var growth: Double {
         switch mood {
         case .idle: 0
         case .thinking: 0.6
@@ -28,10 +28,6 @@ struct SproutView: View {
             }
         }
         .frame(width: size, height: size)
-        .onAppear { growth = targetGrowth }
-        .onChange(of: mood) { _, _ in
-            withAnimation(.spring(response: 0.6, dampingFraction: 0.6)) { growth = targetGrowth }
-        }
         .accessibilityLabel("Sprout")
     }
 }
@@ -51,6 +47,9 @@ struct SproutDrawing {
         let breathe = 1 + 0.035 * sin(time * 2.2)
         let wobble = mood == .thinking ? 6 * sin(time * 5) : 2 * sin(time * 1.3)
         let g = max(0, min(1, growth))
+        // A bare seed sits in the lower half of the unit box; lift it so it looks centred, and let
+        // the stem take that room as it grows.
+        context.translateBy(x: 0, y: -22 * (1 - g))
 
         // Stem and leaves grow out of the top of the seed.
         let stemTop = CGPoint(x: 50 + wobble * 0.4, y: 52 - 34 * g)
