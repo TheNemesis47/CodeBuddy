@@ -19,6 +19,10 @@ in `~/Work/testM5/MODELS.md`.
   from `~/Documents/AI/models/gguf/`.
 - MTPLX: `mtplx serve` on `:8000` (OpenAI + Anthropic API).
 - Check which one is up: `curl -s localhost:8080/v1/models; curl -s localhost:8000/v1/models`.
+- Proactive hints use whichever is up (Qwen3-Coder-30B-A3B preferred). Without a local engine there
+  are no hints; `BUDDY_PROACTIVE_CLOUD=1 uv run buddy serve` lets them use Claude instead.
+- Live idle run through the plugin's code: `BUDDY_PORT=… BUDDY_HOME=… ./gradlew test --rerun -Pe2e
+  --tests '*LiveBrainE2ETest.testIdleReachesTheBrain'` with the brain and notch running.
 
 ## Running the parts
 

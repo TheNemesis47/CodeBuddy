@@ -1,6 +1,6 @@
 # Where CodeBuddy falls short of the MVP
 
-> **Last reviewed:** 2026-10-14 · **Last updated:** 2026-10-14 · **Change:** G4 closed (PyCharm plugin); G5 mostly done; G13 added
+> **Last reviewed:** 2026-10-14 · **Last updated:** 2026-10-14 · **Change:** G6 closed (proactive hints on the local engine); G13 now covers hints too
 
 Every known shortfall, one entry each, ranked by impact. This is the work list agents pick from:
 take the highest-ranked open entry, and when you close part of one, update its evidence and
@@ -15,13 +15,13 @@ estimate here. **Human** marks what an agent can't finish alone.
 | ~~G3~~ | ~~Notch: extract panel from Coucou, Sprout placeholder, `--demo`~~ (done 2026-10-14) | feature | — | — | agent |
 | ~~G4~~ | ~~PyCharm plugin: skeleton, trigger detection, context, send~~ (done 2026-10-14) | feature | — | — | agent |
 | G5 | Latency p50 over 10 real runs (criterion 1); wiring is done. **Risk: first token 1.3–5.8 s** | perf | blocks next stage | 2 h | agent + **Human** (G13) |
-| G6 | Proactive idle hint on the local engine + rate limit + no-cloud test (criterion 2) | feature | blocks next stage | 4 h | agent |
+| ~~G6~~ | ~~Proactive idle hint on the local engine + rate limit + no-cloud test (criterion 2)~~ (done 2026-10-14) | feature | — | — | agent |
 | G7 | Enforce module boundaries automatically | tooling | medium | 1 h | agent |
 | G8 | Sprout final design | feature | medium | — | **Human** |
 | G9 | CI on GitHub Actions | tooling | low | 1 h | **Human** (create remote) |
 | G10 | Evals: snippet set + scorer for suggestion quality | tooling | high (after MVP) | 6 h | agent |
 | G11 | Real-screen check of the notch: hover, click, Spaces, full screen | UX | medium | 1 h | **Human** |
-| G13 | Install the plugin in your real PyCharm and use `#?` / `#!teoria` on real code | feature | blocks next stage | 30 min | **Human** |
+| G13 | Install the plugin in your real PyCharm and use `#?` / `#!teoria` and idle hints on real code | feature | blocks next stage | 45 min | **Human** |
 | G12 | Grant Screen Recording to the terminal so agents can `screencapture` the real screen (today: view snapshots only) | tooling | low | 5 min | **Human** |
 
 ## G1: Protocol v0 (closed 2026-10-14)
@@ -99,7 +99,16 @@ a shorter system prompt. `--effort low` made no clear difference (3 runs).
 first-token latency and input tokens. Criteria 1, 3 and 4 are measured over 10 runs and written in
 ROADMAP.md.
 
-## G6: Proactive hint
+## G6: Proactive hint (closed 2026-10-14)
+
+Done on branch `feat/proactive-hints`. Plugin: `Idle.kt` sends `idle` 4 s after the last change
+to a `.py` file (per-document `Debouncer`; PSI and I/O off the EDT; same window as last time → not
+sent). Brain: `local.py` finds llama.cpp :8080 or MTPLX :8000 via `/v1/models` and streams from it
+(`LocalModel`, `prompts/hint.md`); `hints.py` allows 1 hint every 180 s, only for a changed window,
+and none for 180 s after an explicit trigger; `BUDDY_PROACTIVE_CLOUD=1` is the only path to Claude.
+Notch: a hint peeks with its first ~70 characters, a click opens it. Live run (Qwen3-Coder-30B-A3B
+on llama.cpp): idle 4.05 s after the last keystroke, hint done 585 ms later (devlog). Open: real
+PyCharm use (G13) and hint quality as a number (G10). The original entry:
 
 **Done when.** An `idle` event produces a hint from llama.cpp :8080 or MTPLX :8000 in ≤ 8 s, at most
 1 every 3 minutes, and only if the code changed. With no local engine it produces nothing. A test
@@ -136,8 +145,11 @@ off in the devlog.
 **Done when.** In PyCharm: Settings → Plugins → ⚙ → Install Plugin from Disk →
 `ide-pycharm/build/distributions/codebuddy-pycharm-0.1.0.zip`, restart, start
 `cd brain && uv run buddy serve` and `cd notch && swift run CodeBuddy`, then write
-`#? …` and `#!teoria …` in a real project. Note in the devlog what felt slow, wrong or noisy,
-whether typing ever stuttered (golden rule 1), and what the answers looked like.
+`#? …` and `#!teoria …` in a real project. For hints, also start a local engine
+(`llama-server -m ~/Documents/AI/models/gguf/Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf --alias
+Qwen3-Coder-30B-A3B --port 8080 -ngl 999 -fa on -c 16384 --jinja`) and pause while typing. Note in
+the devlog what felt slow, wrong or noisy, whether typing ever stuttered (golden rule 1), whether
+hints came too often or too rarely, and what the answers looked like.
 
 ## G12: Screen Recording for agents (Human)
 

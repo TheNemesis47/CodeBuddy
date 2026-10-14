@@ -2,6 +2,21 @@
 
 Newest first. One entry per non-obvious decision.
 
+## 2026-10-14: How proactive hints are routed and limited (G6)
+
+**Decision.** (1) The brain looks for a local engine on every `idle` that passes the gate (a
+`/v1/models` probe on loopback, 0.5 s timeout), not once at startup, so starting or stopping
+llama.cpp/MTPLX needs no brain restart. (2) With `proactive_cloud` on, the local engine is still
+preferred; Claude is used only when none is up. (3) The 3-minute gate counts only hints actually
+started: when no engine answers, the slot is given back. (4) An explicit trigger also starts the
+3-minute quiet period, because the plugin sends `idle` 4 s after the `#?` line and the hint would
+replace the answer in the notch. (5) Hints get their own system prompt, no project map and a ~3k
+token budget: on the local engine prefill is the latency. (6) The plugin skips an `idle` whose
+window equals the last one from that document; the brain separately skips a window equal to the
+last hinted one. (7) `httpx2`, already used by the tests, becomes a runtime dependency for the
+local engine client. **Why.** Hints must stay rare, cheap and never in the way of an explicit answer.
+**Rollback.** Each is a line in `brain/src/buddy/server.py` or `hints.py`, or `Idle.kt`.
+
 ## 2026-10-14: Brain details chosen while building G2
 
 **Decision.** (1) The JSON Schemas in `protocol/` are the source of truth, and the brain validates

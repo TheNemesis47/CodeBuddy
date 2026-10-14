@@ -2,6 +2,46 @@
 
 Newest first. Terse. Written at the end of every task so the next agent can pick up.
 
+## 2026-10-14 21:50: G6 proactive hints (branch feat/proactive-hints, on top of feat/ide-pycharm)
+
+- **Landed:** plugin `Idle.kt`: an `editorFactoryDocumentListener` (EDT: a `.py` check, an offset,
+  a timer restart) → per-document `Debouncer` (4 s) → `IdleDispatcher` builds the context like a
+  trigger's (±60 lines, scope, project hash) in a non-blocking read action and sends `idle`; the
+  same window as the last idle from that document is not resent. Brain: `local.py` (`/v1/models`
+  detection on 127.0.0.1:8080/:8000, prefers Qwen3-Coder-30B-A3B; `LocalModel` streams OpenAI SSE,
+  max 160 tokens), `hints.py` (`HintGate`: 1 hint / 180 s, changed window only, slot given back
+  when no engine answers, paused 180 s by an explicit trigger; `BUDDY_PROACTIVE_CLOUD`),
+  `prompts/hint.md` (one nudge, ≤ 3 lines, no solution), no project map and a ~3k-token budget for
+  hints. Notch: a hint peeks with its first ~70 characters (`Markdown.preview`), a click opens it;
+  `--demo` plays a hint; brain-mode `--snapshots` also saves a hint after clicking it open.
+  Also untracked `ide-pycharm/.intellijPlatform/` (1726 sandbox files, already in `.gitignore`).
+- **Numbers:** tests brain 81 → 116 (1 live, skipped), notch 36 → 40, plugin 18 → 26; floors
+  raised. Mutation checks: unconditional cloud fallback (4 tests fail), no gate (1), no undo (1),
+  no unchanged-window check in the plugin (1), no debounce restart (2). The compiler caught
+  `key in ConcurrentHashMap` (it checks values) in the debouncer before it shipped.
+- **Live run** (`llama-server` with `Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf`, `-c 16384 -fa on`,
+  :8080; brain and notch on 8796; `./gradlew test --rerun -Pe2e --tests
+  '*LiveBrainE2ETest.testIdleReachesTheBrain'`, which types into `load.py` and waits for the real
+  timer): idle fired **4049 ms** after the last keystroke; brain `idle load.py:6 → hint on
+  Qwen3-Coder-30B-A3B ~225 tokens in`, `hint answer_end in 585 ms`; notch `first_token_ms=24
+  total_ms=570` (first run, cold cache: 197 / 955 ms). Well inside 8 s. Hint: «Il file `f` non
+  viene chiuso dopo l'apertura, il che può causare problemi di risorse. Considera l'uso di un
+  `with` statement…». The first run's prompt gave three unrelated nudges; `hint.md` now asks for
+  one. With the engine stopped, the same run logs `no local engine, no hint` and the notch shows
+  nothing. The engine was stopped afterwards.
+- **Screenshots** (all opened and checked): `docs/screenshots/notch/e2e-hint-peek.png` (Sprout, ✓,
+  preview cut on a word) and `e2e-hint-opened.png` (SUGGERIMENTO, `load.py:6`, full hint,
+  `Qwen3-Coder-30B-A3B · primo token 24 ms · totale 570 ms`); demo `demo-1…8` (the six old states
+  unchanged; `7-hint-peek`, `8-hint-expanded` new). Two intermediate live shots showed the panel
+  still open from the previous run's scripted click (a hint never shrinks an open panel, by
+  design), so the run of record restarted the notch.
+- **MVP criteria:** 5/6 (criterion 2 now ✅). Open: 1 (latency p50, G5).
+- **Still open:** Human: G13 now includes trying idle hints in the real PyCharm (too often? too
+  rare? typing stutter?), G11 real screen. Agent: G5; G10 to turn hint quality into a number (the
+  hint still names the fix, `with`, which is borderline for "a nudge, not a solution"). A hint
+  arriving while the panel shows an explicit answer still replaces it after 3 minutes; fine for
+  now, revisit with the priority queue.
+
 ## 2026-10-14 21:25: G4 PyCharm plugin (branch feat/ide-pycharm, on top of feat/notch-app)
 
 - **Landed:** `ide-pycharm/`. Gradle 9.8 wrapper and IntelliJ Platform Gradle Plugin 2.19 (versions
