@@ -1,6 +1,6 @@
 # Where CodeBuddy falls short of the MVP
 
-> **Last reviewed:** 2026-10-14 · **Last updated:** 2026-10-14 · **Change:** G3 closed (notch app)
+> **Last reviewed:** 2026-10-14 · **Last updated:** 2026-10-14 · **Change:** G4 closed (PyCharm plugin); G5 mostly done; G13 added
 
 Every known shortfall, one entry each, ranked by impact. This is the work list agents pick from:
 take the highest-ranked open entry, and when you close part of one, update its evidence and
@@ -13,14 +13,15 @@ estimate here. **Human** marks what an agent can't finish alone.
 | ~~G1~~ | ~~Protocol v0 schemas + examples + validator~~ (done 2026-10-14) | feature | — | — | agent |
 | ~~G2~~ | ~~Brain: daemon, `buddy ask` CLI, Claude CLI provider, WebSocket with token~~ (done 2026-10-14) | feature | — | — | agent |
 | ~~G3~~ | ~~Notch: extract panel from Coucou, Sprout placeholder, `--demo`~~ (done 2026-10-14) | feature | — | — | agent |
-| G4 | PyCharm plugin: skeleton, trigger detection, context, send | feature | blocks next stage | 8 h | agent |
-| G5 | End-to-end wiring + latency p50 (criteria 1, 3, 4). **Risk: first token is 1.6–5.8 s today** | feature/perf | blocks next stage | 4 h | agent + **Human** (real test) |
+| ~~G4~~ | ~~PyCharm plugin: skeleton, trigger detection, context, send~~ (done 2026-10-14) | feature | — | — | agent |
+| G5 | Latency p50 over 10 real runs (criterion 1); wiring is done. **Risk: first token 1.3–5.8 s** | perf | blocks next stage | 2 h | agent + **Human** (G13) |
 | G6 | Proactive idle hint on the local engine + rate limit + no-cloud test (criterion 2) | feature | blocks next stage | 4 h | agent |
 | G7 | Enforce module boundaries automatically | tooling | medium | 1 h | agent |
 | G8 | Sprout final design | feature | medium | — | **Human** |
 | G9 | CI on GitHub Actions | tooling | low | 1 h | **Human** (create remote) |
 | G10 | Evals: snippet set + scorer for suggestion quality | tooling | high (after MVP) | 6 h | agent |
 | G11 | Real-screen check of the notch: hover, click, Spaces, full-screen apps, a second monitor | UX | medium | 1 h | **Human** |
+| G13 | Install the plugin in your real PyCharm and use `#?` / `#!teoria` on real code | feature | blocks next stage | 30 min | **Human** |
 | G12 | Grant Screen Recording to the terminal so agents can `screencapture` the real screen (today: view snapshots only) | tooling | low | 5 min | **Human** |
 
 ## G1: Protocol v0 (closed 2026-10-14)
@@ -64,9 +65,17 @@ and a Sprout placeholder. State machine tests pass. `scripts/guard-assets` is gr
 **Approach.** Human: `sudo xcode-select -s /Applications/Xcode.app`. Then a SwiftPM executable,
 copying only those files, renamed, with the credit in `THIRD_PARTY.md`.
 
-## G4: PyCharm plugin
+## G4: PyCharm plugin (closed 2026-10-14)
 
-**Evidence.** `ide-pycharm/` doesn't exist. Target: PyCharm 2026.2.3 (product `PY`, build 262).
+Done: `ide-pycharm/` (Gradle 9.8 wrapper, IntelliJ Platform Gradle Plugin 2.19, Kotlin 2.4.20)
+built against the local PyCharm 2026.2.3 with `PythonCore`. 18 tests (trigger detection on PSI,
+including strings, docstrings, trailing and normal comments; context; project map; Enter → trigger;
+clear action; message shapes against `protocol/examples`; brain down). `buildPlugin` produces
+`build/distributions/codebuddy-pycharm-0.1.0.zip`. The live e2e test (`-Pe2e`) took the plugin's
+real code path to a running brain and notch. Not done: `idle` events (G6), testing in the real IDE
+(G13).
+
+**Evidence (at the time).** `ide-pycharm/` doesn't exist. Target: PyCharm 2026.2.3 (product `PY`, build 262).
 JDK 21 is installed, Gradle is not (use the wrapper).
 **Done when.** `./gradlew test buildPlugin` is green. Tests cover trigger detection (`#?`,
 `#!teoria` fire; `# teoria`, triggers inside strings and docstrings don't). `runIde` sends a trigger
@@ -76,6 +85,11 @@ on Enter. Context comes from PSI (enclosing function and class, ±60 lines). All
 (golden rule 1).
 
 ## G5: End-to-end
+
+**Progress (2026-10-14).** Wiring done and checked twice: a plugin-like Python client
+(first token 1265 ms) and the plugin's own code via `LiveBrainE2ETest` (2278 ms), both shown in the
+notch. Criterion 3: ~300–350 input tokens per trigger on small files, well under 8k (measured).
+Criterion 4: covered by plugin tests. Left: criterion 1 as a p50 over 10 runs from the real IDE.
 
 **Evidence.** `buddy ask` against Claude through the subscription (Sonnet 5.5, ~1.0k input
 tokens): first token p50 2.9 s, range 1.6–5.8 s, over 15 runs on 2026-10-14: large run-to-run variance.
@@ -114,6 +128,14 @@ Actions job on macOS that runs `./scripts/check`.
 island, hover over it, or check it on a screen without a notch.
 **Done when.** You have run `swift run CodeBuddy --demo`, hovered and clicked it, and noted anything
 off in the devlog.
+
+## G13: Plugin in your real PyCharm (Human)
+
+**Done when.** In PyCharm: Settings → Plugins → ⚙ → Install Plugin from Disk →
+`ide-pycharm/build/distributions/codebuddy-pycharm-0.1.0.zip`, restart, start
+`cd brain && uv run buddy serve` and `cd notch && swift run CodeBuddy`, then write
+`#? …` and `#!teoria …` in a real project. Note in the devlog what felt slow, wrong or noisy,
+whether typing ever stuttered (golden rule 1), and what the answers looked like.
 
 ## G12: Screen Recording for agents (Human)
 

@@ -1,0 +1,28 @@
+<idea-plugin>
+    <id>dev.codebuddy.pycharm</id>
+    <name>CodeBuddy</name>
+    <vendor>CodeBuddy</vendor>
+    <description><![CDATA[
+    A tutor in your Mac's notch. Write <code>#? question</code> or <code>#!teoria topic</code> on its
+    own line and press Enter: the question and the code around it go to the local CodeBuddy brain,
+    and the answer shows up in the notch. The plugin never edits your code, except for the
+    "CodeBuddy: Clear Triggers" action.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>PythonCore</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <enterHandlerDelegate implementation="dev.codebuddy.pycharm.TriggerEnterHandler"/>
+        <applicationService serviceInterface="dev.codebuddy.pycharm.BrainSender"
+                            serviceImplementation="dev.codebuddy.pycharm.BrainConnection"/>
+    </extensions>
+
+    <actions>
+        <action id="CodeBuddy.ClearTriggers" class="dev.codebuddy.pycharm.ClearTriggersAction"
+                text="CodeBuddy: Clear Triggers" description="Remove every #? and #!teoria line from this file">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>

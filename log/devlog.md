@@ -2,6 +2,34 @@
 
 Newest first. Terse. Written at the end of every task so the next agent can pick up.
 
+## 2026-10-14 21:25: G4 PyCharm plugin (branch feat/ide-pycharm, on top of feat/notch-app)
+
+- **Landed:** `ide-pycharm/`. Gradle 9.8 wrapper and IntelliJ Platform Gradle Plugin 2.19 (versions
+  from JetBrains' template, 2026-10-10), Kotlin 2.4.20, built against `/Applications/PyCharm.app`
+  2026.2.3 with `PythonCore`. Pieces: `TriggerParser` (mirrors the brain);
+  `TriggerDetector` (PSI: the line's first character must be inside a `PsiComment`, so strings,
+  docstrings and trailing comments never fire); `ContextBuilder` (±60 lines, enclosing
+  `PyFunction`/`PyClass` with decorators, relative path); `ProjectMapBuilder` (content files minus
+  excluded, top-level signatures, SHA-256 hash); `TriggerEnterHandler` (EDT: one text check
+  only) → `TriggerDispatcher` (non-blocking read action on a pool thread) → `BrainConnection`
+  (JDK WebSocket on its own thread, 2 s connect and 3 s send timeouts, silent with a 5 s retry
+  pause; `MapTracker` resends `project_map` when it changes or on a new socket);
+  `ClearTriggersAction` (the only document write, guarded by `scripts/guard-no-edits`).
+- **Numbers:** plugin tests 0 → 18, floor raised. The gate runs all three modules, none skipped.
+  Mutation check: parsing raw text instead of PSI fails 2 tests. A "comment must start at the
+  line's first char" check turned out to be dead code (the PSI lookup already guarantees it) and was
+  removed.
+- **E2E with the plugin's own code** (`./gradlew test -Pe2e --tests '*LiveBrainE2ETest*'`, brain
+  and notch on port 8797): brain `trigger question load.py:5 ~297 tokens in`; notch
+  `answer_start → island expanded → answer_end first_token_ms=2278 total_ms=6128`. Screenshot:
+  `docs/screenshots/notch/e2e-plugin-to-notch.png` (looked at). The JDK WebSocket sends no
+  `Origin`, so the brain accepts it.
+- **MVP criteria:** 3 (≤ 8k tokens: ~300 measured) ✅, 4 (trigger rules: plugin tests) ✅, 5 (demo) ✅,
+  6 (gate) ✅. 1 (p50 ≤ 3 s, 10 runs from the IDE) and 2 (proactive, G6) are open.
+- **Still open, for a human:** G13 install `ide-pycharm/build/distributions/codebuddy-pycharm-0.1.0.zip`
+  in your PyCharm and try it on real code; G11 look at the notch on the real screen; G12 Screen
+  Recording permission. Agent: G5 latency p50, G6 proactive hints on the local model.
+
 ## 2026-10-14 21:15: G3 notch app (branch feat/notch-app)
 
 - **Landed:** `notch/` SwiftPM. `CodeBuddyKit` holds the logic: a 3-state island machine

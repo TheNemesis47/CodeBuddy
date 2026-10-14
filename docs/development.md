@@ -32,4 +32,9 @@ plugin exist once G3 and G4 are closed.
 - Brain: `uv run buddy ask file.py:LINE "question"` prints the answer. No UI or IDE needed.
 - Notch: `swift run CodeBuddy --demo --snapshots /tmp/shots` saves a PNG of every state (no Screen
   Recording permission needed); look at them. `screencapture` needs that permission (G12).
-- Plugin: `./gradlew runIde` opens a sandbox PyCharm. The full end-to-end check needs a human (G5).
+- Plugin: `./gradlew test` (18 tests, IDE fixture with Python PSI), `./gradlew buildPlugin` →
+  `build/distributions/codebuddy-pycharm-0.1.0.zip`, `./gradlew runIde` opens a sandbox PyCharm.
+- End to end without a human: start `buddy serve` and `swift run CodeBuddy --snapshots /tmp/e2e`
+  with the same `BUDDY_PORT`/`BUDDY_HOME`, then
+  `cd ide-pycharm && ./gradlew test -Pe2e --tests '*LiveBrainE2ETest*'`. The notch log shows
+  `answer_end …` and `/tmp/e2e/answer-<id>.png` is the result. Typing in the real IDE is G13.

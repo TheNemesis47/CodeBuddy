@@ -32,7 +32,21 @@ def count_notch_tests() -> int | None:
     return sum(1 for line in out.splitlines() if "/" in line)
 
 
-MEASURES = {"brain_tests": count_brain_tests, "notch_tests": count_notch_tests}
+def count_plugin_tests() -> int | None:
+    """Reads the JUnit reports that `./gradlew test` (run earlier by scripts/check) writes."""
+    if not (ROOT / "ide-pycharm/gradlew").exists():
+        return None
+    import xml.etree.ElementTree as ET
+
+    reports = (ROOT / "ide-pycharm/build/test-results/test").glob("TEST-*.xml")
+    return sum(int(ET.parse(r).getroot().get("tests", 0)) for r in reports)
+
+
+MEASURES = {
+    "brain_tests": count_brain_tests,
+    "notch_tests": count_notch_tests,
+    "plugin_tests": count_plugin_tests,
+}
 
 
 def main() -> int:

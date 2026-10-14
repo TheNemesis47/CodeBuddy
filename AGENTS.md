@@ -29,7 +29,7 @@ Read this file first, then the files below.
 protocol/      JSON Schemas (v0) + example messages: the contract between all processes
 brain/         Python daemon on 127.0.0.1:8790: context, model routing, streaming   (see brain/README.md)
 notch/         Swift package: notch panel, states, Sprout, markdown answers (CodeBuddyKit = logic)
-ide-pycharm/   Kotlin plugin: PSI context, #? / #!cmd triggers, idle detection      (G4, not created yet)
+ide-pycharm/   Kotlin plugin: PSI context, #? / #!cmd triggers, sends to the brain
 evals/         snippets + expected outcomes, scores suggestion quality               (G10, later)
 quality/       floors.json: ratcheted numbers
 scripts/       check (the gate), guards, ratchet
@@ -49,7 +49,9 @@ Ranked. A higher rule outranks a lower one and outranks feature work.
 The user is coding. A frozen PyCharm costs more than any hint is worth.
 - No network or model work on the EDT. Every brain call is async and has a timeout.
 - If the brain is down or slow, the plugin stays silent: no error dialogs, no retries in a loop.
-- **Enforced by:** plugin tests in `cd ide-pycharm && ./gradlew test` (not yet working: see gaps G4).
+- **Enforced by:** plugin tests in `cd ide-pycharm && ./gradlew test` (`testBrainDownIsSilentAndQuick`;
+  the Enter handler only does a text check on the EDT, and PSI and network run off it). A stress
+  test in a real IDE is (manual): see gaps G13.
 - **Prove it:** every fix of a violation comes with a regression test that failed before.
 
 ### 2. Never edit the user's code
