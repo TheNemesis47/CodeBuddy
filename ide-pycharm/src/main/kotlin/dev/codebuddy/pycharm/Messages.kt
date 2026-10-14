@@ -25,6 +25,21 @@ object Messages {
             ),
         )
 
+    fun idle(id: String, context: CodeContext, projectHash: String?): String =
+        Json.encode(
+            linkedMapOf(
+                "v" to VERSION,
+                "type" to "idle",
+                "id" to id,
+                "file" to context.file,
+                "line" to context.line,
+                "language" to context.language,
+                "window" to mapOf("start" to context.windowStart, "code" to context.windowCode),
+                "scope" to context.scope,
+                "project" to projectHash,
+            ),
+        )
+
     fun projectMap(map: ProjectMap, hashOverride: String? = null): String =
         Json.encode(
             linkedMapOf(

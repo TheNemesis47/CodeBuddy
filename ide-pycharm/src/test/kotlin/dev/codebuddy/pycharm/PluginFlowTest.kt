@@ -77,11 +77,65 @@ class PluginFlowTest : BasePlatformTestCase() {
         val context = CodeContext("a.py", 1, "python", 1, "x = 1", null)
         val map = ProjectMap(listOf("a.py"), mapOf("a.py" to listOf("def f()")))
         assertEquals(exampleKeys("trigger.question"), keys(Messages.trigger("id", Trigger(TriggerKind.QUESTION, "q"), context, map.hash)))
+        assertEquals(exampleKeys("idle"), keys(Messages.idle("id", context, map.hash)))
         assertEquals(exampleKeys("project_map"), keys(Messages.projectMap(map)))
         assertEquals(exampleKeys("hello.ide"), keys(Messages.hello("t".repeat(64))))
         val hello = JsonParser.parseString(Messages.hello("t".repeat(64))).asJsonObject
         assertEquals("ide", hello["role"].asString)
         assertEquals(0, hello["v"].asInt)
+    }
+
+    // --- idle (G6) -------------------------------------------------------------------------
+
+    private val idle get() = project.service<IdleDispatcher>()
+
+    /** What the 4 s timer would do, without waiting 4 s. */
+    private fun fireIdle(): List<Pair<ProjectMap, String>> {
+        val before = sender.sent.size
+        idle.fire(myFixture.editor.document)
+        idle.lastDispatch?.let { PlatformTestUtil.waitForPromise(it, TimeUnit.SECONDS.toMillis(10)) }
+        PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+        return sender.sent.drop(before)
+    }
+
+    fun testTypingInAPythonFileSchedulesAnIdleAndSendsNothingYet() {
+        myFixture.configureByText("load.py", "def load(path):\n    <caret>\n")
+        myFixture.type("data = ")
+        assertTrue(idle.isPending(myFixture.editor.document))
+        assertEmpty(sender.sent) // nothing is built or sent on the EDT while typing
+    }
+
+    fun testTypingInOtherFilesSchedulesNothing() {
+        myFixture.configureByText("notes.txt", "<caret>")
+        myFixture.type("hello")
+        assertFalse(idle.isPending(myFixture.editor.document))
+    }
+
+    fun testIdleSendsTheContextAroundTheCursor() {
+        myFixture.configureByText("load.py", "import json\n\ndef load(path):\n    with open(path) as f:\n        <caret>\n")
+        myFixture.type("data = ")
+        val sent = fireIdle()
+        assertEquals(1, sent.size)
+        val message = JsonParser.parseString(sent[0].second).asJsonObject
+        assertEquals("idle", message["type"].asString)
+        assertEquals("load.py", message["file"].asString)
+        assertEquals(5, message["line"].asInt)
+        assertEquals("python", message["language"].asString)
+        assertEquals(1, message["window"].asJsonObject["start"].asInt)
+        assertTrue(message["window"].asJsonObject["code"].asString.contains("        data = "))
+        assertTrue(message["scope"].asString.startsWith("def load(path):"))
+        assertEquals(sent[0].first.hash, message["project"].asString)
+    }
+
+    fun testIdleIsNotSentAgainForUnchangedCode() {
+        myFixture.configureByText("load.py", "def load(path):\n    <caret>\n")
+        myFixture.type("x")
+        assertEquals(1, fireIdle().size)
+        myFixture.type("y")
+        myFixture.type('\b') // back to the same code: nothing new to say
+        assertEmpty(fireIdle())
+        myFixture.type("z")
+        assertEquals(1, fireIdle().size)
     }
 
     fun testBrainDownIsSilentAndQuick() {
