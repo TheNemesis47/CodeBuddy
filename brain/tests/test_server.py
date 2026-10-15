@@ -19,7 +19,9 @@ TOKEN = "t" * 64
 
 
 def example(name: str) -> dict:
-    message = json.loads((REPO / "protocol" / "examples" / f"{name}.json").read_text())
+    message = json.loads(
+        (REPO / "protocol" / "examples" / f"{name}.json").read_text(encoding="utf-8")
+    )
     return message | ({"token": TOKEN} if message["type"] == "hello" else {})
 
 

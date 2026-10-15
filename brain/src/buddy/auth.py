@@ -27,7 +27,7 @@ def load_or_create_token(path: Path) -> str:
         # per-user data folder's ACL is what keeps the token private there.
         if os.name == "posix" and path.stat().st_mode & 0o077:
             path.chmod(0o600)
-        token = path.read_text().strip()
+        token = path.read_text(encoding="utf-8").strip()
         if len(token) >= TOKEN_BYTES:
             return token
         # Empty or truncated file: replace it rather than accept a weak token.

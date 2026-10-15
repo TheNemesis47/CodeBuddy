@@ -4,6 +4,7 @@ Passes when the overlay logs the answer_end for the trigger's id and saves its s
 answer is the stub's text. Starts and stops everything itself; runs on Linux (CI, under Xvfb),
 Windows and macOS.
 Usage: uv run --project brain python scripts/e2e_overlay.py OUTDIR [--port 8799]
+       … OUTDIR --bundle dist/CodeBuddy-linux-0.1.0   (the packaged brain and overlay instead)
 """
 
 import argparse
@@ -52,19 +53,26 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("out", type=Path)
     parser.add_argument("--port", type=int, default=8799)
+    parser.add_argument("--bundle", type=Path, help="a packaged build (packaging/build.py)")
     args = parser.parse_args()
     out: Path = args.out.resolve()
     out.mkdir(parents=True, exist_ok=True)
     home = Path(tempfile.mkdtemp(prefix="codebuddy-e2e-"))
     env = {**os.environ, "BUDDY_HOME": str(home), "BUDDY_PORT": str(args.port)}
     uv = os.environ.get("UV", "uv")
+    exe = ".exe" if sys.platform == "win32" else ""
+    if args.bundle:
+        brain_cmd = [str(args.bundle.resolve() / "brain" / f"buddy{exe}")]
+        overlay_cmd = [str(args.bundle.resolve() / "overlay" / f"codebuddy-overlay{exe}")]
+    else:
+        brain_cmd = [uv, "run", "--project", str(ROOT / "brain"), "buddy"]
+        overlay_cmd = [uv, "run", "--project", str(ROOT / "overlay"), "codebuddy-overlay"]
     procs: list[subprocess.Popen[bytes]] = []
     try:
         brain_log, overlay_log = out / "brain.log", out / "overlay.log"
         procs.append(
             start(
-                [uv, "run", "--project", str(ROOT / "brain"), "buddy", "serve",
-                 "--port", str(args.port), "--stub", STUB],
+                [*brain_cmd, "serve", "--port", str(args.port), "--stub", STUB],
                 env, brain_log,
             )
         )  # fmt: skip
@@ -72,14 +80,13 @@ def main() -> int:
             errors="replace"), 60, "the brain")
         procs.append(
             start(
-                [uv, "run", "--project", str(ROOT / "overlay"), "codebuddy-overlay",
-                 "--snapshots", str(out)],
+                [*overlay_cmd, "--snapshots", str(out)],
                 env, overlay_log,
             )
         )  # fmt: skip
         wait_for(lambda: "brain connected" in overlay_log.read_text(errors="replace"), 60,
                  "the overlay to connect")  # fmt: skip
-        token = (home / "token").read_text().strip()
+        token = (home / "token").read_text(encoding="utf-8").strip()
         answer_id = asyncio.run(send_trigger(args.port, token))
         shot = out / f"answer-{answer_id}.png"
         wait_for(lambda: shot.exists() and shot.stat().st_size > 0, 30, f"{shot.name}")

@@ -71,7 +71,7 @@ def eval_score() -> float | None:
         return stem[:10], int(stem[11:]) if stem[11:].isdigit() else 1
 
     for path in sorted(listed, key=order, reverse=True):
-        result = json.loads((ROOT / path).read_text())
+        result = json.loads((ROOT / path).read_text(encoding="utf-8"))
         if result.get("complete"):
             return float(result["total"])
     return 0.0
@@ -87,7 +87,7 @@ MEASURES = {
 
 
 def main() -> int:
-    floors = json.loads((ROOT / "quality/floors.json").read_text())
+    floors = json.loads((ROOT / "quality/floors.json").read_text(encoding="utf-8"))
     failed = False
     for name, floor in floors.items():
         measure = MEASURES.get(name)

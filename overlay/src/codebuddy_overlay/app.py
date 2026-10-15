@@ -1,6 +1,8 @@
 """`codebuddy-overlay`: connect to the brain, or play `--demo`; `--snapshots DIR` saves PNGs."""
 
 import argparse
+import shlex
+import subprocess
 import sys
 import time
 from collections.abc import Callable
@@ -147,12 +149,38 @@ class _Bridge:
         self._relay.status_signal.emit(status)
 
 
+def start_brain(command: str) -> subprocess.Popen[bytes]:
+    """The packaged launchers start the brain with the overlay (`--start-brain "…/buddy serve"`),
+    and quitting the overlay stops it. With no console window on Windows."""
+    flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    if sys.platform == "win32":  # non-POSIX split keeps the quotes around quoted paths
+        args = [part.strip('"') for part in shlex.split(command, posix=False)]
+    else:
+        args = shlex.split(command)
+    log(f"starting the brain: {args[0]}")
+    return subprocess.Popen(args, creationflags=flags)
+
+
+def stop_brain(process: subprocess.Popen[bytes]) -> None:
+    if process.poll() is None:
+        process.terminate()
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            process.kill()
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="codebuddy-overlay", description="CodeBuddy overlay")
     parser.add_argument("--demo", action="store_true", help="play every state, no brain needed")
     parser.add_argument("--snapshots", type=Path, metavar="DIR", help="save PNGs into DIR")
     parser.add_argument(
         "--quit-after", type=float, metavar="S", help="exit after S seconds (tests)"
+    )
+    parser.add_argument(
+        "--start-brain",
+        metavar="COMMAND",
+        help="start the brain with this command; stop it on exit",
     )
     args = parser.parse_args(argv)
 
@@ -162,6 +190,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.demo and args.snapshots:
         return demo_snapshots(app, args.snapshots)
 
+    brain = start_brain(args.start_brain) if args.start_brain and not args.demo else None
+    if brain is not None:
+        app.aboutToQuit.connect(lambda: stop_brain(brain))
     model = OverlayModel(QtScheduler())
     window = OverlayWindow(model)
     window.show()

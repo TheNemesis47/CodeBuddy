@@ -27,7 +27,7 @@ def test_command_disables_every_side_effect_and_keeps_code_out_of_argv() -> None
 def test_parse_fixture_stream() -> None:
     events = [
         e
-        for line in (FIXTURES / "claude_stream.jsonl").read_text().splitlines()
+        for line in (FIXTURES / "claude_stream.jsonl").read_text(encoding="utf-8").splitlines()
         if (e := parse_line(line)) is not None
     ]
     assert events == [
@@ -69,8 +69,8 @@ async def test_model_streams_from_the_subprocess_with_prompt_on_stdin(tmp_path: 
     exe = _fake_claude(tmp_path, f"sys.stdout.write(open({str(fixture)!r}).read())\n")
     events = await _collect(ClaudeCliModel("sonnet", executable=exe))
     assert events[-1] == Done("claude-sonnet-5-5", 719, 8)
-    assert (tmp_path / "stdin.txt").read_text() == PROMPT.user
-    assert "SECRET-CODE" not in (tmp_path / "argv.txt").read_text()
+    assert (tmp_path / "stdin.txt").read_text(encoding="utf-8") == PROMPT.user
+    assert "SECRET-CODE" not in (tmp_path / "argv.txt").read_text(encoding="utf-8")
 
 
 @pytest.mark.anyio

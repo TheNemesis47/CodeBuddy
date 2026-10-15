@@ -27,7 +27,7 @@ def _write(path: Path, first_tokens: list[int | None], kind: str = "question") -
 def test_one_answer_appends_one_json_line(tmp_path: Path) -> None:
     path = tmp_path / "home" / "latency.jsonl"  # the folder is created on first write
     LatencyLog(path).record(END, "question")
-    lines = path.read_text().splitlines()
+    lines = path.read_text(encoding="utf-8").splitlines()
     assert len(lines) == 1
     assert json.loads(lines[0]) == {
         "id": "a1",
@@ -53,14 +53,14 @@ def test_errors_are_not_logged(tmp_path: Path) -> None:
 
 def test_a_log_that_cannot_be_written_never_breaks_an_answer(tmp_path: Path) -> None:
     blocker = tmp_path / "file"
-    blocker.write_text("")
+    blocker.write_text("", encoding="utf-8")
     LatencyLog(blocker / "latency.jsonl").record(END, "question")  # parent is a file: no raise
 
 
 def test_missing_and_empty_files_have_no_records(tmp_path: Path) -> None:
     assert read_records(tmp_path / "nope.jsonl") == []
     empty = tmp_path / "latency.jsonl"
-    empty.write_text("")
+    empty.write_text("", encoding="utf-8")
     assert read_records(empty) == []
     assert summarize([]) is None
 

@@ -4,6 +4,7 @@ primary screen. It only draws what `OverlayModel` says; all behaviour lives in t
 from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import (
     QColor,
+    QContextMenuEvent,
     QEnterEvent,
     QFont,
     QMouseEvent,
@@ -11,7 +12,7 @@ from PySide6.QtGui import (
     QPainterPath,
     QPaintEvent,
 )
-from PySide6.QtWidgets import QApplication, QLabel, QPushButton, QTextBrowser, QWidget
+from PySide6.QtWidgets import QApplication, QLabel, QMenu, QPushButton, QTextBrowser, QWidget
 
 from codebuddy_overlay.answers import Status
 from codebuddy_overlay.geometry import EAR_WIDTH, PILL_HEIGHT, Layout, layout, top_center
@@ -164,8 +165,17 @@ class OverlayWindow(QWidget):
         self.model.pointer(False)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
-        if self.model.state is not State.EXPANDED:
+        if event.button() is Qt.MouseButton.LeftButton and self.model.state is not State.EXPANDED:
             self.model.click()
+
+    def quit_menu(self) -> QMenu:
+        """Right-click: the only way to quit a window with no frame and no taskbar entry."""
+        menu = QMenu(self)
+        menu.addAction("Esci da CodeBuddy", QApplication.quit)
+        return menu
+
+    def contextMenuEvent(self, event: QContextMenuEvent) -> None:
+        self.quit_menu().exec(event.globalPos())
 
 
 def _island_path(size: Layout) -> QPainterPath:

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=CodeBuddy
+Comment=Coding tutor at the top of the screen (brain + overlay)
+Exec=@DIR@/codebuddy.sh
+Icon=@DIR@/codebuddy.png
+Terminal=false
+Categories=Development;Education;
+StartupNotify=false

@@ -2,6 +2,7 @@
 
 import json
 import os
+import sys
 from functools import cache
 from pathlib import Path
 from typing import Any
@@ -16,7 +17,13 @@ class ProtocolError(ValueError):
 
 
 def schema_dir() -> Path:
-    default = Path(__file__).resolve().parents[3] / "protocol" / "schemas"
+    """$BUDDY_PROTOCOL_DIR, else `protocol/schemas` inside a packaged (PyInstaller) build, else the
+    repo's `protocol/schemas`."""
+    bundle = getattr(sys, "_MEIPASS", None)
+    if bundle is not None:
+        default = Path(bundle) / "protocol" / "schemas"
+    else:
+        default = Path(__file__).resolve().parents[3] / "protocol" / "schemas"
     return Path(os.environ.get("BUDDY_PROTOCOL_DIR", default))
 
 
@@ -24,7 +31,7 @@ def schema_dir() -> Path:
 def validators() -> dict[str, Draft202012Validator]:
     found = {}
     for path in sorted(schema_dir().glob("*.json")):
-        schema = json.loads(path.read_text())
+        schema = json.loads(path.read_text(encoding="utf-8"))
         Draft202012Validator.check_schema(schema)
         found[path.stem] = Draft202012Validator(schema)
     if not found:

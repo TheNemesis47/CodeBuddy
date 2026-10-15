@@ -1,0 +1,6 @@
+# LF everywhere (shell scripts break with CRLF on Windows runners), except Windows batch files.
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.png binary
+*.jar binary

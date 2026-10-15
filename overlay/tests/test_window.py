@@ -129,3 +129,36 @@ def test_demo_snapshots_save_one_png_per_state(qapp: QApplication, tmp_path: Pat
         "demo-8-hint-open.png",
     ]
     assert all(p.stat().st_size > 200 for p in tmp_path.glob("*.png"))
+
+
+def test_right_click_offers_quit(window) -> None:
+    w, _, _ = window
+    actions = [a.text() for a in w.quit_menu().actions()]
+    assert actions == ["Esci da CodeBuddy"]
+
+
+def test_start_brain_runs_the_command_and_stop_ends_it() -> None:
+    import shlex
+
+    command = shlex.join([sys.executable, "-c", "import time; time.sleep(30)"])
+    if sys.platform == "win32":
+        command = f'"{sys.executable}" -c "import time; time.sleep(30)"'
+    process = overlay_app.start_brain(command)
+    assert process.poll() is None
+    overlay_app.stop_brain(process)
+    assert process.poll() is not None
+
+
+def test_main_starts_the_brain_and_stops_it_on_quit(
+    qapp: QApplication, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Through `main()` as the launchers call it: --start-brain, then quit after a moment."""
+    started: list[str] = []
+    stopped: list[object] = []
+    monkeypatch.setenv("BUDDY_HOME", str(tmp_path))  # no token: the client just stays offline
+    monkeypatch.setenv("BUDDY_PORT", "1")
+    monkeypatch.setattr(overlay_app, "start_brain", lambda cmd: started.append(cmd) or "proc")
+    monkeypatch.setattr(overlay_app, "stop_brain", stopped.append)
+    assert overlay_app.main(["--start-brain", "buddy serve", "--quit-after", "0.2"]) == 0
+    assert started == ["buddy serve"]
+    assert stopped == ["proc"]
