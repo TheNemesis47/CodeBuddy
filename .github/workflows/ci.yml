@@ -68,7 +68,9 @@ jobs:
             ide-pycharm/build/reports/tests/
       - name: Overlay demo snapshots
         env:
-          QT_QPA_PLATFORM: ${{ runner.os == 'Linux' && 'xcb' || 'offscreen' }}
+          # Native rendering where the runner has a display (Xvfb on Linux, the desktop session on
+          # Windows): Qt's offscreen backend has no fonts on Windows and draws every glyph as a box.
+          QT_QPA_PLATFORM: ${{ runner.os == 'Linux' && 'xcb' || (runner.os == 'Windows' && 'windows' || 'offscreen') }}
         run: |
           cmd="uv run --project overlay codebuddy-overlay --demo --snapshots snapshots/${{ runner.os }}"
           if [ "${{ runner.os }}" = Linux ]; then xvfb-run -a --server-args="-screen 0 1920x1080x24" $cmd; else $cmd; fi
@@ -131,11 +133,13 @@ jobs:
             libegl1 libgl1 libdbus-1-3 libfontconfig1 fonts-dejavu-core
       - name: Build
         env:
-          QT_QPA_PLATFORM: offscreen
-        run: uv run --project overlay python packaging/build.py --plugin plugin/codebuddy-pycharm-0.1.0.zip
+          QT_QPA_PLATFORM: ${{ runner.os == 'Linux' && 'xcb' || (runner.os == 'Windows' && 'windows' || 'offscreen') }}
+        run: |
+          cmd="uv run --project overlay python packaging/build.py --plugin plugin/codebuddy-pycharm-0.1.0.zip"
+          if [ "${{ runner.os }}" = Linux ]; then xvfb-run -a --server-args="-screen 0 1920x1080x24" $cmd; else $cmd; fi
       - name: End to end on the packaged build
         env:
-          QT_QPA_PLATFORM: ${{ runner.os == 'Linux' && 'xcb' || 'offscreen' }}
+          QT_QPA_PLATFORM: ${{ runner.os == 'Linux' && 'xcb' || (runner.os == 'Windows' && 'windows' || 'offscreen') }}
         run: |
           bundle=$(ls -d dist/CodeBuddy-*-0.1.0 | head -1)
           cmd="uv run --project brain python scripts/e2e_overlay.py e2e-bundle --bundle $bundle"
