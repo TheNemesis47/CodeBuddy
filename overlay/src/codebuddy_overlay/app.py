@@ -1,6 +1,7 @@
 """`codebuddy-overlay`: connect to the brain, or play `--demo`; `--snapshots DIR` saves PNGs."""
 
 import argparse
+import os
 import shlex
 import subprocess
 import sys
@@ -12,7 +13,7 @@ from pathlib import Path
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QApplication
 
-from codebuddy_overlay import demo
+from codebuddy_overlay import demo, desktop
 from codebuddy_overlay.answers import Status
 from codebuddy_overlay.client import ConnectionLoop, Endpoint, start_in_background
 from codebuddy_overlay.island import ManualScheduler, ScheduledWork
@@ -170,6 +171,15 @@ def stop_brain(process: subprocess.Popen[bytes]) -> None:
             process.kill()
 
 
+def placement(app: QApplication) -> desktop.TopPlacement:
+    screen = app.primaryScreen()
+    if screen is None:
+        return desktop.TopPlacement()
+    found, source = desktop.top_placement(os.environ, screen.geometry().x(), screen.geometry().y())
+    log(f"{source}; Qt platform {app.platformName()}")
+    return found
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="codebuddy-overlay", description="CodeBuddy overlay")
     parser.add_argument("--demo", action="store_true", help="play every state, no brain needed")
@@ -184,6 +194,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
+    if platform := desktop.qt_platform_for(os.environ, sys.platform):
+        os.environ["QT_QPA_PLATFORM"] = platform  # before Qt starts (see desktop.py)
+        log(f"Wayland session: using XWayland ({platform}) to place the panel")
     app = QApplication.instance() or QApplication(sys.argv[:1])
     assert isinstance(app, QApplication)
     app.setQuitOnLastWindowClosed(False)
@@ -194,7 +207,7 @@ def main(argv: list[str] | None = None) -> int:
     if brain is not None:
         app.aboutToQuit.connect(lambda: stop_brain(brain))
     model = OverlayModel(QtScheduler())
-    window = OverlayWindow(model)
+    window = OverlayWindow(model, placement(app))
     window.show()
     if args.demo:
         run_demo(model)

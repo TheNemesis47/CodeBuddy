@@ -181,3 +181,31 @@ def test_code_gets_a_real_monospace_font(window, qapp: QApplication) -> None:
             iterator += 1
         block = block.next()
     assert code and all(families and families[0] == "Menlo" for families in code)
+
+
+def test_a_bar_the_desktop_hides_pushes_every_state_down(qapp: QApplication) -> None:
+    """Hyprland + XWayland: Qt sees the whole screen free, the compositor reserves 30 px."""
+    from codebuddy_overlay.desktop import TopPlacement
+
+    model = OverlayModel(ManualScheduler())
+    model.set_connection(Connection.CONNECTED)
+    w = OverlayWindow(model, TopPlacement(reserved=30))
+    w.show()
+    screen = qapp.primaryScreen()
+    area, top = (
+        screen.availableGeometry(),
+        max(screen.availableGeometry().y(), screen.geometry().y() + 30),
+    )
+    try:
+        for state, action in [
+            (State.HIDDEN, lambda: None),
+            (State.PEEK, lambda: model.pointer(True)),
+            (State.EXPANDED, model.click),
+        ]:
+            action()
+            qapp.processEvents()
+            size = layout(state)
+            assert (w.x(), w.y()) == top_center(area.x(), top, area.width(), size)
+            assert w.y() >= screen.geometry().y() + 30
+    finally:
+        w.close()
