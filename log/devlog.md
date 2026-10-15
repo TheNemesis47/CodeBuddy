@@ -2,6 +2,56 @@
 
 Newest first. Terse. Written at the end of every task so the next agent can pick up.
 
+## 2026-10-15 11:30: Linux and Windows (branch feat/cross-platform, from main)
+
+- **Decision:** `docs/decisions.md` 2026-10-15: the Mac keeps the Swift notch; Linux and Windows get
+  `overlay/` (Python + PySide6-Essentials), a `notch`-role client on protocol v0 (no protocol change).
+- **Landed:**
+  - `overlay/`: frameless, always-on-top, no-focus Qt window at the top centre of the primary
+    screen; hidden pill → peek → expanded with the notch's sizes and timings; Sprout (QPainter
+    port) in every state; streamed markdown (code in a real monospace font); hint peek with the
+    70-char preview, click to open; silent reconnect with 1→15 s backoff on a thread
+    (`websockets`); right-click → *Esci*; `--demo`, `--demo --snapshots DIR`, brain-mode
+    `--snapshots`; `--start-brain CMD` for the launchers.
+  - `protocol/scenarios/`: 12 behaviour scenarios replayed by **both** `notch` (`ScenarioTests.swift`)
+    and `overlay` (`test_scenarios.py`). Mutation check: a broken expectation fails Swift; dropping
+    messages fails 5 Python scenarios.
+  - Brain: `BUDDY_HOME` from platformdirs (same path on macOS), `claude` via `shutil.which`
+    (`claude.exe`/`.cmd`), POSIX mode bits only on POSIX, explicit UTF-8 everywhere (Windows
+    defaults to cp1252), schemas found inside a frozen build, `buddy serve --stub TEXT`.
+  - Plugin: `BrainConfig` used the macOS folder on every OS (it would never have found the token
+    on Linux/Windows); now platformdirs-equivalent. Downloads PyCharm 2026.2.3 when there is no
+    local install.
+  - `scripts/check` OS-aware (notch macOS only, overlay everywhere); ratchet counts
+    `overlay_tests` and skips notch off macOS. `scripts/e2e_overlay.py` (`--bundle` for packages).
+  - `packaging/build.py` (PyInstaller onedir brain + overlay, launchers `CodeBuddy.cmd` /
+    `codebuddy.sh` + `.desktop` + Sprout icon, plugin zip, INSTALL docs; smoke-tests the bundle);
+    `INSTALL.md`, `docs/install/{windows,linux,macos}.md`.
+  - `.github/workflows/ci.yml` (closes G9), `.gitattributes` (LF for scripts).
+- **Numbers:** tests brain 202 → 203, notch 42 (40 + 2 scenario tests), plugin 26 → 30, overlay
+  **58** (new floor `overlay_tests`). Packages: Linux 100 MB `.tar.gz`, Windows 68 MB `.zip`.
+- **CI runs:** 38707988352: Linux and macOS green, Windows red (`JsonTest` compared a path with
+  `/`). 38709298204: all green, but the Windows snapshots drew every glyph as a box (Qt
+  `offscreen` has no fonts on Windows). **38710592165: all green** with native rendering on Windows
+  and xcb under Xvfb on Linux: gate ×3, Linux e2e, package ×2 each with an e2e on the packaged build.
+  Bugs only the runs found: the overlay's missing `--start-brain` argument (bundle e2e), the
+  Windows path test, the tofu snapshots.
+- **Snapshots (downloaded from run 38710592165 and opened):**
+  `docs/screenshots/overlay/ci-linux-demo-states.png` and `ci-windows-demo-states.png` (8 states
+  each, stacked: pill, peek, streaming, done with footer, peek ✓, pill, hint peek with preview,
+  hint open; Sprout seed → half → full; DejaVu/Segoe UI text, monospace code),
+  `ci-linux-e2e-answer.png` (e2e from source) and `ci-windows-bundle-e2e-answer.png` (e2e on the
+  packaged Windows build: «Alla riga 6 il file **non viene chiuso**…», footer `stub · primo token
+  33 ms · totale 207 ms`). Artifacts: `overlay-snapshots-{Linux,Windows,macOS}`, `e2e-linux`,
+  `bundle-check-{Linux,Windows}`, `codebuddy-{Linux,Windows}`.
+- **E2E on the Linux runner:** `overlay: answer_end id=e2e-1792055258 model=stub
+  first_token_ms=20 total_ms=163` and its snapshot; passes.
+- **Still open:** **G15 (Human):** run the packages on real Windows/Linux desktops with PyCharm and
+  `claude`, decide on code signing (SmartScreen warns), push `v0.1.0` and publish the draft
+  release CI makes. Small: the close button's `⌃` is tiny on Linux; code *blocks* aren't shaded on
+  Windows (inline code is); on Wayland the panel position is up to the compositor (decisions.md).
+  G13, G14, G11, G12, G8 unchanged.
+
 ## 2026-10-15 13:00: first push to GitHub (main)
 
 - **Landed:** public remote https://github.com/TheNemesis47/CodeBuddy, `main` pushed (174 files),
