@@ -2,6 +2,32 @@
 
 Newest first. Terse. Written at the end of every task so the next agent can pick up.
 
+## 2026-10-15 16:00: 0.1.1 tester report fixed (branch fix/overlay-hyprland)
+
+- **From** `~/Downloads/codebuddy-0.1.1-report.md` (Omarchy, Hyprland 0.56.2, packaged 0.1.1).
+  Six bugs, all fixed:
+  1. `QT_QPA_PLATFORM=wayland;xcb` (a distro's fallback chain) kept the panel on Wayland. Now only
+     a single platform counts as a choice.
+  2. The bundle's `LD_LIBRARY_PATH` broke the system `hyprctl` (offset 0). `desktop.child_env`
+     gives back PyInstaller's `*_ORIG` to the probes and the brain, and a failing probe now logs
+     its stderr.
+  3. `app.placement` never passed the config's `top_offset`. `configured` is now required, and a
+     test goes through `app.placement`.
+  4. and 5. Hyprland gives an override-redirect XWayland window no pointer events and keeps it on
+     one workspace. On Hyprland the panel is now a `_NET_WM_WINDOW_TYPE_DOCK` window
+     (`overlay/.../x11.py`, libX11 via ctypes, set before the first map); everywhere else it stays
+     override-redirect. Sway would tile a dock and centre a floating window, so it can't be dock
+     everywhere. `BUDDY_X11_WINDOW=dock|override` overrides.
+  6. `#! teoria` with a space works in the brain and the plugin; an unknown `#!word` gets an
+     editor hint (`EditorHints` service). Shebangs are excluded.
+- **Why CI missed them:** the e2e ran from source and on Sway, and nothing touched the panel with
+  a pointer. New: `scripts/smoke_bundle_desktop.py` runs the packaged overlay with a fake
+  `hyprctl` (package job, Linux), and `e2e_wayland.py` now moves a virtual pointer (`wlrctl` +
+  `swaymsg seat - cursor`): hover → ears, click → open; it also uses `QT_QPA_PLATFORM=wayland;xcb`.
+- **Numbers:** brain 262, plugin 48, overlay 112 (floors raised); notch 42; eval 99.1.
+- **Still open:** Hyprland itself is not in CI. G17 human check with the next build (hover,
+  click, workspaces, the "panel no longer drawn after 15 min" observation). G16.
+
 ## 2026-10-15 14:10: v0.1.1 (main)
 
 - **Landed:** `feat/settings` (with `fix/overlay-wayland`) merged into `main` at the user's request

@@ -6,11 +6,10 @@ y = 0, under the bar. Passes when, during `--demo`, the panel takes all three si
 open panel), always centred and always right below the bar, and the overlay logged that the
 offset came from Sway. Saves screenshots (grim) of the whole screen per state.
 
-Then the pointer, through the compositor as a real mouse goes (a virtual pointer, wlrctl, moved
-with `swaymsg seat - cursor`): over the pill the panel must open its ears, and a click must open
-it. 0.1.1 shipped a panel Hyprland gave no pointer events to, and no test had ever touched it.
+Then the pointer, through the compositor as a real mouse goes (a virtual pointer device,
+scripts/wl_pointer.py): over the pill the panel must open its ears, and a click must open it. 0.1.1 shipped a panel Hyprland gave no pointer events to, and no test had ever touched it.
 
-Linux only. Needs: sway, xwayland, grim, x11-utils (xwininfo), wlrctl.
+Linux only. Needs: sway, xwayland, grim, x11-utils (xwininfo).
 Usage: uv run --project overlay python scripts/e2e_wayland.py OUTDIR
 """
 
@@ -23,6 +22,8 @@ import sys
 import tempfile
 import time
 from pathlib import Path
+
+from wl_pointer import VirtualPointer
 
 ROOT = Path(__file__).resolve().parent.parent
 SCREEN = (1920, 1080)
@@ -43,7 +44,7 @@ exec {python} {script} inside {out}
 
 def outside(out: Path) -> int:
     """Start Sway headless; it runs `inside` and exits when that is done."""
-    for tool in ("sway", "grim", "xwininfo", "wlrctl"):
+    for tool in ("sway", "grim", "xwininfo"):
         if shutil.which(tool) is None:
             raise SystemExit(f"e2e-wayland: {tool} is not installed")
     out.mkdir(parents=True, exist_ok=True)
@@ -113,10 +114,6 @@ def wait_for_size(size: tuple[int, int], within_s: float) -> tuple[int, int, int
     return None
 
 
-def sway(*command: str) -> None:
-    subprocess.run(["swaymsg", *command], capture_output=True, check=False)
-
-
 def pointer_phase(out: Path, env: dict[str, str], bar: int) -> list[str]:
     """No brain (it stays "off"): hover the pill → ears, click → open panel."""
     home = Path(tempfile.mkdtemp(prefix="codebuddy-home-"))
@@ -127,20 +124,24 @@ def pointer_phase(out: Path, env: dict[str, str], bar: int) -> list[str]:
         stderr=subprocess.STDOUT,
     )
     problems = []
+    mouse = None
     try:
         hidden = wait_for_size(SIZES["hidden"], 8)
         if hidden is None:
             return ["pointer: the pill never showed"]
-        # A headless Sway has no pointer device: a virtual one gives the seat a pointer.
-        subprocess.run(["wlrctl", "pointer", "move", "1", "1"], check=False, timeout=5)
+        # A headless Sway has no pointer device: a virtual one gives the seat (and XWayland) one.
+        mouse = VirtualPointer(*SCREEN)
+        mouse.move_to(SCREEN[0] // 2, SCREEN[1] // 2)  # away from the panel first
+        time.sleep(0.5)
         x, y, w, h = hidden
-        sway("seat", "-", "cursor", "set", str(x + w // 2), str(y + h // 2))
+        mouse.move_to(x + w // 2, y + h // 2)
         if wait_for_size(SIZES["peek"], 4) is None:
             problems.append("pointer: hovering the pill did not open its ears (no enter event)")
         else:
             subprocess.run(["grim", str(out / "pointer-peek.png")], check=False)
-        sway("seat", "-", "cursor", "press", "button1")
-        sway("seat", "-", "cursor", "release", "button1")
+        peek = panel_geometry() or hidden
+        mouse.move_to(peek[0] + peek[2] // 2, peek[1] + peek[3] // 2)
+        mouse.click()
         if wait_for_size(SIZES["expanded"], 4) is None:
             problems.append("pointer: clicking the pill did not open the panel (no press event)")
         else:
@@ -148,8 +149,15 @@ def pointer_phase(out: Path, env: dict[str, str], bar: int) -> list[str]:
         geometry = panel_geometry()
         if geometry is not None and geometry[1] != bar:
             problems.append(f"pointer: the panel moved to y = {geometry[1]}, expected {bar}")
+    except (OSError, RuntimeError) as error:
+        problems.append(f"pointer: no virtual mouse ({error})")
     finally:
         overlay.kill()
+        if mouse is not None:
+            try:
+                mouse.close()
+            except OSError, RuntimeError:
+                pass  # the compositor is about to exit anyway
     return problems
 
 
