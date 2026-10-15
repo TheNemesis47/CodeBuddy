@@ -112,7 +112,8 @@ at every step.**
 
 ## 6. Git
 
-- Local repo only (no remote yet). The `pre-push` hook runs `./scripts/check` once a remote exists.
+- Remote: `origin` = https://github.com/TheNemesis47/CodeBuddy (public). The `pre-push` hook runs
+  `./scripts/check`.
   Enable hooks with `git config core.hooksPath .githooks`.
 - One branch per slice: `feat/<module>-<topic>`, `fix/<module>-<topic>`, `docs/<topic>`.
 - Commits: Conventional Commits in English (`feat(brain): stream claude answers`). The subject says

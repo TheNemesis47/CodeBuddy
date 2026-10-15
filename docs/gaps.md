@@ -18,7 +18,7 @@ estimate here. **Human** marks what an agent can't finish alone.
 | ~~G6~~ | ~~Proactive idle hint on the local engine + rate limit + no-cloud test (criterion 2)~~ (done 2026-10-14) | feature | — | — | agent |
 | G7 | Enforce module boundaries automatically | tooling | medium | 1 h | agent |
 | G8 | Sprout final design | feature | medium | — | **Human** |
-| G9 | CI on GitHub Actions | tooling | low | 1 h | **Human** (create remote) |
+| G9 | CI on GitHub Actions (remote exists since 2026-10-15) | tooling | low | 1 h | agent |
 | ~~G10~~ | ~~Evals: snippet set + scorer for suggestion quality~~ (done 2026-10-15: score 99.1) | tooling | — | — | agent |
 | G14 | Judge the borderline eval answers by hand; make the cases harder once the score saturates | quality | medium | 1 h | **Human** + agent |
 | G11 | Real-screen check of the notch: hover, click, Spaces, full screen | UX | medium | 1 h | **Human** |
@@ -137,7 +137,8 @@ Concept: a seed → sprout → plant → tree that grows with the skill map. Nee
 
 ## G9: CI
 
-The gate is local only (`scripts/check` + `pre-push`). Once there is a GitHub remote, add one
+The gate is local only (`scripts/check` + `pre-push`). The GitHub remote exists since 2026-10-15
+(https://github.com/TheNemesis47/CodeBuddy). Add one
 Actions job on macOS that runs `./scripts/check`.
 
 ## G11: Notch on the real screen (Human)

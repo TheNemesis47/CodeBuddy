@@ -2,6 +2,19 @@
 
 Newest first. Terse. Written at the end of every task so the next agent can pick up.
 
+## 2026-10-15 13:00: first push to GitHub (main)
+
+- **Landed:** public remote https://github.com/TheNemesis47/CodeBuddy, `main` pushed (174 files),
+  `core.hooksPath .githooks` set, so `pre-push` runs `./scripts/check` (it ran: OK).
+- **History rewritten, with the user's explicit OK:** commit `2cc77ed` had added the IDE sandbox
+  `ide-pycharm/.intellijPlatform/` (~1.7k files, 345 of 348 MB of history: caches and logs).
+  `git filter-repo --invert-paths --path ide-pycharm/.intellijPlatform/` on all refs; pack
+  36 MB -> 1.4 MB; the tree of `main` is unchanged (same tree hash), commit hashes changed.
+  Backup of the old history: `~/Documents/CodeBuddy-backups/codebuddy-2026-10-15-before-filter.bundle`.
+- **Numbers:** unchanged: tests 196/40/26, eval score 99.1, MVP 6/6.
+- **Still open:** G9 CI can start now (the remote exists). No LICENSE file yet: the repo is public
+  but "all rights reserved" until the user picks one (Human). Human: G13, G11.
+
 ## 2026-10-15 12:30: G10 evals (branch feat/evals, from main)
 
 - **Landed:** `evals/cases/` 29 cases (18 `hint`, 8 `#?`, 3 `#!teoria`) + `evals/schema/case.schema.json`;
