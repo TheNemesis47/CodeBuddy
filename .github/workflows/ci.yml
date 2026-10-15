@@ -6,6 +6,9 @@ on:
   push:
     branches: ["**"]
     tags: ["v*"]
+    # Docs-only pushes (devlog, gaps, ROADMAP…) don't change what the gate checks. Path filters
+    # are not evaluated for tag pushes, so a release tag always runs everything.
+    paths-ignore: ["**.md", "docs/**", "log/**"]
   pull_request:
   workflow_dispatch:
 
