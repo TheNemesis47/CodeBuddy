@@ -7,8 +7,9 @@
     own line and press Enter: the question and the code around it go to the local CodeBuddy brain,
     and the answer shows up in the notch. When you stop typing in a Python file for 4 seconds, the
     code around the cursor goes to the brain too, which may peek out with one short hint from a
-    local model. The plugin never edits your code, except for the
-    "CodeBuddy: Clear Triggers" action.
+    local model. Settings → Tools → CodeBuddy picks who answers (Claude Code, OpenRouter or your own
+    OpenAI-compatible server) and where the hint engine runs. The plugin never edits your code,
+    except for the "CodeBuddy: Clear Triggers" action.
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
@@ -17,6 +18,8 @@
     <extensions defaultExtensionNs="com.intellij">
         <enterHandlerDelegate implementation="dev.codebuddy.pycharm.TriggerEnterHandler"/>
         <editorFactoryDocumentListener implementation="dev.codebuddy.pycharm.IdleDocumentListener"/>
+        <applicationConfigurable parentId="tools" id="dev.codebuddy.settings" displayName="CodeBuddy"
+                                 instance="dev.codebuddy.pycharm.CodeBuddyConfigurable"/>
         <applicationService serviceInterface="dev.codebuddy.pycharm.BrainSender"
                             serviceImplementation="dev.codebuddy.pycharm.BrainConnection"/>
     </extensions>

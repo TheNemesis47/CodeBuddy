@@ -38,8 +38,10 @@ The panel handles these by itself; nothing to configure on most desktops:
   says where the offset came from (`top offset 30 px (from hyprland)`).
 
 On any other compositor with a top bar (river, niri, labwc…), if the panel opens under the bar and
-can't be clicked, set the bar's height by hand: `BUDDY_TOP_OFFSET=32 ./codebuddy.sh` (it wins
-over the automatic value).
+can't be clicked, set the bar's height by hand: in PyCharm → Settings → Tools → CodeBuddy → "Space
+above it" (saved as `top_offset` under `[overlay]` in the settings file), or for one run
+`BUDDY_TOP_OFFSET=32 ./codebuddy.sh`. The env var wins over the file, and both win over the
+automatic value. Restart CodeBuddy after changing it.
 
 `install-desktop-entry.sh` keeps a menu entry you edited as `codebuddy.desktop.bak` before
 writing the new one.

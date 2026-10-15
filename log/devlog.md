@@ -2,6 +2,41 @@
 
 Newest first. Terse. Written at the end of every task so the next agent can pick up.
 
+## 2026-10-15 13:40: Wayland/top-bar fix + settings page (branches fix/overlay-wayland, feat/settings)
+
+- **From a tester's report** (Omarchy/Hyprland 0.56.2, `~/Downloads/codebuddy-wayland-report.md`):
+  on native Wayland the panel never resized; under XWayland it opened under the layer-shell bar
+  (unclickable); the tiling WM tiled it. Fixed in the overlay for any compositor, no user config:
+  Wayland + XWayland → Qt on `xcb`; on xcb the window is override-redirect (never tiled, moved or
+  decorated); top offset = `BUDDY_TOP_OFFSET` > `[overlay] top_offset` > compositor
+  (`hyprctl -j monitors` reserved top, `swaymsg` workspace rect) > Qt work area (GNOME/KDE/X11).
+  `install-desktop-entry.sh` keeps an edited entry as `.bak`. New CI job **e2e-wayland**: Sway
+  headless + swaybar, real geometry via `xwininfo`, screenshots via `grim`. Run 38724146815 green
+  on all jobs; panel at y = 23 (bar height), centred, 80x24 → 232x24 → 520x380, log "top offset
+  23 px (from sway)". Screenshots downloaded and opened: `docs/screenshots/overlay/ci-sway-{hidden,
+  peek,expanded}.png`.
+- **Settings** (decision 2026-10-15): `config.toml` owned by the brain (`buddy/settings.py`,
+  `keys.py`, `providers.py`), PyCharm page Settings → Tools → CodeBuddy (`CodeBuddyConfigurable`,
+  `BrainRequests` on its own socket, never on the EDT). Answers: Claude Code (default) /
+  OpenRouter (key) / OpenAI-compatible server; hint engines: list + model + key; `allow_remote`
+  for any non-loopback address (brain refuses to start otherwise); hints never to OpenRouter.
+  Protocol v0 + `settings_get/settings_set/settings/models_get/models` (new types, no bump).
+  `LocalModel` → `OpenAIModel` (auth header, optional sampling, "model @ host" for remote).
+- **Live runs:** the page against a real brain (`LiveSettingsTest`, -Pe2e): loads, the brain
+  refuses a remote URL without `allow_remote`, saves with it; PNG opened and fixed twice (key fields
+  collapsed, path too wide, Claude model kept after switching provider):
+  `docs/screenshots/plugin/settings-page.png`. Brain with a remote-style engine (Qwen3-Coder-30B-A3B
+  on llama.cpp, reached as `http://localtest.me:8080`, a hostname the brain treats as another
+  machine; my sandbox can't reach the Mac's own LAN IP): refused to start without `allow_remote`
+  (exit 2, clear message); with it, `#?` first token 267 ms, total 1697 ms, footer
+  "Qwen3-Coder-30B-A3B @ localtest.me:8080"; hint 244 / 764 ms. Engine and brain stopped.
+- **Numbers:** tests brain 207 → 257, plugin 30 → 45, overlay 58 → 93, notch 42; floors raised.
+  Mutations caught: no network check (4), hint fallback to the cloud (5), key echoed (2), placement
+  ignoring the bar (2), no override-redirect (1).
+- **Still open:** G16 (Qwen as answers provider rewrote the student's line: evals per provider).
+  Human: G17 (settings page in real PyCharm, OpenRouter key, WireGuard to the Mac, Hyprland check),
+  G15, G13, G11. Scratch folder `~/Library/Caches/codebuddy-live` (test token/config) left in place.
+
 ## 2026-10-15 13:50: v0.1.0 released (main)
 
 - **Landed:** `feat/cross-platform` merged into `main` at the user's request (0d81117); tag `v0.1.0`;

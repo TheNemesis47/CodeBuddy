@@ -84,7 +84,7 @@ class Settings:
         urls = list(self.hints.urls)
         if self.answers.provider == "openai-compatible":
             urls.append(self.answers.url)
-        return [u for u in urls if u and not is_loopback(u)]
+        return list(dict.fromkeys(u for u in urls if u and not is_loopback(u)))
 
 
 def config_path(env: Mapping[str, str] = os.environ) -> Path:
