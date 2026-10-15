@@ -9,7 +9,7 @@ EXAMPLES = sorted((REPO / "protocol" / "examples").glob("*.json"))
 
 
 def test_schemas_are_valid_and_found() -> None:
-    assert len(validators()) == 9
+    assert len(validators()) == 14
 
 
 @pytest.mark.parametrize("path", EXAMPLES, ids=lambda p: p.name)

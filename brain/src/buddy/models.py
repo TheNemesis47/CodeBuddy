@@ -27,8 +27,11 @@ class ModelError(Exception):
 
 
 class Model(Protocol):
-    name: str
-    is_local: bool
+    @property
+    def name(self) -> str: ...
+
+    @property
+    def is_local(self) -> bool: ...
 
     def stream(self, prompt: Prompt) -> AsyncIterator[ModelEvent]:
         """Yield TextDelta chunks, then exactly one Done. Raise ModelError on failure."""

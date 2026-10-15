@@ -16,8 +16,10 @@ Mac it appears in the notch; on Linux and Windows it uses a small panel.
 | `#!teoria context manager` + Enter | A short explanation of the concept, tied to your code |
 | *(nothing: you stop typing for 4 s)* | At most one small hint every 3 minutes, from a **local** model only, and only when the code has changed |
 
-Proactive hints never go to the cloud unless you turn on `BUDDY_PROACTIVE_CLOUD=1`. Questions you
-ask go to Claude through your Claude Code subscription. There are no API keys in this repo.
+Proactive hints never go to the cloud unless you turn it on. Questions you ask go to Claude through
+your Claude Code subscription by default; in **PyCharm → Settings → Tools → CodeBuddy** you can pick
+OpenRouter or your own OpenAI-compatible server instead (for example your Mac over WireGuard), and
+where the hint engine runs. There are no API keys in this repo.
 
 ## Install
 

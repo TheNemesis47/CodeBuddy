@@ -5,7 +5,7 @@ from pathlib import Path
 
 import anyio
 import pytest
-from conftest import REPO, FakeModel
+from conftest import CODER, REPO, FakeModel
 from fastapi.testclient import TestClient
 from starlette.testclient import WebSocketTestSession
 from starlette.websockets import WebSocketDisconnect, WebSocketState
@@ -368,3 +368,126 @@ async def test_a_failed_answer_is_not_logged(tmp_path: Path) -> None:
     await send(brain, example("trigger.question"))
     assert notch.received[-1]["type"] == "error"
     assert read_records(path) == []
+
+
+# The settings page (settings_get / settings_set / models_get), over the IDE socket.
+
+
+def settings_app(tmp_path: Path, cloud: FakeModel, engine_url: str = "http://127.0.0.1:9"):
+    from test_providers import make_store
+
+    store = make_store(tmp_path, openrouter_url=engine_url)
+    return server.create_app(cloud, TOKEN, settings=store), store
+
+
+def request(ide: WebSocketTestSession, message: dict) -> dict:
+    ide.send_json(validate(message))
+    reply = validate(ide.receive_json())
+    assert reply["id"] == message["id"]
+    return reply
+
+
+def test_the_settings_page_reads_the_settings_without_keys(
+    tmp_path: Path, cloud: FakeModel
+) -> None:
+    app, store = settings_app(tmp_path, cloud)
+    store.keys.update({"openrouter": "sk-or-very-secret"})
+    with TestClient(app) as test_client, connect(test_client, "ide") as ide:
+        reply = request(ide, example("settings_get"))
+    assert reply["type"] == "settings"
+    assert reply["settings"]["answers"]["provider"] == "claude-code"
+    assert reply["keys"] == {"openrouter": True, "answers_server": False, "hints_server": False}
+    assert reply["path"] == str(tmp_path / "config.toml")
+    assert "sk-or-very-secret" not in json.dumps(reply)
+
+
+def test_saving_switches_the_answering_model_at_once(
+    tmp_path: Path, cloud: FakeModel, engine
+) -> None:
+    app, _ = settings_app(tmp_path, cloud, engine.url)
+    new = example("settings_set") | {
+        "settings": example("settings_set")["settings"]
+        | {"answers": {"provider": "openrouter", "model": "z-ai/glm-4.6", "url": ""}},
+        "keys": {"openrouter": "sk-or-1"},
+    }
+    with TestClient(app) as test_client:
+        with connect(test_client, "ide") as ide:
+            reply = request(ide, new)
+            assert reply["type"] == "settings" and reply["keys"]["openrouter"] is True
+            assert app.state.brain.cloud.name == "openrouter:z-ai/glm-4.6"
+        with connect(test_client, "notch") as notch, connect(test_client, "ide") as ide:
+            trigger = example("trigger.question")
+            ide.send_json(trigger)
+            received = receive_until_end(notch, trigger["id"])
+    assert received[-1]["model"] == "openrouter:z-ai/glm-4.6"
+    assert engine.requests[-1]["model"] == "z-ai/glm-4.6"
+    assert cloud.prompts == []  # the model it started with is no longer asked
+    assert 'provider = "openrouter"' in (tmp_path / "config.toml").read_text(encoding="utf-8")
+
+
+def test_bad_settings_get_an_error_and_change_nothing(tmp_path: Path, cloud: FakeModel) -> None:
+    app, store = settings_app(tmp_path, cloud)
+    before = app.state.brain.cloud
+    remote = example("settings_set") | {
+        "settings": example("settings_set")["settings"] | {"network": {"allow_remote": False}}
+    }
+    with TestClient(app) as test_client, connect(test_client, "ide") as ide:
+        reply = request(ide, remote)
+    assert reply["type"] == "error" and "allow_remote" in reply["message"]
+    assert not (tmp_path / "config.toml").exists()
+    assert app.state.brain.cloud is before
+    assert store.effective.answers.provider == "claude-code"
+
+
+def test_the_settings_page_lists_models(tmp_path: Path, cloud: FakeModel, engine) -> None:
+    app, _ = settings_app(tmp_path, cloud)
+    with TestClient(app) as test_client, connect(test_client, "ide") as ide:
+        claude = request(
+            ide, {"v": 0, "type": "models_get", "id": "m-0", "provider": "claude-code"}
+        )
+        mine = request(ide, example("models_get") | {"url": engine.url})
+        down = request(ide, example("models_get") | {"id": "m-2", "url": "http://127.0.0.1:9"})
+    assert claude["models"] == ["sonnet", "opus", "haiku"] and claude["error"] is None
+    assert mine["models"] == [CODER]
+    assert down["models"] == [] and "not reachable" in down["error"]
+
+
+def test_a_brain_without_settings_says_so(client: TestClient) -> None:
+    with connect(client, "ide") as ide:
+        reply = request(ide, example("settings_get"))
+    assert reply["type"] == "error" and "without settings" in reply["message"]
+
+
+@pytest.mark.anyio
+async def test_hints_never_reach_openrouter_while_proactive_cloud_is_off(
+    tmp_path: Path, engine, closed_url: str
+) -> None:
+    """OpenRouter answers `#?`; the hint engine is down. Idle must not fall back to OpenRouter."""
+    from test_providers import make_store
+
+    from buddy.settings import Answers, Hints, Settings
+
+    store = make_store(
+        tmp_path,
+        Settings(Answers("openrouter", "z-ai/glm-4.6", ""), Hints((closed_url,), "", False)),
+        keys={"openrouter": "sk-or-1"},
+        openrouter_url=engine.url,
+    )
+    brain = server.Brain(FakeModel(), settings=store)
+    brain.apply_settings()
+    for n in range(3):
+        await send(brain, idle_event(n))
+        brain.hints = HintGate()  # no rate limit in the way: every idle tries
+    assert engine.requests == []
+    store.update(
+        to_settings_dict(Answers("openrouter", "z-ai/glm-4.6", ""), Hints((closed_url,), "", True))
+    )
+    brain.apply_settings()
+    await send(brain, idle_event(9))
+    assert len(engine.requests) == 1  # proactive_cloud on: now, and only now, it may
+
+
+def to_settings_dict(answers, hints) -> dict:
+    from buddy.settings import Settings, to_dict
+
+    return to_dict(Settings(answers, hints))

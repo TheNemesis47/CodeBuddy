@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "codebuddy/protocol/v0/settings.json",
+  "title": "settings",
+  "description": "brain → ide. The saved settings, which API keys are set (never the keys), the file's path, and what the command line or env vars override.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "v",
+    "type",
+    "id",
+    "settings",
+    "keys",
+    "path",
+    "overrides"
+  ],
+  "properties": {
+    "v": {
+      "const": 0
+    },
+    "type": {
+      "const": "settings"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "answers",
+        "hints",
+        "network",
+        "overlay"
+      ],
+      "description": "The settings file (brain/src/buddy/settings.py), section by section.",
+      "properties": {
+        "answers": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "provider",
+            "model",
+            "url"
+          ],
+          "properties": {
+            "provider": {
+              "enum": [
+                "claude-code",
+                "openrouter",
+                "openai-compatible"
+              ]
+            },
+            "model": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "url": {
+              "type": "string",
+              "maxLength": 500,
+              "description": "openai-compatible only; empty otherwise"
+            }
+          }
+        },
+        "hints": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "urls",
+            "model",
+            "proactive_cloud"
+          ],
+          "properties": {
+            "urls": {
+              "type": "array",
+              "maxItems": 10,
+              "items": {
+                "type": "string",
+                "maxLength": 500
+              }
+            },
+            "model": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "proactive_cloud": {
+              "type": "boolean"
+            }
+          }
+        },
+        "network": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "allow_remote"
+          ],
+          "properties": {
+            "allow_remote": {
+              "type": "boolean"
+            }
+          }
+        },
+        "overlay": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "top_offset"
+          ],
+          "properties": {
+            "top_offset": {
+              "oneOf": [
+                {
+                  "const": "auto"
+                },
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2000
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "keys": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "openrouter",
+        "answers_server",
+        "hints_server"
+      ],
+      "properties": {
+        "openrouter": {
+          "type": "boolean"
+        },
+        "answers_server": {
+          "type": "boolean"
+        },
+        "hints_server": {
+          "type": "boolean"
+        }
+      }
+    },
+    "path": {
+      "type": "string"
+    },
+    "overrides": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

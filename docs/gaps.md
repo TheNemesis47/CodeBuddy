@@ -19,7 +19,9 @@ estimate here. **Human** marks what an agent can't finish alone.
 | G7 | Enforce module boundaries automatically | tooling | medium | 1 h | agent |
 | G8 | Sprout final design | feature | medium | — | **Human** |
 | ~~G9~~ | ~~CI on GitHub Actions~~ (done 2026-10-15: gate on 3 OSes, e2e, packages) | tooling | — | — | agent |
-| G15 | Linux/Windows: try the packages on real machines, code signing (v0.1.0 published as pre-release 2026-10-15) | release | blocks testers | 1–2 h | **Human** |
+| G15 | Linux/Windows: try the packages on real machines, code signing (v0.1.0 published as pre-release 2026-10-15; Wayland/top-bar report fixed 2026-10-15) | release | blocks testers | 1–2 h | **Human** |
+| G16 | Evals per answers provider: `buddy eval --triggers` on the provider in the settings (OpenRouter, your server), not only Claude | quality | medium | 2 h | agent |
+| G17 | Try the settings page in your real PyCharm: OpenRouter with a key, your Mac over WireGuard (`allow_remote`), and the panel on Hyprland | feature | medium | 30 min | **Human** |
 | ~~G10~~ | ~~Evals: snippet set + scorer for suggestion quality~~ (done 2026-10-15: score 99.1) | tooling | — | — | agent |
 | G14 | Judge the borderline eval answers by hand; make the cases harder once the score saturates | quality | medium | 1 h | **Human** + agent |
 | G11 | Real-screen check of the notch: hover, click, Spaces, full screen | UX | medium | 1 h | **Human** |
@@ -160,6 +162,23 @@ unpack `CodeBuddy-<os>-0.1.0`, follow `docs/install/<os>.md`, ask a `#?` from Py
 the devlog what was off (panel position, fonts, the brain not finding `claude`, focus stealing).
 (2) Decide on signing (Windows Authenticode certificate; Linux needs none for a tarball). (3) Push
 a `v0.1.0` tag, check the draft release CI creates, and publish it yourself.
+
+## G16: Evals per answers provider
+
+**Evidence (2026-10-15).** A live `#?` answered by Qwen3-Coder-30B-A3B (llama.cpp, through the
+settings' OpenAI-compatible provider) rewrote the student's line ("Dovrebbe diventare: `with open(path)
+as f:` …"), against `system.md`'s "never write the corrected version". Claude has not done this in
+the eval runs. The settings page now says smaller models give away the fix more often.
+**Done when.** `buddy eval --triggers --answers settings` (or similar) scores the trigger cases on
+the provider in the settings file; results per provider in `evals/results/`; the devlog compares
+Claude, Qwen3-Coder (local) and one OpenRouter model.
+
+## G17: Settings page in a real PyCharm (Human)
+
+The page is tested against a scripted brain and, live, against a real brain (`LiveSettingsTest`,
+-Pe2e, PNG checked). Left for you: install the plugin, open Settings → Tools → CodeBuddy, pick
+OpenRouter with a key and ask a `#?`; point answers at your Mac over WireGuard (turn on "Allow
+servers on other machines"); on Hyprland, check the panel sits under the bar with no window rules.
 
 ## G11: Notch on the real screen (Human)
 

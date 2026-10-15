@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "codebuddy/protocol/v0/settings_set.json",
+  "title": "settings_set",
+  "description": "ide → brain. Replace the settings (and set or clear API keys). The brain checks, saves and applies them, then answers `settings`; on a problem it answers `error` with the same id and saves nothing.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "v",
+    "type",
+    "id",
+    "settings"
+  ],
+  "properties": {
+    "v": {
+      "const": 0
+    },
+    "type": {
+      "const": "settings_set"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "answers",
+        "hints",
+        "network",
+        "overlay"
+      ],
+      "description": "The settings file (brain/src/buddy/settings.py), section by section.",
+      "properties": {
+        "answers": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "provider",
+            "model",
+            "url"
+          ],
+          "properties": {
+            "provider": {
+              "enum": [
+                "claude-code",
+                "openrouter",
+                "openai-compatible"
+              ]
+            },
+            "model": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "url": {
+              "type": "string",
+              "maxLength": 500,
+              "description": "openai-compatible only; empty otherwise"
+            }
+          }
+        },
+        "hints": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "urls",
+            "model",
+            "proactive_cloud"
+          ],
+          "properties": {
+            "urls": {
+              "type": "array",
+              "maxItems": 10,
+              "items": {
+                "type": "string",
+                "maxLength": 500
+              }
+            },
+            "model": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "proactive_cloud": {
+              "type": "boolean"
+            }
+          }
+        },
+        "network": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "allow_remote"
+          ],
+          "properties": {
+            "allow_remote": {
+              "type": "boolean"
+            }
+          }
+        },
+        "overlay": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "top_offset"
+          ],
+          "properties": {
+            "top_offset": {
+              "oneOf": [
+                {
+                  "const": "auto"
+                },
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2000
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "keys": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Only the keys to change: text sets, null clears. Never sent back.",
+      "properties": {
+        "openrouter": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 500
+        },
+        "answers_server": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 500
+        },
+        "hints_server": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 500
+        }
+      }
+    }
+  }
+}

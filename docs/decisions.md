@@ -2,6 +2,28 @@
 
 Newest first. One entry per non-obvious decision.
 
+## 2026-10-15: Settings in PyCharm, written by the brain; remote engines need explicit consent
+
+**Decision.** The settings live in one TOML file the brain owns (`config.toml` in the user's
+config folder, `$BUDDY_CONFIG`). The PyCharm page (Settings → Tools → CodeBuddy) reads and saves it
+through the brain with new protocol messages (`settings_get`, `settings_set`, `models_get`; v0, new
+types only). Answers can come from Claude Code (default), OpenRouter, or any OpenAI-compatible
+server; hint engines are a list of addresses. Precedence: flags > env vars > file > defaults.
+**Why.** One settings page that works on macOS, Linux and Windows, written once in the plugin the
+student already has open; the brain stays the only process that talks to models (boundaries), and
+it checks every value before saving. A file keeps the settings readable and editable by hand.
+**The posture change.** Until now nothing left the computer except explicit triggers to Claude. A
+user's own server on another machine (their Mac over WireGuard) is legitimate, so it is allowed,
+but only with `network.allow_remote`, and the brain refuses to start on a file that names a remote
+address without it, rather than guess. Hints never go to OpenRouter, and still never to the answers
+provider while `proactive_cloud` is off. Keys live in `keys.json` (mode 600) or env vars, never in
+the file or in a message. What does not move: the brain's own server binds `127.0.0.1` only.
+**Alternatives.** A settings window in the panel: two implementations (Swift and PySide6). Env vars
+only: no UI, and they don't survive a desktop launcher. Writing the file from the plugin: the plugin
+would have to know the brain's rules and paths, and the boundaries say it only talks to the brain.
+**Known limit.** Smaller models follow "never write the fix" less well than Claude (a live run on
+Qwen3-Coder rewrote the student's line); the page says so, and evals per provider are open (G16).
+
 ## 2026-10-15: Linux and Windows get a Python overlay; the Mac keeps the Swift notch
 
 **Decision.** The Mac keeps `notch/` (Swift, AppKit: it sits in the real notch). Linux and Windows

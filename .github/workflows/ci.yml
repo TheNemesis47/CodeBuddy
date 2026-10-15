@@ -109,6 +109,26 @@ jobs:
           name: e2e-linux
           path: e2e-out/
 
+  e2e-wayland:
+    name: e2e (overlay on Wayland with a top bar, Sway headless)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Sway, XWayland and Qt
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -yq sway xwayland grim x11-utils libxcb-cursor0 libxkbcommon-x11-0 \
+            libxcb-icccm4 libxcb-keysyms1 libxcb-image0 libxcb-render-util0 libxcb-shape0 \
+            libxcb-xinerama0 libegl1 libgl1 libdbus-1-3 libfontconfig1 fonts-dejavu-core
+      - name: Overlay under swaybar
+        run: uv run --project overlay python scripts/e2e_wayland.py e2e-wayland
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-wayland
+          path: e2e-wayland/
+
   package:
     name: package (${{ matrix.os }})
     needs: gate
@@ -164,7 +184,7 @@ jobs:
   draft-release:
     name: draft release (tags only)
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [package, e2e-linux]
+    needs: [package, e2e-linux, e2e-wayland]
     runs-on: ubuntu-latest
     permissions:
       contents: write
