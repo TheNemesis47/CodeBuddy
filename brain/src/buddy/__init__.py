@@ -1,6 +1,6 @@
 """CodeBuddy brain: turns code context into tutor answers streamed to the notch."""
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 
 def main() -> None:

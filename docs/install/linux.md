@@ -8,14 +8,14 @@ below.
 2. Unpack and add it to your applications menu:
 
    ```sh
-   mkdir -p ~/.local/opt && tar -xzf CodeBuddy-linux-0.1.0.tar.gz -C ~/.local/opt
-   ~/.local/opt/CodeBuddy-linux-0.1.0/install-desktop-entry.sh
+   mkdir -p ~/.local/opt && tar -xzf CodeBuddy-linux-0.1.1.tar.gz -C ~/.local/opt
+   ~/.local/opt/CodeBuddy-linux-0.1.1/install-desktop-entry.sh
    ```
 
-3. Start **CodeBuddy** from the menu, or run `~/.local/opt/CodeBuddy-linux-0.1.0/codebuddy.sh`. A
+3. Start **CodeBuddy** from the menu, or run `~/.local/opt/CodeBuddy-linux-0.1.1/codebuddy.sh`. A
    small black pill with a seed appears at the top centre of the screen; the brain starts with it.
 4. Install the plugin in PyCharm: Settings → Plugins → ⚙ → *Install Plugin from Disk…* →
-   `codebuddy-pycharm-0.1.0.zip` → restart.
+   `codebuddy-pycharm-0.1.1.zip` → restart.
 5. In a `.py` file write `#? cosa fa questa riga?` and press Enter.
 
 Quit: right-click the panel → *Esci da CodeBuddy*. If Qt complains about the `xcb` platform plugin,

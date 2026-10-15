@@ -158,13 +158,13 @@ jobs:
         env:
           QT_QPA_PLATFORM: ${{ runner.os == 'Linux' && 'xcb' || (runner.os == 'Windows' && 'windows' || 'offscreen') }}
         run: |
-          cmd="uv run --project overlay python packaging/build.py --plugin plugin/codebuddy-pycharm-0.1.0.zip"
+          cmd="uv run --project overlay python packaging/build.py --plugin $(ls plugin/codebuddy-pycharm-*.zip)"
           if [ "${{ runner.os }}" = Linux ]; then xvfb-run -a --server-args="-screen 0 1920x1080x24" $cmd; else $cmd; fi
       - name: End to end on the packaged build
         env:
           QT_QPA_PLATFORM: ${{ runner.os == 'Linux' && 'xcb' || (runner.os == 'Windows' && 'windows' || 'offscreen') }}
         run: |
-          bundle=$(ls -d dist/CodeBuddy-*-0.1.0 | head -1)
+          bundle=$(ls -d dist/CodeBuddy-*/ | head -1)
           cmd="uv run --project brain python scripts/e2e_overlay.py e2e-bundle --bundle $bundle"
           if [ "${{ runner.os }}" = Linux ]; then xvfb-run -a --server-args="-screen 0 1920x1080x24" $cmd; else $cmd; fi
       - uses: actions/upload-artifact@v4

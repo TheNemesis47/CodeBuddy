@@ -19,7 +19,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 HERE = ROOT / "packaging"
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 SYSTEM = {"Linux": "linux", "Windows": "windows", "Darwin": "macos"}[platform.system()]
 EXE = ".exe" if SYSTEM == "windows" else ""
 SEP = ";" if SYSTEM == "windows" else ":"

@@ -2,6 +2,14 @@
 
 Newest first. Terse. Written at the end of every task so the next agent can pick up.
 
+## 2026-10-15 14:10: v0.1.1 (main)
+
+- **Landed:** `feat/settings` (with `fix/overlay-wayland`) merged into `main` at the user's request
+  (9385c04). Version 0.1.0 → **0.1.1** (patch: the user asked for a small step) in the brain,
+  overlay, plugin, notch client id, packaging and install guides; CI no longer hardcodes the
+  version (globs). Gate green: 257 / 42 / 45 / 93, eval 99.1.
+- **Still open:** G16; Human: G17, G15, G13, G11.
+
 ## 2026-10-15 13:40: Wayland/top-bar fix + settings page (branches fix/overlay-wayland, feat/settings)
 
 - **From a tester's report** (Omarchy/Hyprland 0.56.2, `~/Downloads/codebuddy-wayland-report.md`):

@@ -6,8 +6,8 @@ Linux and Windows) and the **PyCharm plugin** that sends your `#?` questions.
 
 | OS | Download | Guide |
 |---|---|---|
-| Windows 10/11 (x64) | `CodeBuddy-windows-0.1.0.zip` | [docs/install/windows.md](docs/install/windows.md) |
-| Linux (x64, glibc ≥ 2.34: Ubuntu 22.04+, Fedora 36+) | `CodeBuddy-linux-0.1.0.tar.gz` | [docs/install/linux.md](docs/install/linux.md) |
+| Windows 10/11 (x64) | `CodeBuddy-windows-0.1.1.zip` | [docs/install/windows.md](docs/install/windows.md) |
+| Linux (x64, glibc ≥ 2.34: Ubuntu 22.04+, Fedora 36+) | `CodeBuddy-linux-0.1.1.tar.gz` | [docs/install/linux.md](docs/install/linux.md) |
 | macOS 14+ | from source (Swift notch) | [docs/install/macos.md](docs/install/macos.md) |
 
 Every OS needs:
@@ -16,7 +16,7 @@ Every OS needs:
    once and log in with your subscription. `claude -p "ciao"` in a terminal must answer. The brain
    finds `claude` on your `PATH` (`claude.exe` or `claude.cmd` on Windows).
 2. **PyCharm 2026.2 or newer** with the plugin: Settings → Plugins → ⚙ → *Install Plugin from
-   Disk…* → `codebuddy-pycharm-0.1.0.zip` (in the download) → restart PyCharm.
+   Disk…* → `codebuddy-pycharm-0.1.1.zip` (in the download) → restart PyCharm.
 3. *Optional:* a local model for proactive hints, `llama-server` (llama.cpp) on port 8080, e.g.
    `llama-server -m Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf --port 8080 -ngl 999 -fa on -c 16384 --jinja`.
    Without it there are no proactive hints; `#?` and `#!teoria` still work.

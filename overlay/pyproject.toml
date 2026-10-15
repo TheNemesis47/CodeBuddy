@@ -1,6 +1,6 @@
 [project]
 name = "codebuddy-overlay"
-version = "0.1.0"
+version = "0.1.1"
 description = "CodeBuddy overlay for Linux and Windows: the notch's panel as a frameless Qt window"
 readme = "README.md"
 requires-python = ">=3.14"

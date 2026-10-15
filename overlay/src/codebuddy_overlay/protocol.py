@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 PROTOCOL_VERSION = 0
-CLIENT = "codebuddy-overlay/0.1.0"
+CLIENT = "codebuddy-overlay/0.1.1"
 
 
 class AnswerKind(StrEnum):
