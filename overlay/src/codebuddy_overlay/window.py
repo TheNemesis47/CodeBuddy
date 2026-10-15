@@ -11,6 +11,8 @@ from PySide6.QtGui import (
     QPainter,
     QPainterPath,
     QPaintEvent,
+    QTextCharFormat,
+    QTextCursor,
 )
 from PySide6.QtWidgets import QApplication, QLabel, QMenu, QPushButton, QTextBrowser, QWidget
 
@@ -22,12 +24,23 @@ from codebuddy_overlay.protocol import AnswerKind
 from codebuddy_overlay.sprout import SproutWidget
 
 BACKGROUND = QColor(0, 0, 0)
+CODE_BACKGROUND = QColor(38, 38, 38)
 KIND_LABEL = {
     AnswerKind.QUESTION: "DOMANDA",
     AnswerKind.THEORY: "TEORIA",
     AnswerKind.HINT: "SUGGERIMENTO",
 }
 STATUS_COLOR = {"✓": "#6bcc6b", "!": "#ff8a65", "off": "#ff8a65", "…": "#bbbbbb", "": "#bbbbbb"}
+# Qt marks markdown code with the generic "monospace" family, which some platforms resolve to a
+# serif face; name real monospace fonts per OS first.
+CODE_FONTS = [
+    "Menlo",
+    "Consolas",
+    "DejaVu Sans Mono",
+    "Liberation Mono",
+    "Courier New",
+    "monospace",
+]
 BODY_CSS = """
 body { color: #e6e6e6; font-size: 13px; }
 code { color: #f5f5f5; background-color: #262626; }
@@ -137,6 +150,7 @@ class OverlayWindow(QWidget):
         bar = self.body.verticalScrollBar()
         at_bottom = bar.value() >= bar.maximum() - 4
         self.body.setMarkdown(text)
+        _use_code_fonts(self.body)
         if streaming and at_bottom:  # follow the stream, unless the student scrolled up
             bar.setValue(bar.maximum())
 
@@ -176,6 +190,30 @@ class OverlayWindow(QWidget):
 
     def contextMenuEvent(self, event: QContextMenuEvent) -> None:
         self.quit_menu().exec(event.globalPos())
+
+
+def _use_code_fonts(body: QTextBrowser) -> None:
+    """Give inline code and code blocks a real monospace font and a dark background."""
+    document = body.document()
+    block = document.begin()
+    while block.isValid():
+        iterator = block.begin()
+        while not iterator.atEnd():
+            fragment = iterator.fragment()
+            families = fragment.charFormat().fontFamilies() or []
+            if fragment.charFormat().fontFixedPitch() or "monospace" in families:
+                cursor = QTextCursor(document)
+                cursor.setPosition(fragment.position())
+                cursor.setPosition(
+                    fragment.position() + fragment.length(), QTextCursor.MoveMode.KeepAnchor
+                )
+                code = QTextCharFormat()
+                code.setFontFamilies(CODE_FONTS)
+                code.setFontFixedPitch(True)
+                code.setBackground(CODE_BACKGROUND)
+                cursor.mergeCharFormat(code)
+            iterator += 1
+        block = block.next()
 
 
 def _island_path(size: Layout) -> QPainterPath:

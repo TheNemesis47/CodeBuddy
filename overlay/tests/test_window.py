@@ -162,3 +162,22 @@ def test_main_starts_the_brain_and_stops_it_on_quit(
     assert overlay_app.main(["--start-brain", "buddy serve", "--quit-after", "0.2"]) == 0
     assert started == ["buddy serve"]
     assert stopped == ["proc"]
+
+
+def test_code_gets_a_real_monospace_font(window, qapp: QApplication) -> None:
+    w, model, _ = window
+    model.handle(AnswerStart("a", AnswerKind.QUESTION, "q"))
+    model.handle(AnswerDelta("a", "usa `with`:\n\n```python\nwith open(p) as f:\n    pass\n```\n"))
+    qapp.processEvents()
+    document = w.body.document()
+    code = []
+    block = document.begin()
+    while block.isValid():
+        iterator = block.begin()
+        while not iterator.atEnd():
+            fragment = iterator.fragment()
+            if fragment.text().strip() in ("with", "with open(p) as f:"):
+                code.append(fragment.charFormat().fontFamilies())
+            iterator += 1
+        block = block.next()
+    assert code and all(families and families[0] == "Menlo" for families in code)

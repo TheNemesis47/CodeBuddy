@@ -20,6 +20,7 @@
 |---|---:|---:|---|
 | Protocol | 100% of v0 | measured: 9/9 types with examples | protocol/README.md |
 | Brain | ~80% | estimated: G2, G5 (latency log + `buddy latency`), G6 and G10 (evals + scorer) done | G14 |
+| Linux/Windows | ~70% | estimated: overlay (same states and scenarios as the notch), portable brain, packages and CI on 3 OSes done; real-machine tries, code signing and the first release are human (G15) | G15 |
 | Notch UI | ~75% | estimated: G3 done, hint peek with preview; real-screen check (G11) and Sprout design (G8) open | G8, G11 |
 | PyCharm plugin | ~80% | estimated: G4 and idle events (G6) done; real-IDE use (G13) open | G13 |
 | Growth (skill map, exercises, curriculum, diary) | 0% | not started, after MVP | CAPABILITY-MAP.md |
