@@ -129,13 +129,17 @@ def _serve(args: argparse.Namespace) -> int:
 
     from buddy.auth import buddy_home, load_or_create_token
     from buddy.claude_cli import ClaudeCliModel
+    from buddy.hints import proactive_cloud_from_env
     from buddy.server import create_app
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
     token_path = buddy_home() / "token"
     token = load_or_create_token(token_path)
     print(f"buddy: token in {token_path}", file=sys.stderr)
-    app = create_app(ClaudeCliModel(args.model), token)
+    proactive_cloud = proactive_cloud_from_env(os.environ)
+    where = "local engine, else Claude" if proactive_cloud else "local engine only"
+    print(f"buddy: proactive hints → {where}", file=sys.stderr)
+    app = create_app(ClaudeCliModel(args.model), token, proactive_cloud=proactive_cloud)
     # Loopback only, never configurable (SECURITY.md).
     uvicorn.run(app, host="127.0.0.1", port=args.port, log_level="info")
     return 0

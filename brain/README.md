@@ -9,3 +9,8 @@ uv run buddy ask src/x.py:12 --show-prompt   # print the prompt, call nothing (o
 uv run buddy serve                           # WebSocket on 127.0.0.1:8790/ws
 uv run pytest                                # offline tests (fake models)
 ```
+
+Proactive hints: the plugin sends `idle` after 4 s without typing. The brain answers with one short
+hint (`prompts/hint.md`) from the local engine it finds on `127.0.0.1:8080` (llama.cpp) or `:8000`
+(MTPLX) via `/v1/models`, at most once every 3 minutes and only when the code changed. With no
+local engine there is no hint. `BUDDY_PROACTIVE_CLOUD=1` is the only way a hint can use Claude.

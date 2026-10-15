@@ -10,6 +10,7 @@ from starlette.testclient import WebSocketTestSession
 from starlette.websockets import WebSocketDisconnect, WebSocketState
 
 from buddy import server
+from buddy.hints import HintGate
 from buddy.protocol import validate
 
 TOKEN = "t" * 64
@@ -25,9 +26,14 @@ def cloud() -> FakeModel:
     return FakeModel(("Perché ", "manca `with`."))
 
 
+async def no_local_engine() -> None:
+    return None
+
+
 @pytest.fixture
 def client(cloud: FakeModel) -> Iterator[TestClient]:
-    with TestClient(server.create_app(cloud, TOKEN)) as test_client:
+    # Tests never look for a real engine on :8080/:8000.
+    with TestClient(server.create_app(cloud, TOKEN, detect_local=no_local_engine)) as test_client:
         yield test_client
 
 
@@ -77,7 +83,7 @@ class SilentSocket:
     def __init__(self) -> None:
         self.closed_with: int | None = None
 
-    async def receive_text(self) -> str:
+    async def receive(self) -> dict:
         await anyio.sleep_forever()
         raise AssertionError("unreachable")
 
@@ -103,6 +109,18 @@ def receive_until_end(notch: WebSocketTestSession, answer_id: str) -> list[dict]
         received.append(message)
         if message["type"] in ("answer_end", "error") and message["id"] == answer_id:
             return received
+
+
+def test_binary_frames_with_utf8_json_are_accepted(client: TestClient) -> None:
+    with client.websocket_connect("/ws") as ws:
+        ws.send_bytes(json.dumps(example("hello.notch")).encode())
+        assert validate(ws.receive_json())["type"] == "welcome"
+
+
+def test_binary_garbage_from_the_ide_gets_an_error(client: TestClient) -> None:
+    with connect(client, "ide") as ide:
+        ide.send_bytes(b"\xff\xfe not utf-8")
+        assert validate(ide.receive_json())["type"] == "error"
 
 
 def test_trigger_streams_the_answer_to_the_notch(client: TestClient, cloud: FakeModel) -> None:
@@ -159,3 +177,162 @@ def test_bad_ide_message_gets_an_error_and_the_connection_survives(client: TestC
         assert error["id"] is None
         ide.send_text("{oops")  # still connected
         assert ide.receive_json()["type"] == "error"
+
+
+# --- Proactive hints (G6) -------------------------------------------------------------------
+
+
+class RecordingSocket:
+    """Stands in for a connected notch."""
+
+    def __init__(self) -> None:
+        self.received: list[dict] = []
+
+    async def send_json(self, message: dict) -> None:
+        self.received.append(validate(message))
+
+
+class Clock:
+    def __init__(self) -> None:
+        self.now = 1000.0
+
+    def __call__(self) -> float:
+        return self.now
+
+
+def make_brain(
+    cloud: FakeModel, local: FakeModel | None, *, proactive_cloud: bool = False
+) -> tuple[server.Brain, RecordingSocket, Clock]:
+    async def detect() -> FakeModel | None:
+        return local
+
+    clock = Clock()
+    brain = server.Brain(
+        cloud, detect_local=detect, proactive_cloud=proactive_cloud, hints=HintGate(clock=clock)
+    )
+    notch = RecordingSocket()
+    brain.notch.add(notch)  # type: ignore[arg-type]
+    return brain, notch, clock
+
+
+def idle_event(n: int) -> dict:
+    """The protocol example with a different id and window each time (the code changed)."""
+    idle = example("idle")
+    return idle | {"id": f"idle-{n}", "window": idle["window"] | {"code": f"x = {n}\n"}}
+
+
+async def send(brain: server.Brain, *messages: dict) -> None:
+    for message in messages:
+        await brain.handle_ide_message(validate(message))
+    await brain.drain()
+
+
+@pytest.mark.anyio
+async def test_idle_streams_a_hint_from_the_local_engine(cloud: FakeModel) -> None:
+    local = FakeModel(("Guarda ", "`with`."), is_local=True)
+    brain, notch, _ = make_brain(cloud, local)
+    await send(brain, idle_event(1))
+    assert [m["type"] for m in notch.received] == [
+        "answer_start",
+        "answer_delta",
+        "answer_delta",
+        "answer_end",
+    ]
+    assert notch.received[0]["kind"] == "hint"
+    assert notch.received[0]["title"] == "src/load.py:6"
+    assert len(local.prompts) == 1
+    assert "nudge" in local.prompts[0].system
+    assert cloud.prompts == []
+
+
+@pytest.mark.anyio
+async def test_no_local_engine_means_no_hint_and_nothing_to_the_cloud(cloud: FakeModel) -> None:
+    brain, notch, clock = make_brain(cloud, None)
+    for n in range(5):
+        await send(brain, idle_event(n))
+        clock.now += 1000
+    assert notch.received == []
+    assert cloud.prompts == []
+
+
+@pytest.mark.anyio
+async def test_idle_never_reaches_the_cloud_while_proactive_cloud_is_off(cloud: FakeModel) -> None:
+    """Every path: engine up, engine down, engine failing. The cloud model sees only triggers."""
+    for local in (
+        FakeModel(is_local=True),
+        None,
+        FakeModel(("half",), fail="engine crashed", is_local=True),
+    ):
+        brain, _, clock = make_brain(cloud, local)
+        for n in range(3):
+            await send(brain, idle_event(n))
+            clock.now += 1000
+    assert cloud.prompts == []
+
+
+@pytest.mark.anyio
+async def test_proactive_cloud_is_the_only_way_idle_reaches_claude(cloud: FakeModel) -> None:
+    brain, notch, _ = make_brain(cloud, None, proactive_cloud=True)
+    await send(brain, idle_event(1))
+    assert len(cloud.prompts) == 1
+    assert notch.received[0]["kind"] == "hint"
+
+
+@pytest.mark.anyio
+async def test_proactive_cloud_still_prefers_the_local_engine(cloud: FakeModel) -> None:
+    local = FakeModel(is_local=True)
+    brain, _, _ = make_brain(cloud, local, proactive_cloud=True)
+    await send(brain, idle_event(1))
+    assert len(local.prompts) == 1
+    assert cloud.prompts == []
+
+
+@pytest.mark.anyio
+async def test_one_hint_every_three_minutes_and_only_for_changed_code(cloud: FakeModel) -> None:
+    local = FakeModel(is_local=True)
+    brain, notch, clock = make_brain(cloud, local)
+    await send(brain, idle_event(1))  # t = 0: shown
+    clock.now += 60
+    await send(brain, idle_event(2))  # t = 60 s: changed, but too soon
+    clock.now += 200
+    await send(brain, idle_event(1) | {"id": "same-code"})  # t = 260 s: same code as the hint
+    clock.now += 200
+    await send(brain, idle_event(3))  # t = 460 s: changed and late enough: shown
+    clock.now += 500
+    await send(brain, idle_event(3) | {"id": "unchanged"})  # t = 960 s: unchanged since then
+    starts = [m["id"] for m in notch.received if m["type"] == "answer_start"]
+    assert starts == ["idle-1", "idle-3"]
+    assert len(local.prompts) == 2
+
+
+@pytest.mark.anyio
+async def test_no_engine_does_not_use_up_the_rate_limit(cloud: FakeModel) -> None:
+    local = FakeModel(is_local=True)
+    brain, notch, _ = make_brain(cloud, None)
+    await send(brain, idle_event(1))  # engine down: nothing shown
+    brain.detect_local = lambda: _ready(local)
+    await send(brain, idle_event(2))  # engine up a second later: the hint comes
+    assert [m["id"] for m in notch.received if m["type"] == "answer_start"] == ["idle-2"]
+
+
+async def _ready(model: FakeModel) -> FakeModel:
+    return model
+
+
+@pytest.mark.anyio
+async def test_a_trigger_still_goes_to_the_cloud_with_a_local_engine_up(cloud: FakeModel) -> None:
+    local = FakeModel(is_local=True)
+    brain, _, _ = make_brain(cloud, local)
+    await send(brain, example("trigger.question"))
+    assert len(cloud.prompts) == 1
+    assert local.prompts == []
+
+
+@pytest.mark.anyio
+async def test_no_hint_right_after_a_trigger(cloud: FakeModel) -> None:
+    """`#?` + Enter, then 4 s of no typing: the idle hint must not replace the answer."""
+    local = FakeModel(is_local=True)
+    brain, notch, _ = make_brain(cloud, local)
+    await send(brain, example("trigger.question"), idle_event(1))
+    assert local.prompts == []
+    assert {m["id"] for m in notch.received} == {example("trigger.question")["id"]}

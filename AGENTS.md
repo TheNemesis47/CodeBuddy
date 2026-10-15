@@ -28,8 +28,8 @@ Read this file first, then the files below.
 ```text
 protocol/      JSON Schemas (v0) + example messages: the contract between all processes
 brain/         Python daemon on 127.0.0.1:8790: context, model routing, streaming   (see brain/README.md)
-notch/         Swift package: notch panel, states, Sprout, markdown answers         (G3, not created yet)
-ide-pycharm/   Kotlin plugin: PSI context, #? / #!cmd triggers, idle detection      (G4, not created yet)
+notch/         Swift package: notch panel, states, Sprout, markdown answers (CodeBuddyKit = logic)
+ide-pycharm/   Kotlin plugin: PSI context, #? / #!cmd triggers, sends to the brain
 evals/         snippets + expected outcomes, scores suggestion quality               (G10, later)
 quality/       floors.json: ratcheted numbers
 scripts/       check (the gate), guards, ratchet
@@ -49,7 +49,9 @@ Ranked. A higher rule outranks a lower one and outranks feature work.
 The user is coding. A frozen PyCharm costs more than any hint is worth.
 - No network or model work on the EDT. Every brain call is async and has a timeout.
 - If the brain is down or slow, the plugin stays silent: no error dialogs, no retries in a loop.
-- **Enforced by:** plugin tests in `cd ide-pycharm && ./gradlew test` (not yet working: see gaps G4).
+- **Enforced by:** plugin tests in `cd ide-pycharm && ./gradlew test` (`testBrainDownIsSilentAndQuick`;
+  the Enter handler only does a text check on the EDT, and PSI and network run off it). A stress
+  test in a real IDE is (manual): see gaps G13.
 - **Prove it:** every fix of a violation comes with a regression test that failed before.
 
 ### 2. Never edit the user's code
@@ -64,8 +66,8 @@ The buddy talks, the user writes. That is the whole teaching model.
 Coucou's code is MIT, but its name, the Mochi character, its icons and its sounds are © all rights
 reserved.
 - Code extracted from Coucou is renamed and credited in `THIRD_PARTY.md`. The character is Sprout.
-- **Enforced by:** `scripts/guard-assets` (fails on "Mochi"/"Coucou" in source folders and on audio
-  files under `notch/`).
+- **Enforced by:** `scripts/guard-assets` (fails on "Mochi"/"Coucou" in source folders, except
+  attribution comments that point to `THIRD_PARTY.md`, and on audio files under `notch/`).
 
 ### 4. Never lower the bar
 
@@ -101,8 +103,8 @@ don't exist yet are reported as `skip`, never as `ok`.
 While iterating, run only the module you touch (e.g. `cd brain && uv run pytest -x`). The full gate
 is the final word.
 
-UI changes: run `cd notch && swift run CodeBuddy --demo`, take a screenshot
-(`screencapture -x /tmp/notch.png`) and look at it. Put the path in the devlog entry.
+UI changes: run `cd notch && swift run CodeBuddy --demo --snapshots /tmp/shots` (a PNG per state)
+and look at the images. Put the paths in the devlog entry.
 
 Then append a terse entry to `log/devlog.md` (what landed, numbers, what's still open). Sessions can
 end abruptly: the devlog plus a green tree is how the next agent picks up. **Keep the tree building

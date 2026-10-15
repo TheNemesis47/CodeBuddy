@@ -7,12 +7,17 @@ from dataclasses import dataclass, field, replace
 from functools import cache
 from importlib.resources import files
 from string import Template
+from typing import Literal
 
 from buddy.triggers import TriggerKind
+
+type RequestKind = TriggerKind | Literal["hint"]
 
 # ~8k input tokens at ~4 chars/token (SPEC.md, criterion 3). Over budget, the project map goes
 # first, then the window shrinks around the marked line.
 MAX_USER_CHARS = 28_000
+# Hints run on the local engine, where prefill is the latency: ~3k tokens, and no project map.
+MAX_HINT_USER_CHARS = 12_000
 MAX_MAP_FILES = 200
 MAX_LINE_CHARS = 400  # minified code: one line could blow the budget alone
 
@@ -25,7 +30,7 @@ class ProjectMap:
 
 @dataclass(frozen=True)
 class Request:
-    kind: TriggerKind
+    kind: RequestKind
     text: str
     file: str
     line: int
@@ -51,18 +56,25 @@ def _template(name: str) -> Template:
 
 
 def build_prompt(request: Request, answer_language: str = "italiano") -> Prompt:
-    system = _template("system").substitute(language=answer_language)
-    user = _render_user(request, with_map=True)
-    if len(user) > MAX_USER_CHARS:
+    hint = request.kind == "hint"
+    system = _template("hint" if hint else "system").substitute(language=answer_language)
+    budget = MAX_HINT_USER_CHARS if hint else MAX_USER_CHARS
+    user = _render_user(request, with_map=not hint)
+    if len(user) > budget:
         user = _render_user(request, with_map=False)
-    while len(user) > MAX_USER_CHARS and request.window_code.count("\n") > 0:
+    while len(user) > budget and request.window_code.count("\n") > 0:
         request = _drop_farthest_line(request)
         user = _render_user(request, with_map=False)
     return Prompt(system, user)
 
 
 def _render_user(request: Request, *, with_map: bool) -> str:
-    if request.kind == "question":
+    if request.kind == "hint":
+        head = (
+            f"The student stopped typing in `{request.file}` at line {request.line}, marked `→`. "
+            "Give one nudge."
+        )
+    elif request.kind == "question":
         head = _template("question").substitute(
             file=request.file, line=request.line, text=request.text
         )
