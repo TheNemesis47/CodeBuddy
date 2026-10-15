@@ -2,6 +2,29 @@
 
 Newest first. One entry per non-obvious decision.
 
+## 2026-10-15: The panel's monitor comes from the compositor, matched to Qt by connector name
+
+**Decision.** `panel_placement` asks the compositor for its monitors (`hyprctl -j monitors`,
+`swaymsg`), picks the focused one (or `BUDDY_MONITOR`), and the window follows the Qt screen with
+the same name, looked up again on every placement. Qt's `primaryScreen()` is never used while the
+compositor answers. On Hyprland the panel also asks to be pinned (`hl.dsp.window.pin`, retried on
+a timer until `hyprctl clients` confirms it).
+**Why.** XWayland publishes its own X11 layout, and it need not match the compositor's. On the
+0.1.1 tester's two monitors (one rotated) XWayland called the vertical monitor primary and put it
+at `0,0`, while Hyprland had the main one there: centring on Qt's primary asked for `x=500`, which
+Hyprland read in its own space as `-580`, so the panel sat outside every screen — invisible, and
+out of reach of the pointer. That layout can also change mid-session, because XWayland restarts
+when its last client exits, which is why nothing reproduced it on demand. Connector names are the
+one thing both sides agree on. Pinning is needed because Hyprland ties even a dock window to the
+workspace it opened on, and ignores `_NET_WM_DESKTOP = 0xFFFFFFFF` and `_NET_WM_STATE_STICKY`
+(both measured on 0.56.2).
+**Alternatives.** Placing the window with `hyprctl dispatch movewindowpixel` after every resize:
+compositor-specific, an IPC round trip per state change, and it fights the app's own geometry.
+Matching monitors to screens by coordinates (0.1.1): that is exactly what the two layouts disagree
+about. `_NET_WM_DESKTOP`/`STICKY` for the pin: ignored.
+**Rollback.** `panel_placement` returning `Panel()` puts the panel back on Qt's primary; removing
+the `keep_on_every_workspace` call leaves it on one workspace.
+
 ## 2026-10-15: Settings in PyCharm, written by the brain; remote engines need explicit consent
 
 **Decision.** The settings live in one TOML file the brain owns (`config.toml` in the user's

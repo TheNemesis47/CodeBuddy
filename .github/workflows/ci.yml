@@ -167,6 +167,11 @@ jobs:
           bundle=$(ls -d dist/CodeBuddy-*/ | head -1)
           cmd="uv run --project brain python scripts/e2e_overlay.py e2e-bundle --bundle $bundle"
           if [ "${{ runner.os }}" = Linux ]; then xvfb-run -a --server-args="-screen 0 1920x1080x24" $cmd; else $cmd; fi
+      - name: Packaged overlay on a Hyprland-like desktop (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          bundle=$(ls -d dist/CodeBuddy-*/ | head -1)
+          xvfb-run -a --server-args="-screen 0 1920x1080x24" python3 scripts/smoke_bundle_desktop.py $bundle e2e-bundle/desktop
       - uses: actions/upload-artifact@v4
         with:
           name: codebuddy-${{ runner.os }}

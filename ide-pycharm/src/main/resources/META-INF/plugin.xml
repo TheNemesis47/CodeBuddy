@@ -20,6 +20,8 @@
         <editorFactoryDocumentListener implementation="dev.codebuddy.pycharm.IdleDocumentListener"/>
         <applicationConfigurable parentId="tools" id="dev.codebuddy.settings" displayName="CodeBuddy"
                                  instance="dev.codebuddy.pycharm.CodeBuddyConfigurable"/>
+        <applicationService serviceInterface="dev.codebuddy.pycharm.EditorHints"
+                            serviceImplementation="dev.codebuddy.pycharm.IdeEditorHints"/>
         <applicationService serviceInterface="dev.codebuddy.pycharm.BrainSender"
                             serviceImplementation="dev.codebuddy.pycharm.BrainConnection"/>
     </extensions>

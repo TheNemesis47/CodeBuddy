@@ -180,6 +180,13 @@ The page is tested against a scripted brain and, live, against a real brain (`Li
 OpenRouter with a key and ask a `#?`; point answers at your Mac over WireGuard (turn on "Allow
 servers on other machines"); on Hyprland, check the panel sits under the bar with no window rules.
 
+2026-10-15, 0.1.1 report (`~/Downloads/codebuddy-0.1.1-report.md`): on Omarchy the panel stayed
+on Wayland (`QT_QPA_PLATFORM=wayland;xcb`), the packaged probe got 0 px, the config's
+`top_offset` was ignored, and the panel took no mouse events and stuck to one workspace. All five
+fixed on `fix/overlay-hyprland` (dock window on Hyprland). Left for you: with the next build,
+remove the wrapper `~/.local/bin/codebuddy`, start CodeBuddy, and check hover, click, right-click
+→ Esci, the panel on every workspace, and that it still draws after 15+ minutes.
+
 ## G11: Notch on the real screen (Human)
 
 **Evidence.** Agents only see view snapshots (`--snapshots`). They don't see the menu bar around the

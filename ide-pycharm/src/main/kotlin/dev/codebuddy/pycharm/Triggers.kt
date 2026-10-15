@@ -20,11 +20,23 @@ object TriggerParser {
             return if (text.isEmpty()) null else Trigger(TriggerKind.QUESTION, text)
         }
         if (s.startsWith("#!")) {
-            val rest = s.substring(2)
+            val rest = s.substring(2).trimStart() // `#! teoria x` works like `#!teoria x`
             val command = rest.substringBefore(' ')
             val kind = commands[command.lowercase()] ?: return null
             return Trigger(kind, rest.substringAfter(' ', "").trim())
         }
         return null
+    }
+
+    /**
+     * The word after `#!` when it is not a command we know (`#!boh x` → "boh"), so the editor can
+     * say so instead of staying silent. Only letters: a shebang (`#!/usr/bin/env`) is not a typo.
+     */
+    fun unknownCommand(comment: String): String? {
+        val s = comment.trim()
+        if (!s.startsWith("#!")) return null
+        val command = s.substring(2).trimStart().substringBefore(' ')
+        if (command.isEmpty() || !command.all(Char::isLetter) || command.lowercase() in commands) return null
+        return command
     }
 }

@@ -12,6 +12,8 @@ from buddy.triggers import ParsedTrigger, parse_trigger_line
         ("\t#!TEORIA decoratori", ParsedTrigger("theory", "decoratori")),
         ("#!theory generators", ParsedTrigger("theory", "generators")),
         ("#!teoria", ParsedTrigger("theory", "")),
+        ("#! teoria context manager", ParsedTrigger("theory", "context manager")),
+        ("#!   theory", ParsedTrigger("theory", "")),
     ],
 )
 def test_triggers_fire(line: str, expected: ParsedTrigger) -> None:
@@ -27,6 +29,9 @@ def test_triggers_fire(line: str, expected: ParsedTrigger) -> None:
         "#!   ",
         "#!alt",  # after the MVP
         "#!sconosciuto qualcosa",
+        "#! sconosciuto qualcosa",
+        "#!/usr/bin/env python3",  # a shebang
+        "#! /usr/bin/env python3",
         "x = 1  #? why",  # only whole-line comments count
         'print("#? in a string")',
         "",

@@ -11,7 +11,7 @@
 | MVP success criteria met | 6/6 (1 latency p50, 2 proactive, 3 token budget, 4 trigger rules, 5 demo, 6 gate) | measured: devlog 2026-10-15 10:10 (criterion 1) and 2026-10-14 21:50 |
 | `#?` first-token latency, plugin code path → brain → Claude Sonnet 5.5 → notch (1.7–3.2k tokens in) | p50 1572 ms, p90 1896 ms, range 1397–2097 ms (target p50 ≤ 3 s: met); repeat run p50 1634 ms, range 1492–2967 ms | measured: `scripts/bench-latency`, 2 × 10 runs on 2026-10-15 (devlog) |
 | Proactive hint, idle → hint done (Qwen3-Coder-30B-A3B, llama.cpp) | 585 ms (first token 24 ms); idle fires 4.05 s after the last keystroke | measured: 1 live run on 2026-10-14 (devlog) |
-| Tests (brain / notch / plugin / overlay) | 257 / 42 / 45 / 93 | measured: `python3 scripts/ratchet.py` (2026-10-15) |
+| Tests (brain / notch / plugin / overlay) | 262 / 42 / 48 / 117 | measured: `python3 scripts/ratchet.py` (2026-10-15) |
 | CI (`.github/workflows/ci.yml`) | green on ubuntu, windows, macos + Linux e2e + packaged-build e2e on Linux and Windows | measured: run 38710592165, 2026-10-15 |
 | Eval score of suggestions (29 cases, deterministic checks, 0–100) | **99.1** (baseline 94.5); judge 3.89/5 (local, not ratcheted) | measured: `buddy eval --repeat 3 --triggers --judge local`, `evals/results/2026-10-15-2.json`; hints Qwen3-Coder-30B-A3B on llama.cpp, triggers Sonnet 5.5 |
 

@@ -2,6 +2,75 @@
 
 Newest first. Terse. Written at the end of every task so the next agent can pick up.
 
+## 2026-10-15 16:25: the panel's monitor, and the pin it needed (branch fix/overlay-hyprland)
+
+- **From the tester's second report** (`~/Work/codebuddy-0.1.1-report.md`, Omarchy, two monitors,
+  the second rotated), run against the CI package of this branch: bugs 1, 2, 3, 4 and 6 confirmed
+  fixed on the real desktop, two left.
+- **Bug 7 (new, it made the panel invisible):** XWayland publishes its own X11 layout. There it
+  called the rotated monitor primary and put it at `0,0`, while Hyprland has the main one there.
+  Centring on `primaryScreen()` asked for `x=500`; Hyprland read that in its own space as
+  **`-580`**, so the panel sat outside every screen: nothing drawn, no pointer, `VIEWABLE` in X11.
+  It also explains the panel that "disappeared after 15 minutes" in the first report, which nobody
+  could reproduce: XWayland restarts when its last client exits, and the layouts drift apart.
+  Now `panel_placement` picks the compositor's focused monitor (or `BUDDY_MONITOR`) and the window
+  follows the **Qt screen with the same connector name**, looked up on every placement.
+  Measured here: X11 `2320,30` → Hyprland `1240,30`, centred on DP-2 under the 30 px bar, and the
+  log now prints the chosen screen and every screen Qt sees.
+- **Bug 5 (not fixed by the dock after all):** a dock window on Hyprland belongs to the workspace
+  it opened on (`hyprctl clients`: `workspace: 4`), and `_NET_WM_DESKTOP = 0xFFFFFFFF` and
+  `_NET_WM_STATE_STICKY` set before the map are both ignored (measured on 0.56.2). The panel now
+  asks Hyprland to pin it (`hl.dsp.window.pin`, `action = "on"`; the flat form is a toggle, so it
+  is only the fallback), retried on a Qt timer until `hyprctl clients` confirms. Measured:
+  `pinned: true`, and the panel is on every workspace.
+- **Tests:** overlay 112 → **117** (floor raised). `hyprland_tops`/`sway_tops`/`top_for_screen`
+  became `hyprland_monitors`/`sway_monitors`/`target_monitor` (name, bar, focus), `top_placement`
+  became `panel_placement` (screen + offset), plus the pin commands and `_screen()` by name.
+  `scripts/smoke_bundle_desktop.py` now checks the chosen screen is named in the log and that the
+  pin was dispatched; its fake `hyprctl` answers `clients` so the retry stops on its own.
+  `overlay/tests/conftest.py` no longer inherits a Wayland session's `QT_QPA_PLATFORM`
+  (`wayland;xcb` made `./scripts/check` fail on the tester's machine only).
+- **Verified on the machine that reported it** (packaged build, Hyprland 0.56.2, two monitors):
+  log `top offset 30 px (from hyprland) on DP-2`, `X11 window type: dock`; hover opens the ears
+  (80x24 → 232x24, still centred); panel visible on another workspace. Gate green (`./scripts/check`),
+  package smoke test green.
+- **Still open:** click, right-click → Esci and a real `#?` are the human's to try (no pointer-click
+  tool on Hyprland here); the 15-minute endurance only means something now that the panel is on
+  screen. `[overlay] monitor` is not in the settings file or the PyCharm page yet: `BUDDY_MONITOR`
+  only, because the plugin's page would drop a key it doesn't know.
+
+## 2026-10-15 16:00: 0.1.1 tester report fixed (branch fix/overlay-hyprland)
+
+- **From** `~/Downloads/codebuddy-0.1.1-report.md` (Omarchy, Hyprland 0.56.2, packaged 0.1.1).
+  Six bugs, all fixed:
+  1. `QT_QPA_PLATFORM=wayland;xcb` (a distro's fallback chain) kept the panel on Wayland. Now only
+     a single platform counts as a choice.
+  2. The bundle's `LD_LIBRARY_PATH` broke the system `hyprctl` (offset 0). `desktop.child_env`
+     gives back PyInstaller's `*_ORIG` to the probes and the brain, and a failing probe now logs
+     its stderr.
+  3. `app.placement` never passed the config's `top_offset`. `configured` is now required, and a
+     test goes through `app.placement`.
+  4. and 5. Hyprland gives an override-redirect XWayland window no pointer events and keeps it on
+     one workspace. On Hyprland the panel is now a `_NET_WM_WINDOW_TYPE_DOCK` window
+     (`overlay/.../x11.py`, libX11 via ctypes, set before the first map); everywhere else it stays
+     override-redirect. Sway would tile a dock and centre a floating window, so it can't be dock
+     everywhere. `BUDDY_X11_WINDOW=dock|override` overrides.
+  6. `#! teoria` with a space works in the brain and the plugin; an unknown `#!word` gets an
+     editor hint (`EditorHints` service). Shebangs are excluded.
+- **Why CI missed them:** the e2e ran from source and on Sway, and nothing touched the panel with
+  a pointer. New: `scripts/smoke_bundle_desktop.py` runs the packaged overlay with a fake
+  `hyprctl` (package job, Linux), and `e2e_wayland.py` now moves a virtual pointer (`wlrctl` +
+  `swaymsg seat - cursor`): hover → ears, click → open; it also uses `QT_QPA_PLATFORM=wayland;xcb`.
+  (wlrctl destroys its device at once, so `scripts/wl_pointer.py` keeps a
+  zwlr_virtual_pointer_v1 alive; the demo is sampled from when the pill shows, as XWayland can
+  take 5 s to start.) CI run 38746072727 green on every job; screenshots
+  `docs/screenshots/overlay/ci-sway-pointer-{peek,expanded}.png` (opened: cursor on the pill,
+  panel under swaybar). The package smoke test passed in the real PyInstaller build (offset 30
+  from the fake hyprctl, clean LD_LIBRARY_PATH, dock set, config 64 used).
+- **Numbers:** brain 262, plugin 48, overlay 112 (floors raised); notch 42; eval 99.1.
+- **Still open:** Hyprland itself is not in CI. G17 human check with the next build (hover,
+  click, workspaces, the "panel no longer drawn after 15 min" observation). G16.
+
 ## 2026-10-15 14:10: v0.1.1 (main)
 
 - **Landed:** `feat/settings` (with `fix/overlay-wayland`) merged into `main` at the user's request

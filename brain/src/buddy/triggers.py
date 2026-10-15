@@ -26,7 +26,8 @@ def parse_trigger_line(line: str) -> ParsedTrigger | None:
         text = stripped[2:].strip()
         return ParsedTrigger("question", text) if text else None
     if stripped.startswith("#!"):
-        command, _, rest = stripped[2:].partition(" ")
+        # `#! teoria x` works like `#!teoria x`, as `#? q` works like `#?q`.
+        command, _, rest = stripped[2:].lstrip().partition(" ")
         kind = COMMANDS.get(command.lower())
         # `#!teoria` with no topic is allowed: it asks for the theory behind the code at that line.
         return ParsedTrigger(kind, rest.strip()) if kind else None
