@@ -209,3 +209,38 @@ def test_a_bar_the_desktop_hides_pushes_every_state_down(qapp: QApplication) -> 
             assert w.y() >= screen.geometry().y() + 30
     finally:
         w.close()
+
+
+def test_the_app_places_the_panel_with_the_config_file(
+    qapp: QApplication, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Through `app.placement`, the call the app makes: 0.1.1 read the file in tests only."""
+    from codebuddy_overlay.desktop import TopPlacement
+
+    config = tmp_path / "config.toml"
+    config.write_text("[overlay]\ntop_offset = 64\n", encoding="utf-8")
+    monkeypatch.setenv("BUDDY_CONFIG", str(config))
+    monkeypatch.delenv("BUDDY_TOP_OFFSET", raising=False)
+    assert overlay_app.placement(qapp) == TopPlacement(explicit=64)
+    monkeypatch.setenv("BUDDY_TOP_OFFSET", "12")
+    assert overlay_app.placement(qapp) == TopPlacement(explicit=12)
+
+
+def test_a_dock_panel_is_a_dock_before_it_shows(qapp: QApplication) -> None:
+    """Hyprland: `_NET_WM_WINDOW_TYPE_DOCK` instead of override-redirect. Checked on a real X
+    server where there is one (Linux CI: xcb under Xvfb); elsewhere no X11 call is made."""
+    from PySide6.QtCore import Qt
+
+    from codebuddy_overlay import x11
+
+    model = OverlayModel(ManualScheduler())
+    w = OverlayWindow(model, x11_kind="dock")
+    try:
+        assert not w.windowFlags() & Qt.WindowType.X11BypassWindowManagerHint
+        if qapp.platformName() == "xcb":
+            assert x11.window_types(int(w.winId())) == [x11.DOCK]
+            w.show()
+            qapp.processEvents()
+            assert x11.window_types(int(w.winId())) == [x11.DOCK]  # Qt kept it on map
+    finally:
+        w.close()

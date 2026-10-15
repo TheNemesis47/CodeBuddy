@@ -5,26 +5,33 @@ Two problems, both solved here and not in user config:
 1. On Wayland a client can't place itself, and wlroots compositors (Hyprland, Sway, river…) also
    ignore its resizes, so the panel would stay a pill wherever the compositor dropped it. Under
    XWayland its own geometry code works: `qt_platform_for` picks `xcb` when the user didn't pick
-   a platform and XWayland is there.
+   one platform and XWayland is there.
 2. A layer-shell bar (Waybar, Omarchy's bar, swaybar…) is drawn over normal windows and takes the
    clicks in its strip, but XWayland is never told it is there: Qt reports the whole screen as
    available and the panel would open under the bar. `top_placement` asks the compositor how much
    it reserves at the top; `BUDDY_TOP_OFFSET` (or `[overlay] top_offset` in the config file) is
    the manual answer for any other desktop.
 
-Pure functions on the environment and on the compositor's JSON, plus one `probe` that runs the
-compositor's CLI with a short timeout. Nothing here is needed on macOS or Windows.
+How the window manager treats the panel under X11 is chosen here too (`x11_window_kind`).
+
+Pure functions on the environment and on the compositor's JSON, plus `_run`, which runs the
+compositor's CLI with a short timeout and the caller's own library path. Nothing here is needed on
+macOS or Windows.
 """
 
 import json
+import os
 import subprocess
+import sys
 import tomllib
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, TypeIs
+from typing import Any, Literal, TypeIs
 
 import platformdirs
+
+from codebuddy_overlay.log import log
 
 PROBE_TIMEOUT_S = 1.0
 
@@ -33,10 +40,39 @@ type Tops = dict[tuple[int, int], int]  # monitor's top-left corner → pixels r
 
 
 def qt_platform_for(env: Mapping[str, str], platform: str) -> str | None:
-    """`xcb` on a Linux Wayland session with XWayland, unless the user chose a Qt platform."""
-    if platform != "linux" or env.get("QT_QPA_PLATFORM") or not env.get("WAYLAND_DISPLAY"):
+    """`xcb` on a Linux Wayland session with XWayland, unless the user picked one Qt platform.
+
+    A list like "wayland;xcb" is Qt's fallback chain, which distros set for the whole session
+    (Omarchy, many KDE and uwsm setups): it is not a choice to stay on Wayland."""
+    if platform != "linux" or not env.get("WAYLAND_DISPLAY") or not env.get("DISPLAY"):
         return None
-    return "xcb" if env.get("DISPLAY") else None
+    chosen = [name.strip() for name in env.get("QT_QPA_PLATFORM", "").split(";") if name.strip()]
+    if len(chosen) == 1:  # one platform: the user means it
+        return None
+    if chosen and "xcb" not in chosen:  # a chain that never gives X11
+        return None
+    return "xcb"
+
+
+type X11WindowKind = Literal["dock", "override"]
+
+
+def x11_window_kind(env: Mapping[str, str]) -> X11WindowKind:
+    """How the panel escapes the window manager on X11 and XWayland, so no WM tiles, moves,
+    resizes or decorates it and nobody writes per-WM rules.
+
+    `override` (override-redirect, the WM never sees the window) works on X11 and on most XWayland
+    compositors (Sway, KDE, GNOME). Hyprland gives an override-redirect XWayland window no pointer
+    events and pins it to one workspace, so there the panel is a `dock` (_NET_WM_WINDOW_TYPE_DOCK):
+    still left alone, on every workspace, and clickable. `BUDDY_X11_WINDOW` picks one by hand."""
+    match env.get("BUDDY_X11_WINDOW", "").strip().lower():
+        case "dock":
+            return "dock"
+        case "override":
+            return "override"
+        case _:
+            pass
+    return "dock" if env.get("HYPRLAND_INSTANCE_SIGNATURE") else "override"
 
 
 def parse_offset(value: object) -> int | None:
@@ -121,14 +157,44 @@ def top_for_screen(tops: Tops, screen_x: int, screen_y: int) -> int:
     return max(tops.values(), default=0)
 
 
+_LOADER_VARS = ("LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH", "LD_PRELOAD")
+
+
+def child_env(env: Mapping[str, str], frozen: bool) -> dict[str, str]:
+    """The environment for a program we start (the compositor's CLI, the brain).
+
+    A packaged build (PyInstaller) points LD_LIBRARY_PATH at its own bundled libraries, where a
+    system `hyprctl` or `swaymsg` can't start (an older libstdc++). PyInstaller keeps the caller's
+    value as <VAR>_ORIG: give it back, or drop the variable if there was none."""
+    child = dict(env)
+    for var in _LOADER_VARS:
+        original = child.pop(f"{var}_ORIG", None)
+        if original is not None:
+            child[var] = original
+        elif frozen:
+            child.pop(var, None)
+    return child
+
+
 def _run(command: Sequence[str]) -> str | None:
     try:
         result = subprocess.run(
-            list(command), capture_output=True, text=True, timeout=PROBE_TIMEOUT_S, check=False
+            list(command),
+            capture_output=True,
+            text=True,
+            timeout=PROBE_TIMEOUT_S,
+            check=False,
+            env=child_env(os.environ, getattr(sys, "frozen", False)),
         )
-    except OSError, subprocess.SubprocessError:
+    except (OSError, subprocess.SubprocessError) as error:
+        log(f"{command[0]} failed: {error}")
         return None
-    return result.stdout if result.returncode == 0 else None
+    if result.returncode != 0:
+        # Without this line a broken probe looks like "this desktop reserves nothing".
+        reason = result.stderr.strip().splitlines()[-1:] or ["no output"]
+        log(f"{command[0]} failed (exit {result.returncode}): {reason[0]}")
+        return None
+    return result.stdout
 
 
 def _json(text: str | None) -> object:
@@ -174,13 +240,14 @@ def top_placement(
     env: Mapping[str, str],
     screen_x: int,
     screen_y: int,
-    configured: object = None,
+    configured: object,
     run: Run = _run,
 ) -> tuple[TopPlacement, str]:
     """The placement for this desktop, and a line for the log saying where it came from.
 
-    Order: `BUDDY_TOP_OFFSET`, then `configured` (the config file), then the compositor (Wayland
-    only), then Qt's own available area."""
+    Order: `BUDDY_TOP_OFFSET`, then `configured` (`configured_top_offset`, the config file), then
+    the compositor (Wayland only), then Qt's own available area. `configured` has no default, so
+    a caller can't forget the config file."""
     for source, value in (
         ("BUDDY_TOP_OFFSET", env.get("BUDDY_TOP_OFFSET")),
         ("config", configured),

@@ -16,10 +16,12 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import QApplication, QLabel, QMenu, QPushButton, QTextBrowser, QWidget
 
+from codebuddy_overlay import x11
 from codebuddy_overlay.answers import Status
-from codebuddy_overlay.desktop import TopPlacement
+from codebuddy_overlay.desktop import TopPlacement, X11WindowKind
 from codebuddy_overlay.geometry import EAR_WIDTH, PILL_HEIGHT, Layout, layout, top_center
 from codebuddy_overlay.island import State
+from codebuddy_overlay.log import log
 from codebuddy_overlay.model import OverlayModel
 from codebuddy_overlay.protocol import AnswerKind
 from codebuddy_overlay.sprout import SproutWidget
@@ -49,24 +51,34 @@ pre { background-color: #1a1a1a; }
 """
 
 
-def window_flags(platform: str) -> Qt.WindowType:
+def window_flags(platform: str, kind: X11WindowKind = "override") -> Qt.WindowType:
     flags = (
         Qt.WindowType.FramelessWindowHint
         | Qt.WindowType.WindowStaysOnTopHint
         | Qt.WindowType.Tool  # no taskbar entry
         | Qt.WindowType.WindowDoesNotAcceptFocus
     )
-    if platform == "xcb":
+    if platform == "xcb" and kind == "override":
         # Unmanaged (override-redirect) on X11 and XWayland: the window manager never tiles,
         # moves, resizes, decorates or dims it, so every WM places it where `_place` says, with no
-        # per-WM rules (i3, Hyprland, Sway…). The panel needs no keyboard focus.
+        # per-WM rules. The panel needs no keyboard focus. Not on Hyprland: see x11_window_kind.
         flags |= Qt.WindowType.X11BypassWindowManagerHint
     return flags
 
 
 class OverlayWindow(QWidget):
-    def __init__(self, model: OverlayModel, placement: TopPlacement | None = None) -> None:
-        super().__init__(None, window_flags(QApplication.platformName()))
+    def __init__(
+        self,
+        model: OverlayModel,
+        placement: TopPlacement | None = None,
+        x11_kind: X11WindowKind = "override",
+    ) -> None:
+        platform = QApplication.platformName()
+        super().__init__(None, window_flags(platform, x11_kind))
+        if platform == "xcb" and x11_kind == "dock":
+            # Before the first show(): a WM reads the type when the window is mapped.
+            failed = x11.set_window_type(int(self.winId()), x11.DOCK)
+            log(f"X11 window type: {'dock' if failed is None else f'not set, {failed}'}")
         self.placement = placement or TopPlacement()
         self.setWindowTitle("CodeBuddy")
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)

@@ -8,12 +8,14 @@ from PySide6.QtCore import Qt
 
 from codebuddy_overlay.desktop import (
     TopPlacement,
+    child_env,
     hyprland_tops,
     parse_offset,
     qt_platform_for,
     sway_tops,
     top_for_screen,
     top_placement,
+    x11_window_kind,
 )
 from codebuddy_overlay.window import window_flags
 
@@ -83,6 +85,14 @@ SWAY = {**WAYLAND, "SWAYSOCK": "/run/user/1000/sway-ipc.sock"}
         (WAYLAND, "linux", "xcb"),
         ({"WAYLAND_DISPLAY": "wayland-1"}, "linux", None),  # no XWayland: leave Qt alone
         ({**WAYLAND, "QT_QPA_PLATFORM": "wayland"}, "linux", None),  # the user chose
+        ({**WAYLAND, "QT_QPA_PLATFORM": "xcb"}, "linux", None),  # already X11
+        ({**WAYLAND, "QT_QPA_PLATFORM": ""}, "linux", "xcb"),
+        # Qt's fallback chain, set session-wide by distros (Omarchy: "wayland;xcb")
+        ({**WAYLAND, "QT_QPA_PLATFORM": "wayland;xcb"}, "linux", "xcb"),
+        ({**WAYLAND, "QT_QPA_PLATFORM": "wayland;xcb;offscreen"}, "linux", "xcb"),
+        ({**WAYLAND, "QT_QPA_PLATFORM": " wayland ; xcb "}, "linux", "xcb"),
+        ({**WAYLAND, "QT_QPA_PLATFORM": "wayland;offscreen"}, "linux", None),  # never X11
+        ({"WAYLAND_DISPLAY": "wayland-1", "QT_QPA_PLATFORM": "wayland;xcb"}, "linux", None),
         ({"DISPLAY": ":0"}, "linux", None),  # plain X11 already is xcb
         (WAYLAND, "win32", None),
         (WAYLAND, "darwin", None),
@@ -158,7 +168,7 @@ def test_the_strip_is_the_screens_own_else_the_largest() -> None:
 
 def test_on_hyprland_the_bar_comes_from_hyprctl() -> None:
     run = FakeCompositor({"monitors": HYPRLAND_MONITORS})
-    placement, source = top_placement(HYPRLAND, 0, 0, run=run)
+    placement, source = top_placement(HYPRLAND, 0, 0, None, run=run)
     assert placement == TopPlacement(reserved=30)
     assert run.asked == [["hyprctl", "-j", "monitors"]]
     assert "hyprland" in source
@@ -166,11 +176,12 @@ def test_on_hyprland_the_bar_comes_from_hyprctl() -> None:
 
 def test_on_sway_the_bar_comes_from_swaymsg() -> None:
     run = FakeCompositor({"get_outputs": SWAY_OUTPUTS, "get_workspaces": SWAY_WORKSPACES})
-    placement, _ = top_placement(SWAY, 0, 0, run=run)
+    placement, _ = top_placement(SWAY, 0, 0, None, run=run)
     assert placement == TopPlacement(reserved=22)
 
 
 def test_the_user_wins_over_the_config_file_and_the_compositor() -> None:
+    # 0.1.1 shipped with app.py not passing the config file: `configured` has no default now.
     run = FakeCompositor({"monitors": HYPRLAND_MONITORS})
     placement, source = top_placement({**HYPRLAND, "BUDDY_TOP_OFFSET": "44"}, 0, 0, "12", run=run)
     assert placement == TopPlacement(explicit=44) and "BUDDY_TOP_OFFSET" in source
@@ -182,14 +193,14 @@ def test_the_user_wins_over_the_config_file_and_the_compositor() -> None:
 
 
 def test_a_compositor_that_fails_to_answer_leaves_the_work_area() -> None:
-    placement, _ = top_placement(HYPRLAND, 0, 0, run=FakeCompositor({}))
+    placement, _ = top_placement(HYPRLAND, 0, 0, None, run=FakeCompositor({}))
     assert placement == TopPlacement(reserved=0)
 
 
 def test_off_wayland_the_compositor_is_never_asked() -> None:
     run = FakeCompositor({"monitors": HYPRLAND_MONITORS})
     placement, _ = top_placement(
-        {"DISPLAY": ":0", "HYPRLAND_INSTANCE_SIGNATURE": "x"}, 0, 0, run=run
+        {"DISPLAY": ":0", "HYPRLAND_INSTANCE_SIGNATURE": "x"}, 0, 0, None, run=run
     )
     assert placement == TopPlacement() and run.asked == []
 
@@ -200,6 +211,59 @@ def test_on_x11_and_xwayland_the_window_manager_is_bypassed() -> None:
         assert not window_flags(platform) & Qt.WindowType.X11BypassWindowManagerHint
 
 
+def test_a_dock_is_never_override_redirect() -> None:
+    """Hyprland: an override-redirect XWayland window gets no pointer events (0.1.1 report)."""
+    assert not window_flags("xcb", "dock") & Qt.WindowType.X11BypassWindowManagerHint
+    assert window_flags("xcb", "dock") & Qt.WindowType.WindowStaysOnTopHint
+
+
+@pytest.mark.parametrize(
+    ("env", "expected"),
+    [
+        ({}, "override"),
+        (SWAY, "override"),
+        ({"DISPLAY": ":0"}, "override"),
+        (HYPRLAND, "dock"),
+        ({**HYPRLAND, "BUDDY_X11_WINDOW": "override"}, "override"),
+        ({**SWAY, "BUDDY_X11_WINDOW": " Dock "}, "dock"),
+        ({**HYPRLAND, "BUDDY_X11_WINDOW": "boh"}, "dock"),
+    ],
+)
+def test_hyprland_gets_a_dock_everyone_else_override_redirect(env, expected) -> None:
+    assert x11_window_kind(env) == expected
+
+
+def test_programs_we_start_get_the_callers_library_path_back() -> None:
+    """PyInstaller points LD_LIBRARY_PATH into the bundle, where system hyprctl can't start."""
+    bundle = {
+        "LD_LIBRARY_PATH": "/opt/CodeBuddy/overlay/_internal",
+        "LD_LIBRARY_PATH_ORIG": "/usr/local/lib",
+        "PATH": "/usr/bin",
+    }
+    assert child_env(bundle, frozen=True) == {
+        "LD_LIBRARY_PATH": "/usr/local/lib",
+        "PATH": "/usr/bin",
+    }
+    assert child_env({"LD_LIBRARY_PATH": "/opt/b/_internal"}, frozen=True) == {}  # caller had none
+    assert child_env({"LD_LIBRARY_PATH": "/mine"}, frozen=False) == {"LD_LIBRARY_PATH": "/mine"}
+
+
+def test_a_failing_probe_says_why_and_gets_the_callers_environment(monkeypatch, capsys) -> None:
+    import sys
+
+    from codebuddy_overlay import desktop
+
+    fail = [sys.executable, "-c", "import sys; sys.stderr.write('libstdc++ too old'); sys.exit(1)"]
+    assert desktop._run(fail) is None
+    assert "failed (exit 1): libstdc++ too old" in capsys.readouterr().err
+
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setenv("LD_PRELOAD_ORIG", "")
+    monkeypatch.setenv("LD_PRELOAD", "/opt/CodeBuddy/_internal/libfake.so")
+    show = [sys.executable, "-c", "import os; print(repr(os.environ.get('LD_PRELOAD')))"]
+    assert desktop._run(show) == "''\n"  # the caller's (empty) value, not the bundle's
+
+
 def test_the_settings_file_can_set_the_offset(tmp_path) -> None:
     from codebuddy_overlay.desktop import configured_top_offset
 
@@ -208,7 +272,7 @@ def test_the_settings_file_can_set_the_offset(tmp_path) -> None:
     assert configured_top_offset(env) is None  # no file
     path.write_text("[overlay]\ntop_offset = 34\n", encoding="utf-8")
     assert configured_top_offset(env) == 34
-    placement, source = top_placement(env, 0, 0, configured_top_offset(env))
+    placement, source = top_placement(env, 0, 0, configured_top_offset(env))  # see test_window
     assert placement == TopPlacement(explicit=34) and "config" in source
     path.write_text('[overlay]\ntop_offset = "auto"\n', encoding="utf-8")
     assert parse_offset(configured_top_offset(env)) is None

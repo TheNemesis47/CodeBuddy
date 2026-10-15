@@ -6,7 +6,11 @@ y = 0, under the bar. Passes when, during `--demo`, the panel takes all three si
 open panel), always centred and always right below the bar, and the overlay logged that the
 offset came from Sway. Saves screenshots (grim) of the whole screen per state.
 
-Linux only. Needs: sway, xwayland, grim, x11-utils (xwininfo).
+Then the pointer, through the compositor as a real mouse goes (a virtual pointer, wlrctl, moved
+with `swaymsg seat - cursor`): over the pill the panel must open its ears, and a click must open
+it. 0.1.1 shipped a panel Hyprland gave no pointer events to, and no test had ever touched it.
+
+Linux only. Needs: sway, xwayland, grim, x11-utils (xwininfo), wlrctl.
 Usage: uv run --project overlay python scripts/e2e_wayland.py OUTDIR
 """
 
@@ -39,7 +43,7 @@ exec {python} {script} inside {out}
 
 def outside(out: Path) -> int:
     """Start Sway headless; it runs `inside` and exits when that is done."""
-    for tool in ("sway", "grim", "xwininfo"):
+    for tool in ("sway", "grim", "xwininfo", "wlrctl"):
         if shutil.which(tool) is None:
             raise SystemExit(f"e2e-wayland: {tool} is not installed")
     out.mkdir(parents=True, exist_ok=True)
@@ -99,6 +103,56 @@ def panel_geometry() -> tuple[int, int, int, int] | None:
     return tuple(int(v) for v in match.groups()) if match else None  # type: ignore[return-value]
 
 
+def wait_for_size(size: tuple[int, int], within_s: float) -> tuple[int, int, int, int] | None:
+    deadline = time.monotonic() + within_s
+    while time.monotonic() < deadline:
+        geometry = panel_geometry()
+        if geometry is not None and geometry[2:] == size:
+            return geometry
+        time.sleep(0.1)
+    return None
+
+
+def sway(*command: str) -> None:
+    subprocess.run(["swaymsg", *command], capture_output=True, check=False)
+
+
+def pointer_phase(out: Path, env: dict[str, str], bar: int) -> list[str]:
+    """No brain (it stays "off"): hover the pill → ears, click → open panel."""
+    home = Path(tempfile.mkdtemp(prefix="codebuddy-home-"))
+    overlay = subprocess.Popen(
+        [sys.executable, "-m", "codebuddy_overlay.app", "--quit-after", "20"],
+        env={**env, "BUDDY_HOME": str(home), "BUDDY_PORT": "1"},
+        stdout=(out / "overlay-pointer.log").open("wb"),
+        stderr=subprocess.STDOUT,
+    )
+    problems = []
+    try:
+        hidden = wait_for_size(SIZES["hidden"], 8)
+        if hidden is None:
+            return ["pointer: the pill never showed"]
+        # A headless Sway has no pointer device: a virtual one gives the seat a pointer.
+        subprocess.run(["wlrctl", "pointer", "move", "1", "1"], check=False, timeout=5)
+        x, y, w, h = hidden
+        sway("seat", "-", "cursor", "set", str(x + w // 2), str(y + h // 2))
+        if wait_for_size(SIZES["peek"], 4) is None:
+            problems.append("pointer: hovering the pill did not open its ears (no enter event)")
+        else:
+            subprocess.run(["grim", str(out / "pointer-peek.png")], check=False)
+        sway("seat", "-", "cursor", "press", "button1")
+        sway("seat", "-", "cursor", "release", "button1")
+        if wait_for_size(SIZES["expanded"], 4) is None:
+            problems.append("pointer: clicking the pill did not open the panel (no press event)")
+        else:
+            subprocess.run(["grim", str(out / "pointer-expanded.png")], check=False)
+        geometry = panel_geometry()
+        if geometry is not None and geometry[1] != bar:
+            problems.append(f"pointer: the panel moved to y = {geometry[1]}, expected {bar}")
+    finally:
+        overlay.kill()
+    return problems
+
+
 def inside(out: Path) -> None:
     """Runs as a child of Sway: WAYLAND_DISPLAY, SWAYSOCK and DISPLAY are set."""
     result: dict[str, object] = {"ok": False}
@@ -108,7 +162,8 @@ def inside(out: Path) -> None:
         bar = bar_height()
         result["bar_height"] = bar
         result["env"] = {k: os.environ.get(k) for k in ("WAYLAND_DISPLAY", "DISPLAY", "SWAYSOCK")}
-        env = {k: v for k, v in os.environ.items() if k != "QT_QPA_PLATFORM"}
+        # Qt's fallback chain, as distros set it session-wide (Omarchy): the panel still picks xcb.
+        env = {**os.environ, "QT_QPA_PLATFORM": "wayland;xcb"}
         log_path = out / "overlay.log"
         overlay = subprocess.Popen(
             [
@@ -153,6 +208,7 @@ def inside(out: Path) -> None:
             problems.append("the overlay did not take the offset from Sway (see overlay.log)")
         if "using XWayland" not in log:
             problems.append("the overlay did not switch to XWayland (see overlay.log)")
+        problems += pointer_phase(out, env, bar)
         result.update(
             ok=not problems,
             problems=problems,

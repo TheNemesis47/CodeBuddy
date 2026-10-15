@@ -2,6 +2,7 @@ package dev.codebuddy.pycharm
 
 import com.google.gson.JsonParser
 import com.intellij.openapi.components.service
+import com.intellij.openapi.editor.Editor
 import com.intellij.testFramework.PlatformTestUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.testFramework.replaceService
@@ -51,6 +52,32 @@ class PluginFlowTest : BasePlatformTestCase() {
     fun testEnterAfterTheoryWithoutTopicSendsATrigger() {
         val sent = pressEnterAfter("#!teoria<caret>\nx = 1\n")
         assertEquals("theory", JsonParser.parseString(sent.single().second).asJsonObject["kind"].asString)
+    }
+
+    fun testEnterAfterTheoryWithASpaceSendsATrigger() {
+        val sent = pressEnterAfter("#! teoria context manager<caret>\nx = 1\n")
+        val message = JsonParser.parseString(sent.single().second).asJsonObject
+        assertEquals("theory", message["kind"].asString)
+        assertEquals("context manager", message["text"].asString)
+    }
+
+    fun testAnUnknownCommandSendsNothingAndSaysSoInAHint() {
+        val hints = CopyOnWriteArrayList<String>()
+        ApplicationManager.getApplication().replaceService(
+            EditorHints::class.java,
+            object : EditorHints {
+                override fun show(editor: Editor, text: String) {
+                    hints += text
+                }
+            },
+            testRootDisposable,
+        )
+        assertEmpty(pressEnterAfter("#! boh x<caret>\n"))
+        assertEquals(listOf(unknownCommandHint("boh")), hints)
+        assertTrue("#!teoria" in hints.single())
+        assertEmpty(pressEnterAfter("#!/usr/bin/env python3<caret>\n"))
+        assertEquals(1, pressEnterAfter("#!teoria x<caret>\n").size) // a known command: a trigger, no hint
+        assertEquals(1, hints.size)
     }
 
     fun testEnterAfterNormalLinesSendsNothing() {

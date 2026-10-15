@@ -28,14 +28,20 @@ The panel handles these by itself; nothing to configure on most desktops:
 
 - **Wayland:** a Wayland app can't place or (on wlroots compositors) resize its own window, so the
   panel runs through XWayland (`QT_QPA_PLATFORM=xcb`), where it can. It needs XWayland, which every
-  mainstream desktop has. To force something else, set `QT_QPA_PLATFORM` yourself.
-- **Tiling window managers** (Hyprland, Sway, i3…): the panel is an unmanaged X11 window
-  (override-redirect), so it is never tiled, moved, dimmed or given borders, and needs no window
-  rules. It shows on every workspace.
+  mainstream desktop has. A fallback list your distro sets for the whole session, like
+  `wayland;xcb` (Omarchy), doesn't stop it; to force one platform, set `QT_QPA_PLATFORM` to just
+  that one (`wayland`, `xcb`…).
+- **Tiling window managers** (Hyprland, Sway, i3…): the panel is never tiled, moved, dimmed or
+  given borders, needs no window rules, and shows on every workspace. On Hyprland it is a dock
+  window (`_NET_WM_WINDOW_TYPE_DOCK`), because Hyprland gives no mouse events to unmanaged X11
+  windows; everywhere else it is an unmanaged (override-redirect) window. If the panel can't be
+  hovered or clicked on your desktop, try the other one: `BUDDY_X11_WINDOW=dock ./codebuddy.sh` or
+  `BUDDY_X11_WINDOW=override ./codebuddy.sh`, and tell us which works.
 - **A bar at the top** (Waybar, Omarchy's bar, swaybar, Hyprpanel…): on wlroots compositors
   XWayland is not told about the bar, so the panel asks the compositor how much space it reserves:
   `hyprctl -j monitors` on Hyprland, `swaymsg` on Sway. GNOME and KDE tell Qt directly. The log
-  says where the offset came from (`top offset 30 px (from hyprland)`).
+  says where the offset came from (`top offset 30 px (from hyprland)`), and if `hyprctl` or
+  `swaymsg` failed, why.
 
 On any other compositor with a top bar (river, niri, labwc…), if the panel opens under the bar and
 can't be clicked, set the bar's height by hand: in PyCharm → Settings → Tools → CodeBuddy → "Space

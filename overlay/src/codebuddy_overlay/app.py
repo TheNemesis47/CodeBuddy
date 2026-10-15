@@ -7,7 +7,6 @@ import subprocess
 import sys
 import time
 from collections.abc import Callable
-from datetime import datetime
 from pathlib import Path
 
 from PySide6.QtCore import QTimer
@@ -17,15 +16,12 @@ from codebuddy_overlay import demo, desktop
 from codebuddy_overlay.answers import Status
 from codebuddy_overlay.client import ConnectionLoop, Endpoint, start_in_background
 from codebuddy_overlay.island import ManualScheduler, ScheduledWork
+from codebuddy_overlay.log import log
 from codebuddy_overlay.model import Connection, OverlayModel
 from codebuddy_overlay.protocol import AnswerEnd, BrainMessage, Error
 from codebuddy_overlay.window import OverlayWindow
 
 SNAPSHOT_TIME = 1.0  # Sprout's clock in snapshots: eyes open, no blink
-
-
-def log(message: str) -> None:
-    print(f"[{datetime.now():%H:%M:%S}] overlay: {message}", file=sys.stderr, flush=True)
 
 
 class QtScheduler:
@@ -159,7 +155,8 @@ def start_brain(command: str) -> subprocess.Popen[bytes]:
     else:
         args = shlex.split(command)
     log(f"starting the brain: {args[0]}")
-    return subprocess.Popen(args, creationflags=flags)
+    env = desktop.child_env(os.environ, getattr(sys, "frozen", False))
+    return subprocess.Popen(args, creationflags=flags, env=env)
 
 
 def stop_brain(process: subprocess.Popen[bytes]) -> None:
@@ -175,7 +172,10 @@ def placement(app: QApplication) -> desktop.TopPlacement:
     screen = app.primaryScreen()
     if screen is None:
         return desktop.TopPlacement()
-    found, source = desktop.top_placement(os.environ, screen.geometry().x(), screen.geometry().y())
+    geometry = screen.geometry()
+    found, source = desktop.top_placement(
+        os.environ, geometry.x(), geometry.y(), desktop.configured_top_offset(os.environ)
+    )
     log(f"{source}; Qt platform {app.platformName()}")
     return found
 
@@ -207,7 +207,7 @@ def main(argv: list[str] | None = None) -> int:
     if brain is not None:
         app.aboutToQuit.connect(lambda: stop_brain(brain))
     model = OverlayModel(QtScheduler())
-    window = OverlayWindow(model, placement(app))
+    window = OverlayWindow(model, placement(app), desktop.x11_window_kind(os.environ))
     window.show()
     if args.demo:
         run_demo(model)
