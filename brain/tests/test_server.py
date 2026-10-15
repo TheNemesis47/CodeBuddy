@@ -1,6 +1,7 @@
 import json
 from collections.abc import Iterator
 from contextlib import contextmanager
+from pathlib import Path
 
 import anyio
 import pytest
@@ -11,6 +12,7 @@ from starlette.websockets import WebSocketDisconnect, WebSocketState
 
 from buddy import server
 from buddy.hints import HintGate
+from buddy.latency import LatencyLog, read_records
 from buddy.protocol import validate
 
 TOKEN = "t" * 64
@@ -336,3 +338,31 @@ async def test_no_hint_right_after_a_trigger(cloud: FakeModel) -> None:
     await send(brain, example("trigger.question"), idle_event(1))
     assert local.prompts == []
     assert {m["id"] for m in notch.received} == {example("trigger.question")["id"]}
+
+
+@pytest.mark.anyio
+async def test_every_answer_and_hint_is_logged_with_its_latency(
+    cloud: FakeModel, tmp_path: Path
+) -> None:
+    path = tmp_path / "latency.jsonl"
+    local = FakeModel(("Guarda.",), is_local=True)
+    brain, _, _ = make_brain(cloud, local)
+    brain.latency = LatencyLog(path)
+    await send(brain, idle_event(1), example("trigger.question"))
+    records = read_records(path)
+    assert [(r["kind"], r["id"]) for r in records] == [
+        ("hint", "idle-1"),
+        ("question", example("trigger.question")["id"]),
+    ]
+    assert all(r["model"] == "fake-1" and r["input_tokens"] == 10 for r in records)
+    assert all(0 <= r["first_token_ms"] <= r["total_ms"] for r in records)
+
+
+@pytest.mark.anyio
+async def test_a_failed_answer_is_not_logged(tmp_path: Path) -> None:
+    path = tmp_path / "latency.jsonl"
+    brain, notch, _ = make_brain(FakeModel(fail="quota finita"), None)
+    brain.latency = LatencyLog(path)
+    await send(brain, example("trigger.question"))
+    assert notch.received[-1]["type"] == "error"
+    assert read_records(path) == []

@@ -32,9 +32,10 @@ intellijPlatform {
 tasks.test {
     // Tests read the shared protocol examples (the contract with the brain).
     systemProperty("codebuddy.protocolDir", rootProject.projectDir.resolve("../protocol").absolutePath)
-    // The live end-to-end test needs a running brain: only with -Pe2e (never in scripts/check).
+    // Live tests (end-to-end, latency bench) need a running brain: only with -Pe2e (never in
+    // scripts/check).
     if (!providers.gradleProperty("e2e").isPresent) {
-        exclude("**/LiveBrainE2ETest*")
+        exclude("**/Live*Test*")
     }
     for (name in listOf("BUDDY_PORT", "BUDDY_HOME")) {
         providers.environmentVariable(name).orNull?.let { environment(name, it) }

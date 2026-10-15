@@ -42,3 +42,9 @@ plugin exist once G3 and G4 are closed.
   with the same `BUDDY_PORT`/`BUDDY_HOME`, then
   `cd ide-pycharm && ./gradlew test -Pe2e --tests '*LiveBrainE2ETest*'`. The notch log shows
   `answer_end …` and `/tmp/e2e/answer-<id>.png` is the result. Typing in the real IDE is G13.
+- Latency bench (G5, calls Claude 10 times): `scripts/bench-latency LABEL [buddy serve options]`,
+  e.g. `scripts/bench-latency sonnet --model sonnet`. It starts a brain on 8797, the notch and an
+  answer recorder, runs `LiveLatencyBenchTest` (10 `#?` triggers through the plugin's code, one at a
+  time), prints `buddy latency` and stops everything. Output in `bench/LABEL/` (git-ignored):
+  `home/latency.jsonl`, `answers.jsonl` (full texts, to compare quality), logs and `shots/`.
+  Afterwards `cd ide-pycharm && ./gradlew --stop` stops the Gradle daemon.

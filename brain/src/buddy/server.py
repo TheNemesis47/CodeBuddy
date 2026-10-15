@@ -20,6 +20,7 @@ from buddy import __version__
 from buddy.answers import Message, run_answer
 from buddy.auth import token_matches
 from buddy.hints import HintGate, window_key
+from buddy.latency import LatencyLog
 from buddy.local import detect_local_model
 from buddy.models import Model
 from buddy.prompting import ProjectMap, Request, RequestKind, build_prompt
@@ -66,12 +67,14 @@ class Brain:
         detect_local: DetectLocal = detect_local_model,
         proactive_cloud: bool = False,
         hints: HintGate | None = None,
+        latency: LatencyLog | None = None,
     ) -> None:
         self.cloud = cloud
         self.answer_language = answer_language
         self.detect_local = detect_local
         self.proactive_cloud = proactive_cloud
         self.hints = hints or HintGate()
+        self.latency = latency
         self.notch = NotchHub()
         self.project: ProjectMap | None = None
         self.project_hash: str | None = None
@@ -117,7 +120,7 @@ class Brain:
             trigger["line"],
             prompt.estimated_tokens(),
         )
-        return await run_answer(
+        final = await run_answer(
             self.cloud,
             prompt,
             id=trigger["id"],
@@ -125,6 +128,8 @@ class Brain:
             title=trigger["text"] or trigger["file"],
             emit=self.notch.broadcast,
         )
+        self._log_latency(final, trigger["kind"])
+        return final
 
     async def _hint(self, idle: dict[str, Any]) -> Message | None:
         started = time.monotonic()
@@ -152,7 +157,21 @@ class Brain:
             emit=self.notch.broadcast,
         )
         log.info("hint %s in %d ms", final["type"], round((time.monotonic() - started) * 1000))
+        self._log_latency(final, "hint")
         return final
+
+    def _log_latency(self, final: Message, kind: str) -> None:
+        if final["type"] == "answer_end":
+            log.info(
+                "%s %s first token %s ms, total %s ms, %s tokens in",
+                kind,
+                final["model"],
+                final["first_token_ms"],
+                final["total_ms"],
+                final["tokens"]["in"],
+            )
+        if self.latency:
+            self.latency.record(final, kind)
 
     def _spawn(self, work: Awaitable[Message | None]) -> None:
         task: asyncio.Task[Message | None] = asyncio.ensure_future(work)
@@ -173,6 +192,7 @@ def create_app(
     detect_local: DetectLocal = detect_local_model,
     proactive_cloud: bool = False,
     hints: HintGate | None = None,
+    latency: LatencyLog | None = None,
 ) -> FastAPI:
     app = FastAPI(
         title="CodeBuddy brain",
@@ -187,6 +207,7 @@ def create_app(
         detect_local=detect_local,
         proactive_cloud=proactive_cloud,
         hints=hints,
+        latency=latency,
     )
     app.state.brain = brain
 

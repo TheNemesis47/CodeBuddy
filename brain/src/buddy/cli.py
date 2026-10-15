@@ -1,4 +1,5 @@
-"""`buddy ask` (one answer in the terminal, no UI) and `buddy serve` (the daemon)."""
+"""`buddy ask` (one answer in the terminal, no UI), `buddy serve` (the daemon) and `buddy latency`
+(first-token percentiles from the latency log)."""
 
 import argparse
 import asyncio
@@ -40,9 +41,16 @@ def main(argv: list[str] | None = None) -> int:
     serve.add_argument("--port", type=int, default=int(os.environ.get("BUDDY_PORT", DEFAULT_PORT)))
     serve.add_argument("--model", default="sonnet", help="claude model alias (default: sonnet)")
 
+    latency = sub.add_parser("latency", help="first-token p50/p90/min/max from the latency log")
+    latency.add_argument("--file", type=Path, help="default: $BUDDY_HOME/latency.jsonl")
+    latency.add_argument("--kind", choices=["question", "theory", "hint"], help="only this kind")
+    latency.add_argument("--last", type=int, metavar="N", help="only the last N answers")
+
     args = parser.parse_args(argv)
     if args.command == "ask":
         return _ask(args)
+    if args.command == "latency":
+        return _latency(args)
     return _serve(args)
 
 
@@ -85,7 +93,9 @@ def _parse_target(target: str) -> tuple[Path, int]:
 
 
 def _ask(args: argparse.Namespace) -> int:
+    from buddy.auth import buddy_home
     from buddy.claude_cli import ClaudeCliModel
+    from buddy.latency import FILE_NAME, LatencyLog
 
     path, line = _parse_target(args.target)
     request = build_request(path, line, " ".join(args.question).strip(), args.theory)
@@ -110,6 +120,7 @@ def _ask(args: argparse.Namespace) -> int:
         )
     )
     print()
+    LatencyLog(buddy_home() / FILE_NAME).record(final, request.kind)
     if final["type"] == "error":
         print(f"buddy: {final['message']}", file=sys.stderr)
         return 1
@@ -122,6 +133,31 @@ def _ask(args: argparse.Namespace) -> int:
     return 0
 
 
+def _latency(args: argparse.Namespace) -> int:
+    from buddy.auth import buddy_home
+    from buddy.latency import FILE_NAME, read_records, summarize
+
+    path: Path = args.file or buddy_home() / FILE_NAME
+    records = read_records(path)
+    if args.kind:
+        records = [r for r in records if r.get("kind") == args.kind]
+    if args.last:
+        records = records[-args.last :]
+    summary = summarize(records)
+    if summary is None:
+        print(f"buddy: no answers logged in {path}")
+        return 1
+    models = sorted({str(r.get("model")) for r in records})
+    print(f"{summary.count} answers · {', '.join(models)} · {path}")
+    print(
+        f"first token: p50 {summary.p50:.0f} ms · p90 {summary.p90:.0f} ms · "
+        f"min {summary.min} ms · max {summary.max} ms"
+    )
+    if summary.without_text:
+        print(f"({summary.without_text} answers ended without text and are left out)")
+    return 0
+
+
 def _serve(args: argparse.Namespace) -> int:
     import logging
 
@@ -130,6 +166,7 @@ def _serve(args: argparse.Namespace) -> int:
     from buddy.auth import buddy_home, load_or_create_token
     from buddy.claude_cli import ClaudeCliModel
     from buddy.hints import proactive_cloud_from_env
+    from buddy.latency import FILE_NAME, LatencyLog
     from buddy.server import create_app
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
@@ -139,7 +176,11 @@ def _serve(args: argparse.Namespace) -> int:
     proactive_cloud = proactive_cloud_from_env(os.environ)
     where = "local engine, else Claude" if proactive_cloud else "local engine only"
     print(f"buddy: proactive hints → {where}", file=sys.stderr)
-    app = create_app(ClaudeCliModel(args.model), token, proactive_cloud=proactive_cloud)
+    latency = LatencyLog(buddy_home() / FILE_NAME)
+    print(f"buddy: latency log in {latency.path}", file=sys.stderr)
+    app = create_app(
+        ClaudeCliModel(args.model), token, proactive_cloud=proactive_cloud, latency=latency
+    )
     # Loopback only, never configurable (SECURITY.md).
     uvicorn.run(app, host="127.0.0.1", port=args.port, log_level="info")
     return 0

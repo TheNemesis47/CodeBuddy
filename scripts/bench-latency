@@ -1,0 +1,45 @@
+#!/usr/bin/env sh
+# G5 latency bench: 10 real `#?` triggers through the plugin's code path to a running brain and
+# notch; prints the brain's first-token p50/p90/min/max. Starts everything it needs and stops it
+# all on exit. Not part of scripts/check (it calls Claude through your subscription).
+#
+#   scripts/bench-latency LABEL [buddy serve options…]
+#   scripts/bench-latency sonnet-baseline --model sonnet
+#
+# Output in bench/LABEL/ (git-ignored): latency.jsonl, answers.jsonl, brain.log, notch.log, shots/.
+set -eu
+cd "$(dirname "$0")/.."
+label=${1:?usage: scripts/bench-latency LABEL [buddy serve options…]}
+shift
+out="$PWD/bench/$label"
+rm -rf "$out"
+mkdir -p "$out/shots"
+export BUDDY_HOME="$out/home" BUDDY_PORT="${BUDDY_PORT:-8797}"
+
+pids=""
+cleanup() {
+  for pid in $pids; do kill "$pid" 2>/dev/null || true; done
+  wait 2>/dev/null || true
+}
+trap cleanup EXIT INT TERM
+
+(cd notch && swift build -q)
+(cd brain && exec uv run buddy serve --port "$BUDDY_PORT" "$@") >"$out/brain.log" 2>&1 &
+pids="$pids $!"
+for _ in $(seq 100); do
+  grep -q "Uvicorn running" "$out/brain.log" 2>/dev/null && break
+  sleep 0.1
+done
+grep -q "Uvicorn running" "$out/brain.log" || { cat "$out/brain.log"; exit 1; }
+
+(cd notch && exec "$(swift build --show-bin-path)/CodeBuddy" --snapshots "$out/shots") >"$out/notch.log" 2>&1 &
+pids="$pids $!"
+uv run --project brain python scripts/bench_answers.py "$out/answers.jsonl" &
+pids="$pids $!"
+sleep 2
+
+(cd ide-pycharm && ./gradlew --quiet test --rerun -Pe2e --tests '*LiveLatencyBenchTest*')
+sleep 1
+
+echo "== $label ($*)"
+(cd brain && uv run buddy latency --file "$out/home/latency.jsonl" --kind question --last 10)

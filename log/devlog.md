@@ -2,6 +2,48 @@
 
 Newest first. Terse. Written at the end of every task so the next agent can pick up.
 
+## 2026-10-15 10:10: G5 latency (branch feat/brain-latency)
+
+- **Landed:** brain `latency.py`: every `answer_end` (triggers, hints, `buddy ask`) appends
+  `{id, kind, model, first_token_ms, total_ms, input_tokens}` to `$BUDDY_HOME/latency.jsonl`
+  (errors aren't logged; an unwritable log only warns). `buddy latency [--file] [--kind] [--last N]`
+  prints first-token p50/p90/min/max (linear interpolation). The server also logs each answer's
+  latency. Bench: `ide-pycharm/.../LiveLatencyBenchTest.kt` (excluded from the gate like every
+  `Live*Test`) puts a `#?` above an anchor line in 10 different `brain/src/buddy/*.py` files, runs
+  `TriggerDispatcher.prepare` on PSI and sends through `BrainConnection`, then waits for the
+  brain's latency line before the next one. `scripts/bench-latency LABEL [serve options]` starts
+  brain (8797), notch and `scripts/bench_answers.py` (records answer texts), runs it, prints
+  `buddy latency`, stops all three. Output in `bench/LABEL/` (git-ignored).
+- **Numbers:** brain tests 116 → 137 (19 in `test_latency.py`, 2 in `test_server.py`); floor
+  raised. Notch 40, plugin 26 unchanged (the bench is a live test, not counted).
+- **Runs** (10 `#?` each, Claude Sonnet 5.5 through `claude -p`, first token as measured by the
+  brain in `answer_end.first_token_ms`):
+
+  | Run | Setup | p50 | p90 | min | max | input tokens |
+  |---|---|---:|---:|---:|---:|---|
+  | `sonnet-baseline` | `buddy serve --model sonnet` (unchanged) | **1572 ms** | 1896 ms | 1397 ms | 2097 ms | 1656–3167 |
+  | `sonnet-repeat` | same, run again right after | **1634 ms** | 1947 ms | 1492 ms | 2967 ms | similar |
+
+  p50 ≤ 3 s in both, so none of the fallbacks (Haiku for `#?`, a warm process, a shorter prompt
+  or map, prompt caching) was tried: nothing changed, so there are no before/after answers to
+  compare. **Chosen setup: Sonnet for `#?` and `#!teoria`, one `claude -p` per trigger, as before.**
+  Yesterday's 1.6–5.8 s spread (15 `buddy ask` runs) didn't show up today; total time per answer is
+  5.7–6.7 s. Criterion 1 met (and 3: under 8k as Claude counts tokens; the brain's own estimate
+  was 678–1636, about half, because the CLI adds overhead). MVP criteria **6/6**.
+- **Notch:** 10 snapshots per run, all 10 answers recorded in full. Looked at
+  `docs/screenshots/notch/bench-latency-answer.png` (from `bench/sonnet-baseline/shots/`): the
+  `O_EXCL` answer, footer `claude-sonnet-5-5 · primo token 2097 ms · totale 6717 ms`, correct and
+  in Italian, refers to "riga 19/20". **Defect:** answers are ~1000–1200 characters, the panel
+  scrolls to the end, and the first line sits half-hidden under the header. Not fixed here (notch
+  UI, not latency): shorter answers (system prompt) or scrolling to the top on `answer_end`.
+- **What the number doesn't cover:** the brain's clock starts when the trigger arrives; Enter →
+  PSI → localhost send in a real, busy IDE isn't in it (G13). The fixture project is small, so the
+  project map is smaller than in a real project.
+- **Processes:** every brain, notch and recorder the script started was stopped (`pgrep` empty);
+  Gradle daemon stopped with `./gradlew --stop`.
+- **Still open:** Human: G13 (try `#?` in your PyCharm, then `buddy latency --kind question`),
+  G11, G12, G8. Agent: notch first-line clipping above, G7 boundaries, G10 evals.
+
 ## 2026-10-14 21:50: G6 proactive hints (branch feat/proactive-hints, on top of feat/ide-pycharm)
 
 - **Landed:** plugin `Idle.kt`: an `editorFactoryDocumentListener` (EDT: a `.py` check, an offset,
