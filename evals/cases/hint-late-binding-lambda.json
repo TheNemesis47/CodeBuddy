@@ -1,0 +1,26 @@
+{
+  "id": "hint-late-binding-lambda",
+  "title": "Lambdas in a loop capture the variable",
+  "kind": "hint",
+  "line": 4,
+  "language": "italiano",
+  "code": "def make_multipliers():\n    multipliers = []\n    for i in range(3):\n        multipliers.append(lambda x: x * i)\n    return multipliers\n",
+  "concepts": {
+    "late-binding": [
+      "late binding",
+      "valore di `?i",
+      "ultimo valore",
+      "quando (viene|vengono|la) chiamat",
+      "closure",
+      "riferiment"
+    ]
+  },
+  "forbidden": [
+    "i\\s*=\\s*i",
+    "partial"
+  ],
+  "fix_lines": [
+    "multipliers.append(lambda x, i=i: x * i)"
+  ],
+  "rubric": "Says each lambda reads i when it is called, after the loop ended. Does not show the default-argument trick."
+}

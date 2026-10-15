@@ -1,0 +1,22 @@
+{
+  "id": "t-async-await",
+  "title": "Theory: async/await",
+  "kind": "#!teoria",
+  "line": 11,
+  "language": "italiano",
+  "code": "import asyncio\n\n\nasync def download(url):\n    await asyncio.sleep(1)\n    return url\n\n\nasync def main(urls):\n    results = []\n    #!teoria async/await\n    for url in urls:\n        results.append(await download(url))\n    return results\n",
+  "concepts": {
+    "async": [
+      "event loop",
+      "ciclo di eventi",
+      "corout",
+      "\\bawait\\b",
+      "concorren"
+    ]
+  },
+  "forbidden": [],
+  "fix_lines": [
+    "results = await asyncio.gather(*(download(url) for url in urls))"
+  ],
+  "rubric": "Four parts; explains coroutines and the event loop, and that the loop at line 12 awaits one download at a time."
+}

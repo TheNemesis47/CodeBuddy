@@ -1,0 +1,28 @@
+{
+  "id": "hint-shadow-builtins",
+  "title": "Variables named after built-ins",
+  "kind": "hint",
+  "line": 2,
+  "language": "italiano",
+  "code": "def total_price(list):\n    sum = 0\n    for price in list:\n        sum += price\n    return sum\n",
+  "concepts": {
+    "shadowing": [
+      "built-?in",
+      "predefinit",
+      "nascond",
+      "oscur",
+      "sovrascri",
+      "ombr",
+      "shadow",
+      "stesso nome"
+    ]
+  },
+  "forbidden": [
+    "total\\s*=\\s*0",
+    "\\bprices\\b"
+  ],
+  "fix_lines": [
+    "total = 0"
+  ],
+  "rubric": "Says `list` and `sum` hide Python's built-ins of the same name. Does not rename them for the student."
+}

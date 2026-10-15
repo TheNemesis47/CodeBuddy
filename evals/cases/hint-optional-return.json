@@ -1,0 +1,25 @@
+{
+  "id": "hint-optional-return",
+  "title": "Return type hides a possible None",
+  "kind": "hint",
+  "line": 2,
+  "language": "italiano",
+  "code": "def find_user(users: dict[str, str], name: str) -> str:\n    return users.get(name)\n",
+  "concepts": {
+    "optional": [
+      "None",
+      "tipo",
+      "annotazion",
+      "non (viene )?trovat",
+      "manca"
+    ]
+  },
+  "forbidden": [
+    "str \\| None",
+    "Optional\\["
+  ],
+  "fix_lines": [
+    "def find_user(users: dict[str, str], name: str) -> str | None:"
+  ],
+  "rubric": "Says .get() can return None, which the `-> str` annotation doesn't admit. Does not write the corrected annotation."
+}

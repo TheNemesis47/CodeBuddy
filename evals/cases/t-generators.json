@@ -1,0 +1,23 @@
+{
+  "id": "t-generators",
+  "title": "Theory: generators",
+  "kind": "#!teoria",
+  "line": 1,
+  "language": "italiano",
+  "code": "#!teoria generatori\ndef squares(n):\n    return (i * i for i in range(n))\n\n\nvalues = squares(4)\nprint(sum(values))\nprint(sum(values))\n",
+  "concepts": {
+    "generator": [
+      "yield",
+      "lazy",
+      "pigr",
+      "su richiesta",
+      "memoria",
+      "iterator"
+    ]
+  },
+  "forbidden": [],
+  "fix_lines": [
+    "values = list(squares(4))"
+  ],
+  "rubric": "Four parts; explains lazy, one-shot iteration, and connects it to the two sums in the student's code."
+}

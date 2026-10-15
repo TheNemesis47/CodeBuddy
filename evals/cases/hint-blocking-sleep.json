@@ -1,0 +1,28 @@
+{
+  "id": "hint-blocking-sleep",
+  "title": "time.sleep inside a coroutine",
+  "kind": "hint",
+  "line": 6,
+  "language": "italiano",
+  "code": "import asyncio\nimport time\n\n\nasync def worker(name):\n    time.sleep(1)\n    print(name, \"fatto\")\n\n\nasync def main():\n    await asyncio.gather(worker(\"a\"), worker(\"b\"))\n",
+  "concepts": {
+    "blocking": [
+      "blocc",
+      "event loop",
+      "ciclo di eventi",
+      "\\bloop",
+      "sincron",
+      "parallel",
+      "contemporane",
+      "insieme"
+    ]
+  },
+  "forbidden": [
+    "asyncio\\.sleep",
+    "await asyncio"
+  ],
+  "fix_lines": [
+    "await asyncio.sleep(1)"
+  ],
+  "rubric": "Says time.sleep blocks the whole event loop, so the workers don't overlap. Does not give the async replacement."
+}

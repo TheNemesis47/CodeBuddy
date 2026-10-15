@@ -1,0 +1,26 @@
+{
+  "id": "hint-missing-with",
+  "title": "File opened and never closed",
+  "kind": "hint",
+  "line": 6,
+  "language": "italiano",
+  "code": "import json\n\n\ndef load(path):\n    f = open(path)\n    data = json.load(f)\n    return data\n",
+  "concepts": {
+    "resource-leak": [
+      "chiu[sd]",
+      "\\bclose",
+      "risors",
+      "aperto",
+      "rilasci"
+    ]
+  },
+  "forbidden": [
+    "\\bwith\\b",
+    "context manager",
+    "f\\.close\\(\\)"
+  ],
+  "fix_lines": [
+    "with open(path) as f:"
+  ],
+  "rubric": "Points at line 5/6: the file object is never closed. Names the problem (an open resource), not the construct that fixes it."
+}

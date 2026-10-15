@@ -42,10 +42,32 @@ def count_plugin_tests() -> int | None:
     return sum(int(ET.parse(r).getroot().get("tests", 0)) for r in reports)
 
 
+def eval_score() -> float | None:
+    """The total of the latest *committed* complete eval result (evals/results/<date>[-N].json).
+    Uncommitted runs don't count, and neither do partial ones (e.g. hints only)."""
+    if not (ROOT / "evals/cases").is_dir():
+        return None
+    listed = subprocess.run(
+        ["git", "ls-files", "evals/results/*.json"],
+        cwd=ROOT, capture_output=True, text=True, check=False,
+    ).stdout.split()
+
+    def order(path: str) -> tuple[str, int]:
+        stem = Path(path).stem
+        return stem[:10], int(stem[11:]) if stem[11:].isdigit() else 1
+
+    for path in sorted(listed, key=order, reverse=True):
+        result = json.loads((ROOT / path).read_text())
+        if result.get("complete"):
+            return float(result["total"])
+    return 0.0
+
+
 MEASURES = {
     "brain_tests": count_brain_tests,
     "notch_tests": count_notch_tests,
     "plugin_tests": count_plugin_tests,
+    "eval_score": eval_score,
 }
 
 

@@ -1,0 +1,22 @@
+{
+  "id": "q-list-any-vs-float",
+  "title": "list[Any] vs list[float]",
+  "kind": "#?",
+  "line": 5,
+  "language": "italiano",
+  "code": "from typing import Any\n\n\ndef total(prices: list[Any]) -> float:\n    #? cosa cambia se scrivo list[float] invece di list[Any]?\n    return sum(prices)\n",
+  "concepts": {
+    "static-typing": [
+      "type checker",
+      "pyright",
+      "mypy",
+      "controll",
+      "static",
+      "runtime",
+      "\\bAny\\b"
+    ]
+  },
+  "forbidden": [],
+  "fix_lines": [],
+  "rubric": "Explains that Any switches off checking while list[float] lets a type checker catch wrong elements; nothing changes at runtime."
+}

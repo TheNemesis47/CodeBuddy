@@ -1,0 +1,22 @@
+{
+  "id": "q-generator-exhausted",
+  "title": "Second sum of a generator is 0",
+  "kind": "#?",
+  "line": 7,
+  "language": "italiano",
+  "code": "def squares(n):\n    return (i * i for i in range(n))\n\n\nvalues = squares(4)\nprint(sum(values))\n#? perché la seconda somma è zero?\nprint(sum(values))\n",
+  "concepts": {
+    "generator": [
+      "generator",
+      "esaurit",
+      "consumat",
+      "una (sola )?volta",
+      "iterator"
+    ]
+  },
+  "forbidden": [],
+  "fix_lines": [
+    "values = list(squares(4))"
+  ],
+  "rubric": "Explains that a generator can be iterated only once: the first sum consumed it."
+}

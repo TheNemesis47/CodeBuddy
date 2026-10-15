@@ -1,0 +1,27 @@
+{
+  "id": "hint-float-equality",
+  "title": "Comparing floats with ==",
+  "kind": "hint",
+  "line": 2,
+  "language": "italiano",
+  "code": "def is_total_correct(a, b, expected):\n    return a + b == expected\n\n\nprint(is_total_correct(0.1, 0.2, 0.3))\n",
+  "concepts": {
+    "float-precision": [
+      "virgola mobile",
+      "floating",
+      "precision",
+      "arrotond",
+      "approssim",
+      "0\\.3000",
+      "\\bfloat"
+    ]
+  },
+  "forbidden": [
+    "isclose",
+    "abs\\(a \\+ b - expected\\)"
+  ],
+  "fix_lines": [
+    "return math.isclose(a + b, expected)"
+  ],
+  "rubric": "Says 0.1 + 0.2 isn't exactly 0.3 in floating point, so == is unreliable. Does not give isclose or a tolerance check."
+}

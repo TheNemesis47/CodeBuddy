@@ -1,0 +1,24 @@
+{
+  "id": "hint-is-vs-equals",
+  "title": "`is` used to compare strings",
+  "kind": "hint",
+  "line": 2,
+  "language": "italiano",
+  "code": "def is_admin(role):\n    if role is \"admin\":\n        return True\n    return False\n",
+  "concepts": {
+    "identity-vs-equality": [
+      "identit",
+      "stesso oggetto",
+      "valore",
+      "uguaglianz",
+      "\\bis\\b"
+    ]
+  },
+  "forbidden": [
+    "=="
+  ],
+  "fix_lines": [
+    "if role == \"admin\":"
+  ],
+  "rubric": "Says `is` checks identity (same object), not equal value. Does not write `==`."
+}

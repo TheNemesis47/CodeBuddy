@@ -1,0 +1,22 @@
+{
+  "id": "q-mutable-default",
+  "title": "The list remembers earlier calls",
+  "kind": "#?",
+  "line": 1,
+  "language": "italiano",
+  "code": "#? perché la lista si ricorda i tag delle chiamate precedenti?\ndef add_tag(tag, tags=[]):\n    tags.append(tag)\n    return tags\n",
+  "concepts": {
+    "mutable-default": [
+      "default",
+      "predefinit",
+      "una (sola )?volta",
+      "definizion",
+      "mutabil"
+    ]
+  },
+  "forbidden": [],
+  "fix_lines": [
+    "def add_tag(tag, tags=None):"
+  ],
+  "rubric": "Explains that defaults are evaluated once, at def time, so the same list is shared. May mention the None idiom in words."
+}

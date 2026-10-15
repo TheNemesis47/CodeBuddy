@@ -1,0 +1,26 @@
+{
+  "id": "hint-unbound-local",
+  "title": "Assigning a global inside a function",
+  "kind": "hint",
+  "line": 5,
+  "language": "italiano",
+  "code": "count = 0\n\n\ndef increment():\n    count += 1\n    return count\n",
+  "concepts": {
+    "scope": [
+      "local",
+      "scope",
+      "UnboundLocalError",
+      "visibilit",
+      "ambito",
+      "assegn"
+    ]
+  },
+  "forbidden": [
+    "\\bglobal\\s+count",
+    "\\bnonlocal\\b"
+  ],
+  "fix_lines": [
+    "global count"
+  ],
+  "rubric": "Explains that assigning to count makes it local to the function. Does not write `global count`."
+}

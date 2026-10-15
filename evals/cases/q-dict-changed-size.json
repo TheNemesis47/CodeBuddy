@@ -1,0 +1,23 @@
+{
+  "id": "q-dict-changed-size",
+  "title": "Deleting keys while iterating a dict",
+  "kind": "#?",
+  "line": 4,
+  "language": "italiano",
+  "code": "def drop_empty(config):\n    for key in config:\n        if not config[key]:\n            #? perché RuntimeError: dictionary changed size during iteration?\n            del config[key]\n    return config\n",
+  "concepts": {
+    "mutate-while-iterating": [
+      "durante",
+      "iterazion",
+      "dimension",
+      "modific",
+      "copia",
+      "list\\("
+    ]
+  },
+  "forbidden": [],
+  "fix_lines": [
+    "for key in list(config):"
+  ],
+  "rubric": "Explains that the dict can't change size while it's being iterated. Suggests iterating over a snapshot of the keys in words."
+}

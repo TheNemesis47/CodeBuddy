@@ -1,0 +1,22 @@
+{
+  "id": "q-nonlocal-counter",
+  "title": "UnboundLocalError in a closure",
+  "kind": "#?",
+  "line": 5,
+  "language": "italiano",
+  "code": "def make_counter():\n    count = 0\n\n    def increment():\n        #? perché qui ho UnboundLocalError?\n        count += 1\n        return count\n\n    return increment\n",
+  "concepts": {
+    "scope": [
+      "nonlocal",
+      "\\blocal",
+      "assegn",
+      "scope",
+      "ambito"
+    ]
+  },
+  "forbidden": [],
+  "fix_lines": [
+    "nonlocal count"
+  ],
+  "rubric": "Explains that += assigns, so count becomes local to increment and is read before it has a value. Can name `nonlocal`, without rewriting the function."
+}

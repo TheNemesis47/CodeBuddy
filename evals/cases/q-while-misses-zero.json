@@ -1,0 +1,22 @@
+{
+  "id": "q-while-misses-zero",
+  "title": "Countdown stops at 1",
+  "kind": "#?",
+  "line": 2,
+  "language": "italiano",
+  "code": "def countdown(n):\n    #? perché non stampa lo zero?\n    while n > 0:\n        print(n)\n        n -= 1\n",
+  "concepts": {
+    "loop-condition": [
+      "condizion",
+      "> ?0",
+      "falsa",
+      "\\besce",
+      "zero"
+    ]
+  },
+  "forbidden": [],
+  "fix_lines": [
+    "while n >= 0:"
+  ],
+  "rubric": "Walks through the last iteration: when n becomes 0, `n > 0` is false and the loop exits. Lets the student change the condition."
+}

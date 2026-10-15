@@ -1,0 +1,28 @@
+{
+  "id": "hint-remove-while-iterating",
+  "title": "Removing from a list while looping over it",
+  "kind": "hint",
+  "line": 4,
+  "language": "italiano",
+  "code": "def remove_negatives(numbers):\n    for n in numbers:\n        if n < 0:\n            numbers.remove(n)\n    return numbers\n",
+  "concepts": {
+    "mutate-while-iterating": [
+      "mentre",
+      "durante",
+      "salt",
+      "modific",
+      "itera"
+    ]
+  },
+  "forbidden": [
+    "\\[n for n in",
+    "numbers\\[:\\]",
+    "list\\(numbers\\)",
+    "\\.copy\\(\\)"
+  ],
+  "fix_lines": [
+    "return [n for n in numbers if n >= 0]",
+    "for n in numbers[:]:"
+  ],
+  "rubric": "Points out that removing items from the list being iterated makes the loop skip elements. No comprehension or copy given."
+}

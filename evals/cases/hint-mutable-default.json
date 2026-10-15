@@ -1,0 +1,27 @@
+{
+  "id": "hint-mutable-default",
+  "title": "Mutable default argument",
+  "kind": "hint",
+  "line": 1,
+  "language": "italiano",
+  "code": "def add_tag(tag, tags=[]):\n    tags.append(tag)\n    return tags\n",
+  "concepts": {
+    "mutable-default": [
+      "mutabil",
+      "default",
+      "predefinit",
+      "condivis",
+      "stessa lista",
+      "ogni chiamata",
+      "una (sola )?volta"
+    ]
+  },
+  "forbidden": [
+    "=\\s*None",
+    "is None"
+  ],
+  "fix_lines": [
+    "def add_tag(tag, tags=None):"
+  ],
+  "rubric": "Says the default list is created once and shared between calls. Does not suggest None as the default."
+}

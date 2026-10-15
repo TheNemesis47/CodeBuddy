@@ -1,5 +1,6 @@
 {
-  "brain_tests": 116,
+  "brain_tests": 174,
   "notch_tests": 40,
-  "plugin_tests": 26
+  "plugin_tests": 26,
+  "eval_score": 94.5
 }
