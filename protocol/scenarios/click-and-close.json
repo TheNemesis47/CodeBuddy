@@ -1,0 +1,59 @@
+{
+  "name": "click-and-close",
+  "description": "A click opens from any closed state; the close button folds to peek right away.",
+  "delays": {
+    "expanded_to_peek": 20,
+    "peek_to_hidden": 8
+  },
+  "steps": [
+    {
+      "connection": "connected"
+    },
+    {
+      "click": true
+    },
+    {
+      "expect": {
+        "state": "expanded"
+      }
+    },
+    {
+      "close": true
+    },
+    {
+      "expect": {
+        "state": "peek"
+      }
+    },
+    {
+      "advance": 8
+    },
+    {
+      "expect": {
+        "state": "hidden"
+      }
+    },
+    {
+      "pointer": "enter"
+    },
+    {
+      "click": true
+    },
+    {
+      "expect": {
+        "state": "expanded"
+      }
+    },
+    {
+      "close": true
+    },
+    {
+      "advance": 30
+    },
+    {
+      "expect": {
+        "state": "peek"
+      }
+    }
+  ]
+}

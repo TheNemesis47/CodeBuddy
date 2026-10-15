@@ -1,0 +1,58 @@
+{
+  "name": "pointer-inside-keeps-it-open",
+  "description": "While the pointer is inside, an ended answer stays open until it leaves.",
+  "delays": {
+    "expanded_to_peek": 20,
+    "peek_to_hidden": 8
+  },
+  "steps": [
+    {
+      "connection": "connected"
+    },
+    {
+      "message": {
+        "v": 0,
+        "type": "answer_start",
+        "id": "a",
+        "kind": "question",
+        "title": "t"
+      }
+    },
+    {
+      "pointer": "enter"
+    },
+    {
+      "message": {
+        "v": 0,
+        "type": "answer_end",
+        "id": "a",
+        "model": "m",
+        "first_token_ms": 1,
+        "total_ms": 2,
+        "tokens": {
+          "in": 1,
+          "out": 1
+        }
+      }
+    },
+    {
+      "advance": 60
+    },
+    {
+      "expect": {
+        "state": "expanded"
+      }
+    },
+    {
+      "pointer": "leave"
+    },
+    {
+      "advance": 20
+    },
+    {
+      "expect": {
+        "state": "peek"
+      }
+    }
+  ]
+}

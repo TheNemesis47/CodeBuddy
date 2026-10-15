@@ -1,0 +1,47 @@
+[project]
+name = "codebuddy-overlay"
+version = "0.1.0"
+description = "CodeBuddy overlay for Linux and Windows: the notch's panel as a frameless Qt window"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "platformdirs>=4.5",
+    "pyside6-essentials>=6.12",
+    "websockets>=15",
+]
+
+[project.scripts]
+codebuddy-overlay = "codebuddy_overlay.app:main"
+
+[build-system]
+requires = ["uv_build>=0.12.18,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.414",
+    "pytest>=9.1.1",
+    "ruff>=0.17.0",
+]
+package = [
+    "pyinstaller>=6.22",
+]
+
+[tool.uv]
+default-groups = ["dev"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.pyright]
+include = ["src", "tests"]
+typeCheckingMode = "basic"
+pythonVersion = "3.14"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-p no:cacheprovider"

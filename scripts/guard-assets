@@ -5,15 +5,16 @@ set -eu
 cd "$(dirname "$0")/.."
 fail=0
 dirs=""
-for d in brain notch ide-pycharm protocol; do [ -d "$d" ] && dirs="$dirs $d"; done
+for d in brain notch overlay ide-pycharm protocol packaging; do [ -d "$d" ] && dirs="$dirs $d"; done
 if [ -n "$dirs" ]; then
   # Attribution lines are allowed (the MIT licence wants credit): they must point to THIRD_PARTY.md.
-  hits=$(grep -rniE 'mochi|coucou' $dirs --exclude-dir=.build --exclude-dir=.venv --exclude-dir=build --exclude-dir=.gradle --exclude-dir=LICENSES | grep -v 'THIRD_PARTY.md' || true)
+  hits=$(grep -rniIE 'mochi|coucou' $dirs --exclude-dir=__pycache__ --exclude-dir=.build --exclude-dir=.venv --exclude-dir=build --exclude-dir=.gradle --exclude-dir=LICENSES --exclude-dir=dist | grep -v 'THIRD_PARTY.md' || true)
   if [ -n "$hits" ]; then echo "guard-assets: Coucou name found in source:"; echo "$hits"; fail=1; fi
 fi
-if [ -d notch ]; then
-  audio=$(find notch -type f \( -iname '*.aiff' -o -iname '*.aif' -o -iname '*.wav' -o -iname '*.mp3' -o -iname '*.m4a' -o -iname '*.caf' \) -not -path '*/.build/*' || true)
-  if [ -n "$audio" ]; then echo "guard-assets: audio files under notch/ (Coucou sounds are not allowed):"; echo "$audio"; fail=1; fi
-fi
+for ui in notch overlay; do
+  [ -d "$ui" ] || continue
+  audio=$(find "$ui" -type f \( -iname '*.aiff' -o -iname '*.aif' -o -iname '*.wav' -o -iname '*.mp3' -o -iname '*.m4a' -o -iname '*.caf' \) -not -path '*/.build/*' -not -path '*/.venv/*' || true)
+  if [ -n "$audio" ]; then echo "guard-assets: audio files under $ui/ (Coucou sounds are not allowed):"; echo "$audio"; fail=1; fi
+done
 [ "$fail" -eq 0 ] && echo "guard-assets: ok"
 exit "$fail"

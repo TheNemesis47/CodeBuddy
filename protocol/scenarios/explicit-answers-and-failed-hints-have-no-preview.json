@@ -1,0 +1,57 @@
+{
+  "name": "explicit-answers-and-failed-hints-have-no-preview",
+  "description": "Only a live or finished hint has a preview.",
+  "delays": {
+    "expanded_to_peek": 20,
+    "peek_to_hidden": 8
+  },
+  "steps": [
+    {
+      "connection": "connected"
+    },
+    {
+      "message": {
+        "v": 0,
+        "type": "answer_start",
+        "id": "a",
+        "kind": "question",
+        "title": "q"
+      }
+    },
+    {
+      "message": {
+        "v": 0,
+        "type": "answer_delta",
+        "id": "a",
+        "text": "Perché…"
+      }
+    },
+    {
+      "expect": {
+        "preview": null
+      }
+    },
+    {
+      "message": {
+        "v": 0,
+        "type": "answer_start",
+        "id": "h",
+        "kind": "hint",
+        "title": "t"
+      }
+    },
+    {
+      "message": {
+        "v": 0,
+        "type": "error",
+        "id": "h",
+        "message": "local engine: HTTP 500"
+      }
+    },
+    {
+      "expect": {
+        "preview": null
+      }
+    }
+  ]
+}

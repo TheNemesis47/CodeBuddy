@@ -1,0 +1,49 @@
+{
+  "name": "hover-peeks-and-hides",
+  "description": "Hover peeks; leaving hides after the delay; coming back cancels it.",
+  "delays": {
+    "expanded_to_peek": 20,
+    "peek_to_hidden": 8
+  },
+  "steps": [
+    {
+      "connection": "connected"
+    },
+    {
+      "pointer": "enter"
+    },
+    {
+      "expect": {
+        "state": "peek"
+      }
+    },
+    {
+      "pointer": "leave"
+    },
+    {
+      "advance": 5
+    },
+    {
+      "pointer": "enter"
+    },
+    {
+      "advance": 10
+    },
+    {
+      "expect": {
+        "state": "peek"
+      }
+    },
+    {
+      "pointer": "leave"
+    },
+    {
+      "advance": 8
+    },
+    {
+      "expect": {
+        "state": "hidden"
+      }
+    }
+  ]
+}

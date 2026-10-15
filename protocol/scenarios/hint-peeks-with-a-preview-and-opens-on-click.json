@@ -1,0 +1,72 @@
+{
+  "name": "hint-peeks-with-a-preview-and-opens-on-click",
+  "description": "A hint only peeks, with its opening words; a click opens the whole hint.",
+  "delays": {
+    "expanded_to_peek": 20,
+    "peek_to_hidden": 8
+  },
+  "steps": [
+    {
+      "connection": "connected"
+    },
+    {
+      "message": {
+        "v": 0,
+        "type": "answer_start",
+        "id": "h",
+        "kind": "hint",
+        "title": "load.py:6"
+      }
+    },
+    {
+      "expect": {
+        "state": "peek",
+        "preview": "…"
+      }
+    },
+    {
+      "message": {
+        "v": 0,
+        "type": "answer_delta",
+        "id": "h",
+        "text": "Guarda la riga 6: **chi chiude** il file `f`?"
+      }
+    },
+    {
+      "expect": {
+        "preview": "Guarda la riga 6: chi chiude il file f?"
+      }
+    },
+    {
+      "message": {
+        "v": 0,
+        "type": "answer_end",
+        "id": "h",
+        "model": "qwen",
+        "first_token_ms": 1,
+        "total_ms": 2,
+        "tokens": {
+          "in": 1,
+          "out": 1
+        }
+      }
+    },
+    {
+      "advance": 7
+    },
+    {
+      "expect": {
+        "state": "peek"
+      }
+    },
+    {
+      "click": true
+    },
+    {
+      "expect": {
+        "state": "expanded",
+        "text": "Guarda la riga 6: **chi chiude** il file `f`?"
+      }
+    }
+  ]
+}

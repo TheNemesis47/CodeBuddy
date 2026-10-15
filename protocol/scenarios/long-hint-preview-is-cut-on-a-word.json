@@ -1,0 +1,35 @@
+{
+  "name": "long-hint-preview-is-cut-on-a-word",
+  "description": "The preview is one plain line of at most 70 characters, cut on a word with an ellipsis.",
+  "delays": {
+    "expanded_to_peek": 20,
+    "peek_to_hidden": 8
+  },
+  "steps": [
+    {
+      "connection": "connected"
+    },
+    {
+      "message": {
+        "v": 0,
+        "type": "answer_start",
+        "id": "h",
+        "kind": "hint",
+        "title": "t"
+      }
+    },
+    {
+      "message": {
+        "v": 0,
+        "type": "answer_delta",
+        "id": "h",
+        "text": "- Alla riga 12 la lista `items` viene **modificata** mentre la stai ancora scorrendo con il ciclo for"
+      }
+    },
+    {
+      "expect": {
+        "preview": "Alla riga 12 la lista items viene modificata mentre la stai ancora…"
+      }
+    }
+  ]
+}

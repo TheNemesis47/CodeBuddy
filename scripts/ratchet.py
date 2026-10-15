@@ -4,6 +4,8 @@ Raise a floor when a number goes up; never lower one. Modules that don't exist y
 """
 
 import json
+import os
+import platform
 import re
 import subprocess
 import sys
@@ -24,12 +26,24 @@ def count_brain_tests() -> int | None:
 
 
 def count_notch_tests() -> int | None:
-    if not (ROOT / "notch/Package.swift").exists():
-        return None
+    if platform.system() != "Darwin" or not (ROOT / "notch/Package.swift").exists():
+        return None  # macOS only, like the notch step in scripts/check
     out = subprocess.run(
         ["swift", "test", "list"], cwd=ROOT / "notch", capture_output=True, text=True, check=False,
     ).stdout
     return sum(1 for line in out.splitlines() if "/" in line)
+
+
+def count_overlay_tests() -> int | None:
+    if not (ROOT / "overlay/pyproject.toml").exists():
+        return None
+    out = subprocess.run(
+        ["uv", "run", "pytest", "--collect-only", "-q"],
+        cwd=ROOT / "overlay", capture_output=True, text=True, check=False,
+        env={**os.environ, "QT_QPA_PLATFORM": os.environ.get("QT_QPA_PLATFORM", "offscreen")},
+    ).stdout
+    match = re.search(r"(\d+) tests? collected", out)
+    return int(match.group(1)) if match else 0
 
 
 def count_plugin_tests() -> int | None:
@@ -67,6 +81,7 @@ MEASURES = {
     "brain_tests": count_brain_tests,
     "notch_tests": count_notch_tests,
     "plugin_tests": count_plugin_tests,
+    "overlay_tests": count_overlay_tests,
     "eval_score": eval_score,
 }
 
@@ -81,7 +96,7 @@ def main() -> int:
             continue
         value = measure()
         if value is None:
-            print(f"skip: {name} (module not created yet)")
+            print(f"skip: {name} (module not created yet, or not built on this OS)")
         elif value < floor:
             print(f"FAIL: {name} = {value} < floor {floor}")
             failed = True
