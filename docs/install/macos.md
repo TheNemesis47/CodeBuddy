@@ -9,5 +9,5 @@ cd notch && swift run CodeBuddy           # terminal 2: the notch
 ```
 
 Plugin: `cd ide-pycharm && ./gradlew buildPlugin`, then in PyCharm: Settings → Plugins → ⚙ →
-*Install Plugin from Disk…* → `ide-pycharm/build/distributions/codebuddy-pycharm-0.1.1.zip`. More in
+*Install Plugin from Disk…* → `ide-pycharm/build/distributions/codebuddy-pycharm-0.1.2.zip`. More in
 `docs/development.md`.

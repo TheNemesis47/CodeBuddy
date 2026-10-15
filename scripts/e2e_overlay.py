@@ -4,7 +4,7 @@ Passes when the overlay logs the answer_end for the trigger's id and saves its s
 answer is the stub's text. Starts and stops everything itself; runs on Linux (CI, under Xvfb),
 Windows and macOS.
 Usage: uv run --project brain python scripts/e2e_overlay.py OUTDIR [--port 8799]
-       … OUTDIR --bundle dist/CodeBuddy-linux-0.1.1   (the packaged brain and overlay instead)
+       … OUTDIR --bundle dist/CodeBuddy-linux-0.1.2   (the packaged brain and overlay instead)
 """
 
 import argparse

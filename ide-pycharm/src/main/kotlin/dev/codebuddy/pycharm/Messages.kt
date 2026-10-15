@@ -3,7 +3,7 @@ package dev.codebuddy.pycharm
 /** ide → brain messages of protocol v0. Shapes are checked against `protocol/examples` in tests. */
 object Messages {
     const val VERSION = 0
-    const val CLIENT = "codebuddy-pycharm/0.1.1"
+    const val CLIENT = "codebuddy-pycharm/0.1.2"
 
     fun hello(token: String): String =
         Json.encode(mapOf("v" to VERSION, "type" to "hello", "role" to "ide", "token" to token, "client" to CLIENT))

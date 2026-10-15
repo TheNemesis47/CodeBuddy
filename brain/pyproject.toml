@@ -1,6 +1,6 @@
 [project]
 name = "buddy"
-version = "0.1.1"
+version = "0.1.2"
 description = "CodeBuddy brain: context, model routing and streaming for the notch tutor"
 readme = "README.md"
 requires-python = ">=3.14"

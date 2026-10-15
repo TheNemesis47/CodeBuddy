@@ -39,6 +39,16 @@ Newest first. Terse. Written at the end of every task so the next agent can pick
   screen. `[overlay] monitor` is not in the settings file or the PyCharm page yet: `BUDDY_MONITOR`
   only, because the plugin's page would drop a key it doesn't know.
 
+## 2026-10-15 17:00: v0.1.2 (main)
+
+- **Landed:** `fix/overlay-hyprland` merged into `main` at the user's request (a9f420e), after the
+  user tested it on Omarchy (clean reinstall, works). CI run 38751943599 green. It brings the 0.1.1
+  report fixes plus the monitor-by-name placement and the Hyprland pin (c808339). Version 0.1.1 →
+  **0.1.2** for a downloadable release; the user moves on to testing on Windows. Gate: brain 262,
+  notch 42, plugin 48, overlay 117, eval 99.1.
+- **Still open:** delete the merged branches (the agent's delete was refused by the permission
+  check; the commands were given to the user). Human: Windows test, G17, G13, G11. G16.
+
 ## 2026-10-15 16:00: 0.1.1 tester report fixed (branch fix/overlay-hyprland)
 
 - **From** `~/Downloads/codebuddy-0.1.1-report.md` (Omarchy, Hyprland 0.56.2, packaged 0.1.1).
