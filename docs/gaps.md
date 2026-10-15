@@ -19,7 +19,7 @@ estimate here. **Human** marks what an agent can't finish alone.
 | G7 | Enforce module boundaries automatically | tooling | medium | 1 h | agent |
 | G8 | Sprout final design | feature | medium | — | **Human** |
 | ~~G9~~ | ~~CI on GitHub Actions~~ (done 2026-10-15: gate on 3 OSes, e2e, packages) | tooling | — | — | agent |
-| G15 | Linux/Windows: try the packages on real machines, code signing, publish the first (draft) release | release | blocks testers | 1–2 h | **Human** |
+| G15 | Linux/Windows: try the packages on real machines, code signing (v0.1.0 published as pre-release 2026-10-15) | release | blocks testers | 1–2 h | **Human** |
 | ~~G10~~ | ~~Evals: snippet set + scorer for suggestion quality~~ (done 2026-10-15: score 99.1) | tooling | — | — | agent |
 | G14 | Judge the borderline eval answers by hand; make the cases harder once the score saturates | quality | medium | 1 h | **Human** + agent |
 | G11 | Real-screen check of the notch: hover, click, Spaces, full screen | UX | medium | 1 h | **Human** |
@@ -146,6 +146,10 @@ packaged build; on a `v*` tag it creates a **draft** release only. First green r
 The original entry: the gate was local only; add an Actions job that runs `./scripts/check`.
 
 ## G15: Linux and Windows testers (Human)
+
+**Progress (2026-10-15).** v0.1.0 published as a pre-release with per-OS install notes:
+https://github.com/TheNemesis47/CodeBuddy/releases/tag/v0.1.0 (CI run 38714216496, all green).
+Left: real machines, signing.
 
 **Evidence.** The packages are built and checked on CI runners only (headless Xvfb on Linux, the
 runner's desktop session on Windows): bundle smoke test, 8 demo snapshots, and an end-to-end answer

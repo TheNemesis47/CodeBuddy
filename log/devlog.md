@@ -2,6 +2,15 @@
 
 Newest first. Terse. Written at the end of every task so the next agent can pick up.
 
+## 2026-10-15 13:50: v0.1.0 released (main)
+
+- **Landed:** `feat/cross-platform` merged into `main` at the user's request (0d81117); tag `v0.1.0`;
+  CI run 38714216496 green (gate ×3, e2e, package ×2, draft release). Release published as a
+  **pre-release** with install notes per OS:
+  https://github.com/TheNemesis47/CodeBuddy/releases/tag/v0.1.0. Assets: Linux tar.gz 100 MB,
+  Windows zip 68 MB, plugin zip 59 kB.
+- **Still open:** G15 (real Linux/Windows machines, signing), G13, G11 (Human). No LICENSE yet.
+
 ## 2026-10-15 11:30: Linux and Windows (branch feat/cross-platform, from main)
 
 - **Decision:** `docs/decisions.md` 2026-10-15: the Mac keeps the Swift notch; Linux and Windows get
