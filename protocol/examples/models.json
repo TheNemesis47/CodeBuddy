@@ -1,0 +1,9 @@
+{
+  "v": 0,
+  "type": "models",
+  "id": "m-1",
+  "models": [
+    "qwen3-coder-30b-a3b"
+  ],
+  "error": null
+}

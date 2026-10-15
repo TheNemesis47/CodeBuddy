@@ -22,9 +22,11 @@ from buddy.auth import token_matches
 from buddy.hints import HintGate, window_key
 from buddy.latency import LatencyLog
 from buddy.local import detect_local_model
-from buddy.models import Model
+from buddy.models import Model, ModelError
 from buddy.prompting import ProjectMap, Request, RequestKind, build_prompt
 from buddy.protocol import ProtocolError, validate
+from buddy.providers import SettingsStore
+from buddy.settings import SettingsError
 
 log = logging.getLogger("buddy.server")
 
@@ -68,6 +70,7 @@ class Brain:
         proactive_cloud: bool = False,
         hints: HintGate | None = None,
         latency: LatencyLog | None = None,
+        settings: SettingsStore | None = None,
     ) -> None:
         self.cloud = cloud
         self.answer_language = answer_language
@@ -75,13 +78,27 @@ class Brain:
         self.proactive_cloud = proactive_cloud
         self.hints = hints or HintGate()
         self.latency = latency
+        self.settings = settings
         self.notch = NotchHub()
         self.project: ProjectMap | None = None
         self.project_hash: str | None = None
         self._tasks: set[asyncio.Task[Message | None]] = set()
 
-    async def handle_ide_message(self, message: dict[str, Any]) -> None:
+    def apply_settings(self) -> None:
+        """Take the models from the settings: at start and after the settings page saves."""
+        if self.settings is None:
+            return
+        self.cloud = self.settings.answers_model()
+        self.detect_local = self.settings.detect_hints()
+        self.proactive_cloud = self.settings.proactive_cloud
+        for line in self.settings.describe():
+            log.info("%s", line)
+
+    async def handle_ide_message(self, message: dict[str, Any]) -> Message | None:
+        """Events start work and return None; the settings page's requests return the reply."""
         match message["type"]:
+            case "settings_get" | "settings_set" | "models_get":
+                return await self._settings_request(message)
             case "trigger":
                 self.hints.pause()  # a hint must not replace the answer the student asked for
                 self._spawn(self._answer(message))
@@ -94,6 +111,28 @@ class Brain:
                     self._spawn(self._hint(message))
             case other:
                 raise ProtocolError(f"{other} is not an ide → brain message")
+        return None
+
+    async def _settings_request(self, message: dict[str, Any]) -> Message:
+        id_ = message["id"]
+        if self.settings is None:
+            return _error(id_, "this brain was started without settings")
+        if message["type"] == "models_get":
+            try:
+                models = await self.settings.models(
+                    message["provider"], message.get("url", ""), message.get("key")
+                )
+            except ModelError as error:
+                return {"v": 0, "type": "models", "id": id_, "models": [], "error": str(error)}
+            return {"v": 0, "type": "models", "id": id_, "models": models, "error": None}
+        if message["type"] == "settings_set":
+            try:
+                self.settings.update(message["settings"], message.get("keys"))
+            except SettingsError as error:
+                return _error(id_, str(error))
+            log.info("settings saved by the settings page")
+            self.apply_settings()
+        return {"v": 0, "type": "settings", "id": id_, **self.settings.view()}
 
     def _request(self, event: dict[str, Any], kind: RequestKind, text: str) -> Request:
         project = self.project if event.get("project") == self.project_hash else None
@@ -184,6 +223,10 @@ class Brain:
             await asyncio.gather(*list(self._tasks), return_exceptions=True)
 
 
+def _error(id_: str | None, message: str) -> Message:
+    return {"v": 0, "type": "error", "id": id_, "message": message}
+
+
 def create_app(
     cloud: Model,
     token: str,
@@ -193,6 +236,7 @@ def create_app(
     proactive_cloud: bool = False,
     hints: HintGate | None = None,
     latency: LatencyLog | None = None,
+    settings: SettingsStore | None = None,
 ) -> FastAPI:
     app = FastAPI(
         title="CodeBuddy brain",
@@ -208,7 +252,9 @@ def create_app(
         proactive_cloud=proactive_cloud,
         hints=hints,
         latency=latency,
+        settings=settings,
     )
+    brain.apply_settings()
     app.state.brain = brain
 
     @app.websocket("/ws")
@@ -253,9 +299,11 @@ async def _ide_loop(ws: WebSocket, brain: Brain) -> None:
     while True:
         try:
             raw = await _receive_frame(ws)
-            await brain.handle_ide_message(validate(json.loads(raw)))
+            reply = await brain.handle_ide_message(validate(json.loads(raw)))
         except ValueError as error:  # bad UTF-8, bad JSON, or a ProtocolError
-            await ws.send_json({"v": 0, "type": "error", "id": None, "message": str(error)})
+            reply = _error(None, str(error))
+        if reply is not None:
+            await ws.send_json(reply)
 
 
 async def _receive_frame(ws: WebSocket) -> str:

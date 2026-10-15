@@ -18,9 +18,13 @@ compositor's CLI with a short timeout. Nothing here is needed on macOS or Window
 
 import json
 import subprocess
+import tomllib
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, TypeIs
+
+import platformdirs
 
 PROBE_TIMEOUT_S = 1.0
 
@@ -134,6 +138,25 @@ def _json(text: str | None) -> object:
         return json.loads(text)
     except ValueError:
         return None
+
+
+def config_path(env: Mapping[str, str]) -> Path:
+    """The brain's settings file (brain/src/buddy/settings.py: same rule)."""
+    if path := env.get("BUDDY_CONFIG"):
+        return Path(path)
+    folder = platformdirs.user_config_dir("CodeBuddy", appauthor=False, roaming=False)
+    return Path(folder) / "config.toml"
+
+
+def configured_top_offset(env: Mapping[str, str]) -> object:
+    """`[overlay] top_offset` from the settings file, or None. A missing or broken file is not
+    the panel's problem: the brain reports it."""
+    try:
+        data = tomllib.loads(config_path(env).read_text(encoding="utf-8"))
+    except OSError, ValueError:
+        return None
+    overlay = data.get("overlay")
+    return overlay.get("top_offset") if isinstance(overlay, dict) else None
 
 
 def compositor_tops(env: Mapping[str, str], run: Run = _run) -> tuple[str, Tops] | None:

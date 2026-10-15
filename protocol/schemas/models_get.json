@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "codebuddy/protocol/v0/models_get.json",
+  "title": "models_get",
+  "description": "ide → brain. List the models a provider offers, for the settings page; `url` for a server, `key` to try a key not saved yet.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "v",
+    "type",
+    "id",
+    "provider"
+  ],
+  "properties": {
+    "v": {
+      "const": 0
+    },
+    "type": {
+      "const": "models_get"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "provider": {
+      "enum": [
+        "claude-code",
+        "openrouter",
+        "openai-compatible",
+        "hints"
+      ]
+    },
+    "url": {
+      "type": "string",
+      "maxLength": 500
+    },
+    "key": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 500
+    }
+  }
+}

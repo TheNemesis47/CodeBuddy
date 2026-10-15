@@ -39,9 +39,17 @@ def main(argv: list[str] | None = None) -> int:
 
     serve = sub.add_parser("serve", help="run the daemon on 127.0.0.1")
     serve.add_argument("--port", type=int, default=int(os.environ.get("BUDDY_PORT", DEFAULT_PORT)))
-    serve.add_argument("--model", default="sonnet", help="claude model alias (default: sonnet)")
+    serve.add_argument(
+        "--model",
+        help="answer with this Claude model alias, whatever the settings say (default: settings)",
+    )
     serve.add_argument(
         "--stub", metavar="TEXT", help="answer every trigger with TEXT instead of Claude (tests)"
+    )
+    serve.add_argument(
+        "--config",
+        type=Path,
+        help="settings file (default: $BUDDY_CONFIG, then the user's config folder)",
     )
 
     latency = sub.add_parser("latency", help="first-token p50/p90/min/max from the latency log")
@@ -264,28 +272,33 @@ def _serve(args: argparse.Namespace) -> int:
     import uvicorn
 
     from buddy.auth import buddy_home, load_or_create_token
-    from buddy.claude_cli import ClaudeCliModel
-    from buddy.hints import proactive_cloud_from_env
+    from buddy.keys import FILE_NAME as KEYS_FILE
+    from buddy.keys import KeyStore
     from buddy.latency import FILE_NAME, LatencyLog
+    from buddy.providers import SettingsStore, answers_override_for
     from buddy.server import create_app
+    from buddy.settings import SettingsError, config_path
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
     token_path = buddy_home() / "token"
     token = load_or_create_token(token_path)
     print(f"buddy: token in {token_path}", file=sys.stderr)
-    proactive_cloud = proactive_cloud_from_env(os.environ)
-    where = "local engine, else Claude" if proactive_cloud else "local engine only"
-    print(f"buddy: proactive hints → {where}", file=sys.stderr)
+    path = args.config or config_path(os.environ)
+    try:
+        store = SettingsStore(
+            path,
+            KeyStore(buddy_home() / KEYS_FILE),
+            os.environ,
+            answers_override=answers_override_for(args.model, args.stub),
+        )
+    except SettingsError as error:
+        # Never guess with a broken settings file: a wrong line could send code somewhere.
+        print(f"buddy: can't use the settings: {error}", file=sys.stderr)
+        print(f"buddy: fix or delete {path} and start again", file=sys.stderr)
+        return 2
     latency = LatencyLog(buddy_home() / FILE_NAME)
     print(f"buddy: latency log in {latency.path}", file=sys.stderr)
-    if args.stub is not None:
-        from buddy.stub import StubModel
-
-        cloud = StubModel(args.stub)
-        print("buddy: triggers → stub model (no Claude)", file=sys.stderr)
-    else:
-        cloud = ClaudeCliModel(args.model)
-    app = create_app(cloud, token, proactive_cloud=proactive_cloud, latency=latency)
+    app = create_app(store.answers_model(), token, latency=latency, settings=store)
     # Loopback only, never configurable (SECURITY.md).
     uvicorn.run(app, host="127.0.0.1", port=args.port, log_level="info")
     return 0

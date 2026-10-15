@@ -1,0 +1,33 @@
+{
+  "v": 0,
+  "type": "settings",
+  "id": "s-2",
+  "settings": {
+    "answers": {
+      "provider": "openai-compatible",
+      "model": "qwen3-coder-30b-a3b",
+      "url": "http://10.0.0.2:8080"
+    },
+    "hints": {
+      "urls": [
+        "http://127.0.0.1:8080",
+        "http://10.0.0.2:8080"
+      ],
+      "model": "",
+      "proactive_cloud": false
+    },
+    "network": {
+      "allow_remote": true
+    },
+    "overlay": {
+      "top_offset": "auto"
+    }
+  },
+  "keys": {
+    "openrouter": true,
+    "answers_server": false,
+    "hints_server": false
+  },
+  "path": "/home/me/.config/CodeBuddy/config.toml",
+  "overrides": []
+}

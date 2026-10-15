@@ -14,8 +14,15 @@ JSON over WebSocket, one message per frame, on `ws://127.0.0.1:8790/ws`. Every m
 | `project_map` | ide → brain | File tree + signatures, sent when its hash changes |
 | `answer_start` / `answer_delta` / `answer_end` | brain → notch | One streamed answer |
 | `error` | brain → client | Failure; `id` is null when not tied to a request |
+| `settings_get` / `settings_set` | ide → brain | The PyCharm settings page reads / saves the settings (and sets API keys) |
+| `settings` | brain → ide | The saved settings, which keys are set (never the keys), overrides |
+| `models_get` / `models` | ide ↔ brain | The models a provider offers, for the settings page |
 
 The connection is refused when the `Origin` header is present (browsers always send it, our clients
 never do) or when the hello token is wrong. See SECURITY.md.
+
+The settings messages were added in v0 without a bump: they are new types, and no existing message
+changed, so older clients keep working. The brain answers them on the same socket, with the
+request's `id`.
 
 Changing a schema in a way that breaks old messages bumps `v` (ask first, AGENTS.md).

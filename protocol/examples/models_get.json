@@ -1,0 +1,8 @@
+{
+  "v": 0,
+  "type": "models_get",
+  "id": "m-1",
+  "provider": "openai-compatible",
+  "url": "http://10.0.0.2:8080",
+  "key": null
+}

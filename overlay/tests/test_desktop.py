@@ -198,3 +198,19 @@ def test_on_x11_and_xwayland_the_window_manager_is_bypassed() -> None:
     assert window_flags("xcb") & Qt.WindowType.X11BypassWindowManagerHint
     for platform in ("offscreen", "windows", "cocoa", "wayland"):
         assert not window_flags(platform) & Qt.WindowType.X11BypassWindowManagerHint
+
+
+def test_the_settings_file_can_set_the_offset(tmp_path) -> None:
+    from codebuddy_overlay.desktop import configured_top_offset
+
+    path = tmp_path / "config.toml"
+    env = {"BUDDY_CONFIG": str(path)}
+    assert configured_top_offset(env) is None  # no file
+    path.write_text("[overlay]\ntop_offset = 34\n", encoding="utf-8")
+    assert configured_top_offset(env) == 34
+    placement, source = top_placement(env, 0, 0, configured_top_offset(env))
+    assert placement == TopPlacement(explicit=34) and "config" in source
+    path.write_text('[overlay]\ntop_offset = "auto"\n', encoding="utf-8")
+    assert parse_offset(configured_top_offset(env)) is None
+    path.write_text("[overlay\n", encoding="utf-8")
+    assert configured_top_offset(env) is None  # broken file: the brain says so, not the panel
