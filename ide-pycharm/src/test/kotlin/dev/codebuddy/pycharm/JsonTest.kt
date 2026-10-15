@@ -29,7 +29,7 @@ class JsonTest {
     fun configReadsPortAndHomeFromTheEnvironment() {
         val config = BrainConfig.fromEnvironment(mapOf("BUDDY_PORT" to "8799", "BUDDY_HOME" to "/tmp/cb"))
         assertEquals("ws://127.0.0.1:8799/ws", config.uri.toString())
-        assertEquals("/tmp/cb/token", config.tokenFile.toString())
+        assertEquals(java.nio.file.Path.of("/tmp/cb", "token"), config.tokenFile)  // separators differ on Windows
         assertEquals("ws://127.0.0.1:8790/ws", BrainConfig.fromEnvironment(emptyMap()).uri.toString())
     }
 }

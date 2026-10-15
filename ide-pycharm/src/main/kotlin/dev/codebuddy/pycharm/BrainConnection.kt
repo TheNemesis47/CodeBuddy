@@ -18,11 +18,27 @@ data class BrainConfig(val uri: URI, val tokenFile: Path) {
         runCatching { Files.readString(tokenFile).trim() }.getOrNull()?.takeIf { it.length >= 32 }
 
     companion object {
-        fun fromEnvironment(env: Map<String, String> = System.getenv()): BrainConfig {
+        fun fromEnvironment(
+            env: Map<String, String> = System.getenv(),
+            osName: String = System.getProperty("os.name"),
+            userHome: String = System.getProperty("user.home"),
+        ): BrainConfig {
             val port = env["BUDDY_PORT"]?.toIntOrNull() ?: 8790
-            val home = env["BUDDY_HOME"]?.let { Path.of(it) }
-                ?: Path.of(System.getProperty("user.home"), "Library", "Application Support", "CodeBuddy")
+            val home = env["BUDDY_HOME"]?.let { Path.of(it) } ?: defaultHome(env, osName, userHome)
             return BrainConfig(URI.create("ws://127.0.0.1:$port/ws"), home.resolve("token"))
+        }
+
+        /** The brain's per-user data folder (platformdirs `user_data_dir("CodeBuddy")`). */
+        fun defaultHome(env: Map<String, String>, osName: String, userHome: String): Path {
+            val os = osName.lowercase()
+            return when {
+                os.startsWith("mac") -> Path.of(userHome, "Library", "Application Support", "CodeBuddy")
+                os.startsWith("windows") ->
+                    (env["LOCALAPPDATA"]?.let { Path.of(it) } ?: Path.of(userHome, "AppData", "Local")).resolve("CodeBuddy")
+                else ->
+                    (env["XDG_DATA_HOME"]?.takeIf { it.isNotBlank() }?.let { Path.of(it) }
+                        ?: Path.of(userHome, ".local", "share")).resolve("CodeBuddy")
+            }
         }
     }
 }
