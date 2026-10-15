@@ -22,3 +22,6 @@ build/
 # models never live here
 *.gguf
 *.safetensors
+
+# latency bench output (scripts/bench-latency)
+bench/

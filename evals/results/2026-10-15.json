@@ -4,6 +4,7 @@
   "total": 94.5,
   "complete": true,
   "cases": 29,
+  "runs": 29,
   "skipped": [],
   "engines": {
     "hint": "Qwen3-Coder-30B-A3B",
@@ -736,7 +737,7 @@
         {
           "name": "no_leak",
           "passed": false,
-          "detail": "/\\bnonlocal\\b/ matched 'nonlocal'"
+          "detail": "/\\bglobal\\b/ matched 'global'"
         },
         {
           "name": "no_fix",

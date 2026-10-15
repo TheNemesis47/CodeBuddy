@@ -7,6 +7,7 @@ uv run buddy ask src/x.py:12                 # line 12 holds a `#? …` or `#!te
 uv run buddy ask src/x.py:12 "why …"         # explicit question about line 12
 uv run buddy ask src/x.py:12 --show-prompt   # print the prompt, call nothing (offline)
 uv run buddy serve                           # WebSocket on 127.0.0.1:8790/ws
+uv run buddy eval --repeat 3                 # score answers on ../evals/cases (see evals/README.md)
 uv run pytest                                # offline tests (fake models)
 ```
 

@@ -31,6 +31,10 @@ plugin exist once G3 and G4 are closed.
 
 `uv run pytest -m live` with `BUDDY_LIVE=1` runs the one test that calls the real `claude` CLI.
 
+Evals (G10): start a local engine, then `cd brain && uv run buddy eval --repeat 3` (hints) or add
+`--triggers --judge local` (Claude quota). Results land in `evals/results/`; commit a complete run
+when a prompt changes and raise `eval_score` in `quality/floors.json`. Details: `evals/README.md`.
+
 ## Driving it as an agent
 
 - Brain: `uv run buddy ask file.py:LINE "question"` prints the answer. No UI or IDE needed.

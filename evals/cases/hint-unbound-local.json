@@ -16,7 +16,7 @@
     ]
   },
   "forbidden": [
-    "\\bglobal\\s+count",
+    "\\bglobal\\b",
     "\\bnonlocal\\b"
   ],
   "fix_lines": [

@@ -1,0 +1,2675 @@
+{
+  "date": "2026-10-15",
+  "label": "improved: hint.md v3 + system.md no corrected lines; hints x3",
+  "total": 99.1,
+  "complete": true,
+  "cases": 29,
+  "runs": 65,
+  "skipped": [],
+  "engines": {
+    "hint": "Qwen3-Coder-30B-A3B",
+    "hint_engine": "http://127.0.0.1:8080",
+    "trigger": "claude-cli:sonnet",
+    "judge": "Qwen3-Coder-30B-A3B"
+  },
+  "checks": {
+    "concept": "64/65",
+    "language": "65/65",
+    "no_fix": "65/65",
+    "no_leak": "62/65",
+    "shape": "62/62"
+  },
+  "judge_mean": 3.89,
+  "results": [
+    {
+      "id": "hint-bare-except",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "bare-except: /tutt[ei]/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "L'istruzione `except:` cattura tutte le eccezioni, inclusa quella che interrompe l'esecuzione del programma. Questo rende difficile il debugging quando qualcosa va storto. Che tipo di errore potrebbe passare inosservato in questo modo?",
+      "first_token_ms": 122,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 3,
+        "reason": "The tutor correctly identifies the problem with bare except and asks a leading question, but could be more specific about the exact exception that should be caught."
+      }
+    },
+    {
+      "id": "hint-bare-except",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "bare-except: /tutt[ei]/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "L'istruzione `except:` cattura tutte le eccezioni, inclusa quella che interrompe l'esecuzione del programma. Che cosa succede se l'utente preme Ctrl+C durante l'esecuzione della funzione?",
+      "first_token_ms": 15,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 3,
+        "reason": "The tutor correctly identifies the issue with bare except and prompts the student to think about unexpected interruptions, but doesn't fully explain why catching all exceptions is problematic for debugging."
+      }
+    },
+    {
+      "id": "hint-bare-except",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "bare-except: /tutt[ei]/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "L'istruzione `except:` cattura tutte le eccezioni, inclusa quella che interrompe l'esecuzione del programma. Che cosa succede se qualcosa va storto in modo inaspettato?",
+      "first_token_ms": 15,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 3,
+        "reason": "The tutor correctly identifies the issue with bare except and asks a leading question, but could be more specific about the exact exception to catch."
+      }
+    },
+    {
+      "id": "hint-blocking-sleep",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "blocking: /blocc/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "2 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che `time.sleep(1)` blocca l'intero evento loop, impedendo la concorrenza tra le coroutine.  \nChe cosa succede se invece di `time.sleep` usi una funzione asincrona che non blocchi?",
+      "first_token_ms": 144,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor correctly identifies the problem with time.sleep blocking the event loop and effectively guides the student to think about async alternatives without providing the solution directly."
+      }
+    },
+    {
+      "id": "hint-blocking-sleep",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "blocking: /blocc/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "2 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che `time.sleep(1)` blocca l'intero event loop, impedendo al programma di eseguire altre coroutine contemporaneamente. Questo annulla il vantaggio dell'asincronismo.\n\nPerché il programma non si comporta come una funzione asincrona dovrebbe?",
+      "first_token_ms": 18,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 3,
+        "reason": "Tutor correctly identifies the problem with time.sleep blocking the event loop but doesn't provide the async replacement as requested in the rubric."
+      }
+    },
+    {
+      "id": "hint-blocking-sleep",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "blocking: /blocc/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "2 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che `time.sleep(1)` blocca l'intero evento loop, impedendo a `asyncio` di eseguire altre coroutine in parallelo.  \nChe cosa succede quando un'operazione di I/O bloccante viene chiamata da una funzione `async`?",
+      "first_token_ms": 15,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 3,
+        "reason": "The tutor correctly identifies the problem with time.sleep blocking the event loop and asks a leading question, but doesn't provide the async replacement as requested in the rubric."
+      }
+    },
+    {
+      "id": "hint-dict-keyerror",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "missing-key: /KeyError/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "2 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che `counts[word]` cerca una chiave non ancora creata nel dizionario, causando un `KeyError`.  \nChe cosa succede quando si tenta di accedere a una chiave inesistente in un dizionario?",
+      "first_token_ms": 118,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 3,
+        "reason": "The tutor correctly identifies the KeyError issue and asks a leading question about accessing non-existent dictionary keys, but doesn't fully address the specific problem of += operation failing on non-existent keys."
+      }
+    },
+    {
+      "id": "hint-dict-keyerror",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "missing-key: /KeyError/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "2 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che `counts[word]` cerca una chiave non ancora creata nel dizionario, causando un `KeyError`.  \nChe cosa succede quando si tenta di accedere a una chiave inesistente in un dizionario?",
+      "first_token_ms": 15,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 3,
+        "reason": "The tutor correctly identifies the KeyError issue and asks a leading question about accessing non-existent dictionary keys, but doesn't explicitly mention that this is the first time seeing the word."
+      }
+    },
+    {
+      "id": "hint-dict-keyerror",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "missing-key: /KeyError/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è una `KeyError` alla linea 4: il codice cerca di incrementare un conteggio per una parola che non è ancora presente nel dizionario. Che cosa succede quando si prova ad accedere a una chiave inesistente in un dizionario?",
+      "first_token_ms": 16,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 3,
+        "reason": "The tutor correctly identifies the KeyError issue and prompts the student to think about accessing non-existent dictionary keys, but doesn't fully align with the rubric requirement to specifically mention that the key doesn't exist yet when the word is first seen."
+      }
+    },
+    {
+      "id": "hint-float-equality",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "float-precision: /virgola mobile/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che la comparazione tra numeri in virgola mobile può fallire a causa della rappresentazione approssimata dei decimali. Quando il codice viene eseguito, potrebbe stampare `False` invece di `True` per la chiamata fornita. Qual è il comportamento più affidabile per confrontare valori in virgola mobile?",
+      "first_token_ms": 120,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 2,
+        "reason": "The tutor correctly identifies the floating-point comparison issue but fails to explicitly mention that 0.1 + 0.2 != 0.3 due to representation errors, and doesn't guide the student toward using isclose or tolerance checks as requested."
+      }
+    },
+    {
+      "id": "hint-float-equality",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "float-precision: /virgola mobile/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che la comparazione `==` tra numeri in virgola mobile può fallire a causa della rappresentazione binaria non esatta dei decimali. Quando il codice viene eseguito, restituisce `False` invece di `True` per la somma 0.1 + 0.2. Pensaci: quale operazione potrebbe rendere questa confronto più affidabile?",
+      "first_token_ms": 17,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 3,
+        "reason": "The tutor correctly identifies the floating-point precision issue and hints at a solution without providing the actual fix."
+      }
+    },
+    {
+      "id": "hint-float-equality",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "float-precision: /virgola mobile/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che la comparazione tra numeri in virgola mobile può fallire a causa della rappresentazione approssimata dei decimali. Quando il codice viene eseguito, potrebbe stampare `False` invece di `True` per motivi di precisione. Considera come potresti confrontare in modo più robusto i numeri decimali?",
+      "first_token_ms": 16,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 3,
+        "reason": "The tutor correctly identifies the floating-point precision issue and hints at a more robust comparison method without providing a direct solution."
+      }
+    },
+    {
+      "id": "hint-floor-division",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "integer-division: /\\binter[ao]\\b/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "2 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "L'operatore `//` restituisce un intero, ma la funzione `average` dovrebbe restituire un numero decimale. \nPotrebbe tornare utile un operatore diverso per la divisione?",
+      "first_token_ms": 110,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 3,
+        "reason": "The tutor correctly identifies the problem with the // operator but fails to explicitly mention that the correct operator should be / for proper division."
+      }
+    },
+    {
+      "id": "hint-floor-division",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "integer-division: /\\binter[ao]\\b/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "3 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "La divisione intera su una lista vuota causa un errore `ZeroDivisionError`.\nChe cosa succede se la lista è vuota?\nCome si può evitare questa situazione?",
+      "first_token_ms": 15,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 2,
+        "reason": "The tutor's response doesn't address the actual problem of using integer division instead of float division for calculating averages, and misses the core hint about the incorrect operator."
+      }
+    },
+    {
+      "id": "hint-floor-division",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "integer-division: /\\binter[ao]\\b/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "2 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "La divisione intera su una lista vuota causa un errore `ZeroDivisionError`.  \nChe cosa succede se la lista è vuota?",
+      "first_token_ms": 15,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 2,
+        "reason": "The tutor's hint doesn't directly address the core issue of integer division dropping the decimal part, and doesn't guide the student toward the correct operator."
+      }
+    },
+    {
+      "id": "hint-is-vs-equals",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 0.8,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "identity-vs-equality: /identit/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "2 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": false,
+          "detail": "/==/ matched '=='"
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che `is` confronta l'identità degli oggetti, non il loro contenuto. Quando il codice viene eseguito, la comparazione fallisce anche se `role` contiene la stringa `\"admin\"` perché `is` controlla se sono lo stesso oggetto in memoria, non se hanno lo stesso valore.\n\nQual è la differenza fondamentale tra `is` e `==` quando si confrontano stringhe?",
+      "first_token_ms": 111,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor correctly explains the difference between 'is' and '==', emphasizes the core concept of identity vs. value comparison, and asks a guiding question without providing the solution."
+      }
+    },
+    {
+      "id": "hint-is-vs-equals",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "identity-vs-equality: /identit/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "2 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che il codice usa `is` per confrontare una stringa, ma `is` verifica l'identità non l'uguaglianza. Quando il codice viene eseguito, il confronto fallisce anche se il valore della stringa è \"admin\". \n\nChe cosa succede se provi a confrontare due stringhe diverse che hanno lo stesso contenuto usando `is`?",
+      "first_token_ms": 17,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor correctly explains that 'is' checks identity not equality, gives a hint about the problem with string comparison, and asks a guiding question without writing the fix."
+      }
+    },
+    {
+      "id": "hint-is-vs-equals",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "identity-vs-equality: /identit/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che `is` confronta l'identità degli oggetti, non il loro contenuto. Quando si usa `is` con stringhe literal, funziona per fortuna, ma è una pratica pericolosa. Qual è il rischio principale di usare `is` per confrontare stringhe?",
+      "first_token_ms": 15,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor correctly explains that 'is' checks identity not equality, identifies the danger of using 'is' with strings, and asks a guiding question to help the student understand the concept without giving away the solution."
+      }
+    },
+    {
+      "id": "hint-late-binding-lambda",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "late-binding: /valore di `?i/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che la lambda cattura la variabile `i` per riferimento, non per valore, quindi tutte le funzioni nella lista useranno l'ultimo valore di `i` quando vengono chiamate. Che cosa succede quando si chiama una di queste funzioni?",
+      "first_token_ms": 122,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor's hint effectively explains the core issue without using the default-argument trick, and prompts the student to think about what happens when the functions are actually called."
+      }
+    },
+    {
+      "id": "hint-late-binding-lambda",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "late-binding: /riferiment/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "2 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che la lambda alla riga 4 cattura la variabile `i` per riferimento, non per valore. Quando le lambda vengono effettivamente eseguite, `i` ha il valore dell'ultimo ciclo, quindi tutte le funzioni restituiscono lo stesso risultato.\n\nQual è il comportamento che si vuole ottenere quando le funzioni vengono chiamate?",
+      "first_token_ms": 16,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor correctly identifies the core issue without using the default argument trick, and asks the right question to guide the student toward understanding the problem."
+      }
+    },
+    {
+      "id": "hint-late-binding-lambda",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "late-binding: /valore di `?i/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che la lambda cattura la variabile `i` per riferimento, non per valore, quindi tutte le funzioni nella lista vedranno l'ultimo valore di `i` quando vengono eseguite. Che cosa succede se provi a chiamare una di queste funzioni dopo il ciclo?",
+      "first_token_ms": 15,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor's hint effectively explains the core issue without using the default-argument trick, and prompts the student to test their understanding by calling the functions after the loop."
+      }
+    },
+    {
+      "id": "hint-missing-await",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "coroutine: /corout/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "L'errore è che `fetch(3)` restituisce un oggetto coroutine ma non viene atteso, quindi `result` contiene una coroutine invece del valore restituito. Che cosa succede se stampi una coroutine?",
+      "first_token_ms": 135,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor correctly identifies the core issue without writing await, explains what happens when printing a coroutine, and guides the student to understand the concept."
+      }
+    },
+    {
+      "id": "hint-missing-await",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 0.8,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "coroutine: /corout/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": false,
+          "detail": "/\\bawait\\b/ matched 'await'"
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "L'async function `fetch` viene chiamata senza `await`, quindi `result` è una coroutine invece di un numero. Che cosa succede quando stampi una coroutine?",
+      "first_token_ms": 17,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor's response effectively explains the core issue without writing the fix, and prompts the student to think about what happens when printing a coroutine."
+      }
+    },
+    {
+      "id": "hint-missing-await",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 0.8,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "coroutine: /corout/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": false,
+          "detail": "/\\bawait\\b/ matched 'await'"
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che alla riga 10 viene chiamata una funzione asincrona senza l'operatore `await`, quindi viene restituito un oggetto coroutine invece del risultato atteso. Che cosa succede se stampi un oggetto coroutine?",
+      "first_token_ms": 15,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor correctly identifies the core issue without writing await, explains what happens when printing a coroutine object, and guides the student to understand the concept."
+      }
+    },
+    {
+      "id": "hint-missing-with",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "resource-leak: /chiu[sd]/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "2 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che il file aperto non viene chiuso, causando una potenziale perdita di risorse. Che cosa succede se il programma tenta di accedere a file in una directory protetta?\nPotresti verificare che il file venga chiuso anche in caso di errori durante la lettura?",
+      "first_token_ms": 122,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "Il tutor identifica correttamente il problema della mancata chiusura del file come perdita di risorse e pone domande che guidano lo studente a considerare casi d'errore e soluzioni appropriate."
+      }
+    },
+    {
+      "id": "hint-missing-with",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "resource-leak: /chiu[sd]/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che il file aperto non viene chiuso, causando un potenziale accumulo di risorse. Che cosa succede se la funzione viene chiamata più volte? Il file rimane aperto?",
+      "first_token_ms": 17,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor correctly identifies the resource management problem without suggesting specific fixes, and prompts the student to think about the consequences of not closing the file."
+      }
+    },
+    {
+      "id": "hint-missing-with",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "resource-leak: /chiu[sd]/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che il file aperto non viene chiuso, causando un potenziale accumulo di risorse. Che cosa succede se la funzione viene chiamata più volte? Il file rimane aperto?",
+      "first_token_ms": 15,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "Il tutor identifica correttamente il problema della risorsa aperta e guida lo studente a riflettere sulle conseguenze senza fornire la soluzione diretta."
+      }
+    },
+    {
+      "id": "hint-mutable-default",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "mutable-default: /predefinit/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che la lista vuota come argomento predefinito viene condivisa tra tutte le chiamate della funzione, causando effetti collaterali imprevisti. Qual è l'effetto di chiamare questa funzione più volte?",
+      "first_token_ms": 110,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 3,
+        "reason": "The tutor correctly identifies the shared default argument issue and asks a leading question, but doesn't fully explain the concept or suggest None as a fix."
+      }
+    },
+    {
+      "id": "hint-mutable-default",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "mutable-default: /predefinit/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che la lista vuota come valore predefinito viene condivisa tra tutte le chiamate alla funzione, causando effetti collaterali imprevisti. Perché questo comportamento potrebbe portare a risultati inaspettati nel codice?",
+      "first_token_ms": 16,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 3,
+        "reason": "The tutor correctly identifies the shared default list issue and asks a leading question, but doesn't explicitly mention that None is the standard fix for this problem."
+      }
+    },
+    {
+      "id": "hint-mutable-default",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "mutable-default: /predefinit/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che la lista vuota come argomento predefinito viene condivisa tra tutte le chiamate alla funzione, causando effetti collaterali imprevisti. Qual è l'effetto di chiamare questa funzione più volte?",
+      "first_token_ms": 15,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 3,
+        "reason": "The tutor correctly identifies the shared default argument issue and asks a guiding question, but doesn't fully explain the concept or suggest the None pattern."
+      }
+    },
+    {
+      "id": "hint-off-by-one-range",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "index-bounds: /indic/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "2 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "L'indice va fuori dai limiti della lista perché `range` include `len(items) + 1` che non esiste.\n\nQual è l'ultimo indice valido di una lista di lunghezza `n`?",
+      "first_token_ms": 125,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor correctly identifies the issue with the index going out of bounds and asks the student to think about the valid range of indices, which helps the student understand the problem without providing the fix."
+      }
+    },
+    {
+      "id": "hint-off-by-one-range",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "index-bounds: /indic/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è un off-by-one nell'indice della lista. La funzione cerca di accedere a elementi fuori dal range valido della lista. Qual è l'indice massimo accessibile in una lista di lunghezza n?",
+      "first_token_ms": 15,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor correctly identifies the off-by-one error and prompts the student to think about the maximum valid index without providing the fix."
+      }
+    },
+    {
+      "id": "hint-off-by-one-range",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "index-bounds: /indic/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "3 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "L'indice va fuori dai limiti della lista perché la range include un valore non valido.  \nQual è l'effetto di includere `len(items) + 1` nella range?  \nIl codice funziona correttamente per liste con almeno 4 elementi?",
+      "first_token_ms": 15,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 4,
+        "reason": "The tutor effectively guides the student to identify the off-by-one error without providing the fix, asking thoughtful questions about the range bounds."
+      }
+    },
+    {
+      "id": "hint-optional-return",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "optional: /None/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che `users.get(name)` può restituire `None`, ma la funzione è dichiarata per restituire sempre una `str`. Quando il nome non esiste nel dizionario, il codice fallirà con un errore di tipo. Qual è il tipo restituito da `users.get(name)`?",
+      "first_token_ms": 108,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor correctly identifies the issue with .get() returning None and prompts the student to think about the return type without providing the fix."
+      }
+    },
+    {
+      "id": "hint-optional-return",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "optional: /None/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che `users.get(name)` può restituire `None`, ma la funzione deve restituire una stringa. Che cosa succede se la chiave non esiste nel dizionario?",
+      "first_token_ms": 16,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor correctly identifies the issue with .get() returning None while the annotation suggests a str return type, and prompts the student to think about what happens when a key doesn't exist without providing the solution or fixing the code."
+      }
+    },
+    {
+      "id": "hint-optional-return",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "optional: /None/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "L'errore è che `users.get(name)` può restituire `None` se la chiave non esiste, ma la funzione è dichiarata per restituire sempre una `str`. Questo può portare a un errore in fase di esecuzione se il codice chiamante non gestisce il valore `None`. Qual è il comportamento desiderato quando un utente non viene trovato?",
+      "first_token_ms": 16,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor correctly identifies the issue with .get() returning None, explains the mismatch with the return annotation, and prompts the student to think about the desired behavior without providing the fix."
+      }
+    },
+    {
+      "id": "hint-recursion-no-base",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "base-case: /caso base/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è una chiamata ricorsiva infinita: la funzione non ha un caso base che fermi la ricorsione, quindi quando viene chiamata con qualsiasi valore, si ripeterà all'infinito fino a un errore di stack. Che cosa succede se provi a eseguire questa funzione con un numero qualsiasi?",
+      "first_token_ms": 110,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 3,
+        "reason": "The tutor correctly identifies the issue of infinite recursion and prompts the student to test their code, but doesn't explicitly ask about or guide toward the concept of a base case."
+      }
+    },
+    {
+      "id": "hint-recursion-no-base",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "base-case: /caso base/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è una chiamata ricorsiva infinita alla linea 2, perché la funzione non ha un caso base che fermi la ricorsione. Che cosa succede quando qualcuno chiama questa funzione?",
+      "first_token_ms": 15,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor correctly identifies the lack of a base case and asks a leading question that helps the student understand the infinite recursion issue without providing the solution."
+      }
+    },
+    {
+      "id": "hint-recursion-no-base",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "base-case: /caso base/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è una chiamata ricorsiva senza caso base, quindi la funzione si chiama all'infinito fino a un errore di stack. Che cosa succede se provi a calcolare `factorial(5)`?",
+      "first_token_ms": 15,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 3,
+        "reason": "The tutor correctly identifies the issue of missing base case and prompts the student to test their code, but doesn't explicitly ask about when recursion should stop."
+      }
+    },
+    {
+      "id": "hint-remove-while-iterating",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "mutate-while-iterating: /durante/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che si modifica una lista durante l'iterazione, causando salti di elementi. Quando rimuovi un elemento, gli indici successivi si spostano, ma l'iteratore non lo sa e salta l'elemento successivo. Che cosa succede se provi a rimuovere gli elementi negativi da una lista con due numeri negativi consecutivi?",
+      "first_token_ms": 118,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 3,
+        "reason": "The tutor correctly identifies the core issue of modifying a list during iteration and provides a helpful prompting question, but doesn't fully address the specific problem of skipping elements or suggest a solution approach."
+      }
+    },
+    {
+      "id": "hint-remove-while-iterating",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 0.8,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": false,
+          "detail": "none of ['mutate-while-iterating']"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è un `UnboundLocalError` a causa di un nome di variabile ambiguo. Quando `numbers` è una lista, la riga 4 tenta di rimuovere un elemento, ma potrebbe riferirsi a una variabile locale invece di quella globale. Qual è il problema con il nome della variabile usata nella funzione?",
+      "first_token_ms": 17,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 2,
+        "reason": "The tutor incorrectly identifies the problem as a variable naming issue when the actual problem is about modifying a list while iterating over it."
+      }
+    },
+    {
+      "id": "hint-remove-while-iterating",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "mutate-while-iterating: /mentre/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "2 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è un `UnboundLocalError` alla linea 4, perché il codice tenta di modificare una lista mentre la sta iterando, causando un errore di riferimento. Se la lista è immutabile o se l'iterazione non è supportata durante la modifica, l'accesso a `numbers` fallisce.\n\nPerché il codice non può rimuovere elementi durante l'iterazione senza causare un errore?",
+      "first_token_ms": 17,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 2,
+        "reason": "The tutor incorrectly identifies the error as UnboundLocalError instead of the actual issue with skipping elements during iteration."
+      }
+    },
+    {
+      "id": "hint-shadow-builtins",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "shadowing: /predefinit/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "2 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che la variabile `sum` nasconde la funzione integrata `sum()` in Python. Quando il codice viene eseguito, `sum` non può essere utilizzata come funzione per calcolare la somma degli elementi della lista. \n\nPotresti usare un altro nome per la variabile che non interferisca con i nomi predefiniti?",
+      "first_token_ms": 116,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 3,
+        "reason": "The tutor correctly identifies the issue with variable naming but doesn't fully adhere to the rubric by not explicitly mentioning that 'list' also shadows a built-in, and could be more direct in suggesting a solution."
+      }
+    },
+    {
+      "id": "hint-shadow-builtins",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "shadowing: /nascond/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "2 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che la variabile `sum` nasconde la funzione integrata `sum()` in Python. Quando il codice cerca di usare `sum`, otterrà il valore della variabile invece della funzione.\n\nQuale nome di variabile eviterebbe questo conflitto?",
+      "first_token_ms": 18,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 3,
+        "reason": "The tutor correctly identifies the issue of shadowing built-in functions and asks a guiding question, but doesn't fully adhere to the rubric by not explicitly mentioning that 'list' also shadows a built-in, and could be more direct in suggesting a solution."
+      }
+    },
+    {
+      "id": "hint-shadow-builtins",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "shadowing: /nascond/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "3 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che la variabile `sum` nasconde la funzione integrata `sum()` in Python, causando un errore quando si cerca di utilizzare la funzione `sum()` nel codice. Questo avviene perché `sum` è un nome riservato e non dovrebbe essere utilizzato come variabile.\n\nLa variabile `sum` è una funzione integrata in Python, che fa la somma degli elementi di un iterabile. Quindi, se usi `sum` come nome di variabile, non potrai più usare la funzione `sum()`.\n\nQual è il problema principale nell'uso di `sum` come nome di variabile in questo contesto?",
+      "first_token_ms": 15,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 3,
+        "reason": "The tutor correctly identifies the issue with shadowing built-ins but doesn't fully adhere to the rubric requirement of not renaming the variables."
+      }
+    },
+    {
+      "id": "hint-sort-returns-none",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "in-place: /None/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che `sort()` restituisce `None` e non la lista ordinata. Quando eseguito, il codice restituisce `None` invece dei primi tre punteggi. Qual è il metodo corretto per ordinare una lista senza modificarla?",
+      "first_token_ms": 109,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 3,
+        "reason": "The tutor correctly identifies the issue with .sort() returning None and asks a guiding question, but could be more explicit about the solution."
+      }
+    },
+    {
+      "id": "hint-sort-returns-none",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "in-place: /None/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "3 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che `sort()` modifica la lista in-place e restituisce `None`, non la lista ordinata. Quindi `ranked` è `None` e il codice fallisce quando tenta di fare `ranked[:3]`.\n\nChe cosa succede se provi a usare un oggetto `None` come una lista?\n\nLa riga 2 chiama `sort()` e assegna il risultato a `ranked`, ma `sort()` non restituisce nulla.",
+      "first_token_ms": 15,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 3,
+        "reason": "The tutor correctly identifies the issue with .sort() returning None and explains the consequence, but doesn't provide enough guidance for the student to figure out the solution on their own."
+      }
+    },
+    {
+      "id": "hint-sort-returns-none",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "in-place: /None/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è che `sort()` restituisce `None` e non la lista ordinata. Quando il codice esegue, `ranked` diventa `None`, quindi `ranked[:3]` causa un errore. Qual è il metodo corretto per ordinare una lista senza modificare l'originale?",
+      "first_token_ms": 17,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 3,
+        "reason": "The tutor correctly identifies the problem with .sort() returning None, but should have provided a more direct hint toward the solution without suggesting sorted() explicitly."
+      }
+    },
+    {
+      "id": "hint-str-plus-int",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "types: /stringa/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "L'errore è una somma tra stringhe e intero alla riga 2: il codice non può concatenare una stringa con un numero intero. Prova a pensare come puoi trasformare il numero in una stringa prima di concatenarlo. Il problema si verifica quando esegui il programma perché Python non consente di sommare direttamente stringhe e interi.",
+      "first_token_ms": 119,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 3,
+        "reason": "The tutor correctly identifies the TypeError and explains the issue without providing a solution, but could be more specific about the conversion method."
+      }
+    },
+    {
+      "id": "hint-str-plus-int",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "types: /\\btip/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "3 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è una somma tra stringhe e intero alla riga 2, causando un errore di tipo.  \nChe cosa succede se provi a sommare una stringa a un numero intero in Python?  \nL'errore si verifica perché non puoi concatenare direttamente stringhe e interi.",
+      "first_token_ms": 16,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor correctly identifies the TypeError issue, explains why it occurs, and guides the student to understand the problem without providing a solution."
+      }
+    },
+    {
+      "id": "hint-str-plus-int",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "types: /stringa/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "L'errore è una somma tra stringhe e intero alla riga 2: il programma fallisce perché non puoi combinare direttamente una stringa con un numero intero usando l'operatore `+`. Prova a pensare a come puoi rendere il numero utilizzabile in una stringa.",
+      "first_token_ms": 15,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor correctly identifies the TypeError issue without suggesting a fix, and guides the student to think about converting the integer to a string."
+      }
+    },
+    {
+      "id": "hint-unbound-local",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "scope: /local/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "2 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "La variabile `count` è usata prima di essere assegnata nella funzione `increment`, causando un errore `UnboundLocalError`.  \nCome si può risolvere l'ambiguità tra la variabile globale e quella locale?",
+      "first_token_ms": 112,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 3,
+        "reason": "The tutor correctly identifies the issue and asks a guiding question, but doesn't fully explain that the assignment makes it local or suggest using 'global count'."
+      }
+    },
+    {
+      "id": "hint-unbound-local",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "scope: /local/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "1 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il problema è una variabile non inizializzata in un ambito locale. Quando esegui il codice, Python lancia un errore perché `count` è usata prima di essere definita nel contesto della funzione. Prova a pensare a come puoi fare in modo che la funzione riconosca la variabile esterna.",
+      "first_token_ms": 15,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 2,
+        "reason": "The tutor correctly identifies the issue but should have explained that the problem is about variable scope and local vs global variables, not uninitialized variables."
+      }
+    },
+    {
+      "id": "hint-unbound-local",
+      "kind": "hint",
+      "model": "Qwen3-Coder-30B-A3B",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "scope: /local/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "2 lines (max 3)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "La variabile `count` è usata prima di essere assegnata nella funzione `increment`, causando un errore `UnboundLocalError`.  \nPerché il nome `count` non si riferisce alla variabile globale definita alla riga 1?",
+      "first_token_ms": 15,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 2,
+        "reason": "The tutor correctly identifies the error but doesn't fully explain that assigning to 'count' makes it local to the function, which is key to understanding the issue."
+      }
+    },
+    {
+      "id": "q-dict-changed-size",
+      "kind": "#?",
+      "model": "claude-sonnet-5-5",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "mutate-while-iterating: /dimension/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "13 lines (max 15)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il ciclo alla riga 2 itera direttamente su `config`, quindi Python tiene un iteratore legato alla struttura interna del dizionario. Quando alla riga 5 fai `del config[key]`, la dimensione del dict cambia mentre l'iteratore è ancora in corso. Python se ne accorge (controlla la dimensione a ogni passo) e alza `RuntimeError` invece di darti risultati imprevedibili, come chiavi saltate o ripetute.\n\n**Regola generale:** non aggiungere né togliere chiavi dal dict su cui stai iterando.\n\nDue strade comuni:\n\n- **Iterare su una copia delle chiavi**: `list(config)` oppure `list(config.keys())` crea una lista indipendente, e il dict originale può cambiare in sicurezza.\n- **Costruire un nuovo dict** con una *dict comprehension* che tiene solo le voci con valore \"vero\", senza modificare l'originale.\n\nEsempio illustrativo su altri dati:\n\n```python\nd = {\"a\": 1, \"b\": 2}\nfor k in list(d):   # copia delle chiavi\n    if d[k] > 1:\n        del d[k]\n```\n\nNota: la seconda strada cambia il comportamento, perché la funzione non modifica più l'argomento in place ma restituisce un dict nuovo. Dato che alla riga 6 fai già `return config`, può andare bene, ma tienine conto se qualcuno si aspetta la modifica in place.",
+      "first_token_ms": 1682,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor perfectly explains why the error occurs, suggests a valid solution using a snapshot of keys, and provides a clear example while avoiding doing the fix directly."
+      }
+    },
+    {
+      "id": "q-generator-exhausted",
+      "kind": "#?",
+      "model": "claude-sonnet-5-5",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "generator: /generator/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "14 lines (max 15)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Perché la riga 2 restituisce un **generatore** (un'espressione `(... for ...)` con le tonde), non una lista. Un generatore è un **iteratore a consumo singolo**: produce i valori uno alla volta e non se li ricorda.\n\n- Alla riga 6 `sum(values)` lo scorre tutto: 0 + 1 + 4 + 9 = 14.\n- Ora il generatore è **esaurito**: non ha più nulla da dare.\n- Alla riga 8 `sum(values)` trova subito la fine, quindi somma zero elementi e restituisce `0` (senza errori).\n\nPiccolo esempio su altro codice:\n\n```python\ng = (x for x in \"ab\")\nlist(g)  # ['a', 'b']\nlist(g)  # []\n```\n\nPer ottenere lo stesso risultato due volte hai due strade:\n- usare una **lista** (parentesi quadre, o `list(...)`) che conserva i valori in memoria;\n- oppure **ricreare** il generatore chiamando di nuovo la funzione.\n\nIl generatore è più leggero in memoria, la lista è riutilizzabile: scegli in base a quante volte ti servono i dati.",
+      "first_token_ms": 2894,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor perfectly explains that generators can only be iterated once, using clear examples and connecting the concept to the student's code."
+      }
+    },
+    {
+      "id": "q-list-any-vs-float",
+      "kind": "#?",
+      "model": "claude-sonnet-5-5",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "static-typing: /type checker/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "5 lines (max 15)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Cambia **cosa il type checker (mypy, Pyright) ti controlla**; a runtime non cambia nulla, Python ignora i type hint.\n\n- **`list[Any]`**: `Any` significa \"spegni i controlli\". Il checker accetta qualsiasi lista, anche `[\"a\", None, 3]`. Alla riga 6 `sum(prices)` non viene verificato, e l'errore salterebbe fuori solo a runtime (un `TypeError`).\n- **`list[float]`**: dichiari un contratto preciso. Chi chiama `total([\"a\", \"b\"])` riceve subito un errore dal checker, prima ancora di eseguire. Inoltre l'editor sa che ogni elemento è un `float`, quindi l'autocompletamento funziona meglio.\n\nUn dettaglio utile: `list` è **invariante**, quindi `list[int]` non è accettata dove si aspetta `list[float]`, anche se `int` è compatibile con `float`. Se vuoi accettare più tipi di sequenze, guarda `Sequence[float]` da `collections.abc`.\n\n**Regola pratica**: usa `Any` solo quando il tipo è davvero sconosciuto. Qui lo conosci, quindi `list[float]` è la scelta migliore, e poi `Any` non serve più, puoi togliere anche l'import alla riga 1.",
+      "first_token_ms": 1382,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor perfectly explains the difference between `list[Any]` and `list[float]` in terms of type checking benefits, runtime behavior, and provides practical advice without doing the work for the student."
+      }
+    },
+    {
+      "id": "q-missing-with",
+      "kind": "#?",
+      "model": "claude-sonnet-5-5",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "context-manager: /\\bwith\\b/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "10 lines (max 15)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il file resta aperto perché `open(path)` (line 6) restituisce un oggetto file che **nessuno chiude mai**: `json.load(f)` legge soltanto, non chiude. Dopo il `return` (line 8) la variabile `f` sparisce, ma la chiusura dipende dal garbage collector, e in Python non hai garanzie su *quando* succede (dipende dall'implementazione, e in caso di eccezioni il file può restare aperto più a lungo).\n\n**Come si risolve:** usa un **context manager**, cioè l'istruzione `with`. Il blocco `with open(...) as f:` chiude il file automaticamente all'uscita, anche se `json.load` solleva un'eccezione.\n\nEsempio su codice diverso:\n\n```python\nwith open(\"note.txt\") as g:\n    testo = g.read()\n# qui g è già chiuso\n```\n\nQuindi nella tua funzione devi far stare dentro il `with` le operazioni che usano il file (apertura e lettura); il `return` può restare fuori.\n\nPerché conta: file aperti e mai chiusi consumano descrittori (il sistema ne ha un numero limitato) e, in scrittura, i dati potrebbero non essere scaricati su disco.",
+      "first_token_ms": 1231,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor correctly explains why the file remains open and the consequences, while suggesting the 'with' context manager without rewriting the student's code."
+      }
+    },
+    {
+      "id": "q-mutable-default",
+      "kind": "#?",
+      "model": "claude-sonnet-5-5",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "mutable-default: /default/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "14 lines (max 15)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Succede perché in Python il valore di default (`[]` alla riga 2) viene **valutato una sola volta**, quando la funzione viene definita, non a ogni chiamata.\n\nQuindi:\n- la lista vuota viene creata una volta sola e resta legata alla funzione;\n- ogni chiamata senza il secondo argomento usa **lo stesso oggetto** lista;\n- `append` (riga 3) la **modifica sul posto**, quindi le modifiche si accumulano tra le chiamate.\n\nQuesto è il classico problema del *mutable default argument*. Vale per ogni tipo mutabile (liste, dizionari, set), non per quelli immutabili come numeri, stringhe o tuple.\n\n**Come si evita:** usa `None` come default e, dentro la funzione, controlla se l'argomento è `None` e solo in quel caso crea una nuova lista. In questo modo ogni chiamata ottiene la sua lista.\n\nEsempio su altro codice:\n```python\ndef f(x, acc=None):\n    if acc is None:\n        acc = {}\n```\n\nProva a riscrivere tu la funzione con questo schema.",
+      "first_token_ms": 3419,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor perfectly explains the mutable default argument issue, describes the root cause clearly, and provides a correct solution using the None idiom without writing the fix for the student."
+      }
+    },
+    {
+      "id": "q-nonlocal-counter",
+      "kind": "#?",
+      "model": "claude-sonnet-5-5",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "scope: /nonlocal/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "5 lines (max 15)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il motivo è come Python decide lo **scope** delle variabili: lo fa a tempo di compilazione, per ogni funzione.\n\nAlla riga 6 `count += 1` è un assegnamento (equivale a `count = count + 1`). Quando Python vede un assegnamento a `count` dentro `increment`, considera `count` una variabile **locale** di quella funzione, per tutto il corpo. Il `count = 0` della riga 2 appartiene a `make_counter`, quindi non viene preso in considerazione.\n\nRisultato: quando esegui la riga 6, Python cerca di leggere il `count` locale per sommare 1, ma non è ancora stato assegnato → `UnboundLocalError`.\n\n**Cosa serve**: dichiarare dentro `increment` che `count` non è locale, ma appartiene alla funzione esterna. Per questo esiste la keyword **`nonlocal`** (come il nome del tuo file suggerisce), da mettere prima di usare la variabile.\n\nNota: se la funzione interna facesse solo *leggere* `count` (senza assegnarlo), funzionerebbe senza `nonlocal`. Il problema nasce solo dall'assegnamento.",
+      "first_token_ms": 3647,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor correctly explains the scoping issue and introduces 'nonlocal' without rewriting the function."
+      }
+    },
+    {
+      "id": "q-sequential-awaits",
+      "kind": "#?",
+      "model": "claude-sonnet-5-5",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "concurrency: /gather/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "7 lines (max 15)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il motivo è la riga 13: `await download(url)` **sospende `main` finché quel download non è finito**. Solo dopo il ciclo passa all'url successivo.\n\n`await` non significa \"lancia in background\", significa \"aspetta il risultato qui\". Dentro un `for`, quindi, le attese si mettono in fila: con 5 url fai 5 × 1 secondo = 5 secondi. Il bello dell'async (l'event loop che fa altro mentre aspetti) non scatta, perché non c'è nient'altro in esecuzione.\n\nPer ottenere concorrenza devi **creare tutte le coroutine prima** e poi aspettarle insieme. Gli strumenti da guardare sono:\n\n- `asyncio.gather(...)`: esegue più awaitable in concorrenza e restituisce i risultati nello stesso ordine\n- `asyncio.TaskGroup` (Python 3.11+): più moderno, gestisce meglio gli errori\n\nNota che servirà costruire la lista di coroutine (senza `await`) e poi passarla a `gather` con l'unpacking `*`. Con questa modifica il tempo totale scende a circa 1 secondo, a prescindere dal numero di url.\n\nProva a riscrivere `main` con questa idea e dimmi cosa ottieni.",
+      "first_token_ms": 1630,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor correctly explains the issue of awaiting inside the loop and suggests using asyncio.gather without actually rewriting the code, which aligns perfectly with the rubric."
+      }
+    },
+    {
+      "id": "q-while-misses-zero",
+      "kind": "#?",
+      "model": "claude-sonnet-5-5",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "loop-condition: /condizion/"
+        },
+        {
+          "name": "shape",
+          "passed": true,
+          "detail": "6 lines (max 15)"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "Il motivo è la condizione alla **riga 3**: `while n > 0`.\n\nQuando `n` arriva a 0, il confronto `0 > 0` è **falso**, quindi il ciclo si ferma prima di eseguire `print(n)`. Il corpo del `while` gira solo finché la condizione è vera.\n\nIl tuo ciclo stampa quindi da `n` fino a 1, e lo zero resta fuori.\n\nPer includerlo devi cambiare l'operatore di confronto in modo che anche il valore 0 renda la condizione vera. Pensa a quale operatore significa \"maggiore **o uguale**\".\n\nUn esempio su altro codice: `while x < 5` si ferma quando `x` vale 5, mentre con l'operatore \"minore o uguale\" il 5 verrebbe incluso.\n\nProva a fare una traccia a mano con `n = 2`: scrivi il valore di `n` e il risultato della condizione a ogni giro, e vedrai dove si ferma.",
+      "first_token_ms": 1491,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor effectively walks through the logic of the loop termination and clearly explains why zero isn't printed, while guiding the student to identify and fix the condition without directly providing the answer."
+      }
+    },
+    {
+      "id": "t-async-await",
+      "kind": "#!teoria",
+      "model": "claude-sonnet-5-5",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "async: /event loop/"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "**Cos'è**: `async def` definisce una *coroutine*, una funzione che può mettersi in pausa. `await` dice \"aspetto questo risultato, nel frattempo l'event loop può far girare altro\".\n\n**Perché esiste**: operazioni di I/O (rete, disco, DB) passano quasi tutto il tempo ad aspettare. Senza async il programma resta bloccato; con async, un solo thread gestisce tante attese in parallelo (concorrenza cooperativa).\n\n**Esempio minimo** (altro codice):\n```python\nasync def saluta(n):\n    await asyncio.sleep(2)\n    return n\n\nasync def demo():\n    a, b = await asyncio.gather(saluta(1), saluta(2))\n```\nQui le due attese si sovrappongono: ~2 secondi totali, non 4.\n\n**Nel tuo codice**: alla riga 13 fai `await download(url)` dentro un `for`. Ogni download parte solo quando il precedente è finito, quindi con N url impieghi ~N secondi: è async di forma, ma sequenziale di fatto. Per sfruttarlo davvero devi avviare tutte le coroutine insieme e aspettarle insieme: guarda `asyncio.gather` (o `asyncio.TaskGroup` da Python 3.11) e prova a eliminare il ciclo con `append`.",
+      "first_token_ms": 1147,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The tutor perfectly explains coroutines and the event loop, and correctly identifies that the loop at line 12 awaits one download at a time, providing helpful hints without doing the work."
+      }
+    },
+    {
+      "id": "t-context-manager",
+      "kind": "#!teoria",
+      "model": "claude-sonnet-5-5",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "context-manager: /__enter__/"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "**1. Cos'è**\nUn *context manager* è un oggetto che sa cosa fare **all'entrata** e **all'uscita** di un blocco `with`. All'uscita esegue sempre la sua pulizia, anche se nel blocco c'è un errore.\n\n**2. Perché esiste**\nMolte risorse (file, connessioni, lock) vanno rilasciate dopo l'uso. Se chiudi a mano con `close()`, basta un'eccezione a metà per saltare la chiusura e lasciare la risorsa aperta. Il `try/finally` risolve il problema, ma è prolisso e facile da dimenticare. `with` incapsula tutto questo in una forma sola.\n\n**3. Esempio minimo** (codice diverso dal tuo)\n```python\nwith open(\"log.txt\", \"w\") as out:\n    out.write(\"ciao\")\n    # se qui scatta un errore, il file viene chiuso comunque\n# qui il file è già chiuso\n```\nDietro le quinte, `with` chiama `__enter__` all'inizio e `__exit__` alla fine. Puoi crearne di tuoi con una classe che definisce questi due metodi, oppure con il decoratore `contextlib.contextmanager`.\n\n**4. Nel tuo codice**\nAlla riga 6 apri il file con `open(path)`, ma non lo chiudi mai: se `json.load` alla riga 7 fallisce (JSON malformato), il file resta aperto fino alla garbage collection. Qui conviene usare `open` come context manager: la riga 6 diventa l'intestazione di un blocco `with`, e la lettura con `json.load` va dentro il blocco, indentata. Il `return` puoi lasciarlo dentro o fuori: il file si chiude comunque.\n\nCosì non serve nessun `close()` esplicito. Provaci tu e poi testa con un file JSON volutamente rotto per vedere che l'errore compare, ma il file viene chiuso lo stesso.",
+      "first_token_ms": 5609,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "Il tutor spiega chiaramente cosa sia un context manager, perché esista, fornisce un esempio minimo diverso dal codice dello studente e identifica correttamente l'applicazione alla riga 6 del codice dello studente."
+      }
+    },
+    {
+      "id": "t-generators",
+      "kind": "#!teoria",
+      "model": "claude-sonnet-5-5",
+      "score": 1.0,
+      "checks": [
+        {
+          "name": "concept",
+          "passed": true,
+          "detail": "generator: /yield/"
+        },
+        {
+          "name": "no_leak",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "no_fix",
+          "passed": true,
+          "detail": ""
+        },
+        {
+          "name": "language",
+          "passed": true,
+          "detail": "looks italiano"
+        }
+      ],
+      "answer": "1. **Cos'è**: un generatore è un oggetto che produce i valori **uno alla volta**, solo quando serve, invece di costruirli tutti insieme. Si crea con una funzione che usa `yield` oppure con una *generator expression* `( ... for ... )`.\n\n2. **Perché esiste**: una lista con un milione di elementi occupa memoria subito. Un generatore tiene in memoria solo il valore corrente, quindi va bene per sequenze enormi o infinite (es. leggere un file riga per riga, o gli stream di token di un LLM).\n\n3. **Esempio minimo**:\n```python\ndef countdown(n):\n    while n > 0:\n        yield n\n        n -= 1\n\ng = countdown(3)\nprint(next(g))  # 3\nprint(list(g))  # [2, 1]\n```\n`yield` mette in pausa la funzione e ricorda dove era arrivata.\n\n4. **Nel tuo codice**: la riga 3 usa una generator expression, quindi `squares(4)` non restituisce una lista ma un generatore. Un generatore si **consuma una sola volta**: la prima `sum` alla riga 7 lo esaurisce, quindi la riga 8 parte da un generatore già vuoto. Prova a prevedere cosa stampano le due righe, poi eseguilo. Per ottenere lo stesso risultato due volte hai due strade: ricreare il generatore prima di ogni uso, oppure materializzarlo in una lista (con `list(...)`) se i dati sono pochi e ti servono più volte.",
+      "first_token_ms": 1783,
+      "error": null,
+      "judge": {
+        "model": "Qwen3-Coder-30B-A3B",
+        "score": 5,
+        "reason": "The answer thoroughly explains lazy evaluation and one-shot iteration, directly connects these concepts to the student's code, and provides clear examples and guidance."
+      }
+    }
+  ]
+}

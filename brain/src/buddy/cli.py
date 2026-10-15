@@ -51,6 +51,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     ev.add_argument("--model", default="sonnet", help="claude model alias for triggers")
     ev.add_argument(
+        "--repeat", type=int, default=1, metavar="N", help="run each hint case N times (sampled)"
+    )
+    ev.add_argument(
         "--judge", choices=["none", "local", "claude"], default="none", help="LLM judge on rubrics"
     )
     ev.add_argument("--label", default="", help="a note stored in the result")
@@ -197,7 +200,7 @@ async def _eval(args: argparse.Namespace) -> int:
         judged = f" · judge {result.judge.get('score')}" if result.judge else ""
         print(f"{result.score:4.2f}  {result.id:<28} {note}{judged}", flush=True)
 
-    run = EvalRun(local, trigger_model, judge, progress=progress)
+    run = EvalRun(local, trigger_model, judge, progress=progress, hint_repeat=args.repeat)
     results = await run.run(cases)
     engines = {"hint": local.name, "hint_engine": local.base_url}
     if trigger_model:
@@ -208,7 +211,10 @@ async def _eval(args: argparse.Namespace) -> int:
     out = args.out or result_path((evals_dir or cases_dir.parent) / "results")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"total {summary['total']} over {summary['cases']} cases · {summary['checks']}")
+    print(
+        f"total {summary['total']} over {summary['cases']} cases "
+        f"({summary['runs']} runs) · {summary['checks']}"
+    )
     if summary["judge_mean"] is not None:
         print(f"judge mean {summary['judge_mean']} / 5")
     print(f"saved {out}" + ("" if summary["complete"] else " (incomplete: not for the ratchet)"))

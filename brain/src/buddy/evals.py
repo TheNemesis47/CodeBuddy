@@ -276,6 +276,7 @@ class EvalRun:
     judge_model: Model | None = None
     language: str = "italiano"
     progress: Callable[[CaseResult], Awaitable[None]] | None = None
+    hint_repeat: int = 1  # hints are sampled (temperature 0.6): several runs per case average out
     results: list[CaseResult] = field(default_factory=list)
 
     async def run(self, cases: Iterable[Case]) -> list[CaseResult]:
@@ -283,10 +284,11 @@ class EvalRun:
             model = self.trigger_model if case.is_trigger else self.hint_model
             if model is None:
                 continue
-            result = await self._run_case(case, model)
-            self.results.append(result)
-            if self.progress:
-                await self.progress(result)
+            for _ in range(1 if case.is_trigger else self.hint_repeat):
+                result = await self._run_case(case, model)
+                self.results.append(result)
+                if self.progress:
+                    await self.progress(result)
         return self.results
 
     async def _run_case(self, case: Case, model: Model) -> CaseResult:
@@ -354,13 +356,19 @@ def summarize(
             totals[check.name][0] += check.passed
             totals[check.name][1] += 1
     judged = [r.judge["score"] for r in results if r.judge and "score" in r.judge]
-    total = 100 * sum(r.score for r in results) / len(results) if results else 0.0
+    per_case: dict[str, list[float]] = {}
+    for result in results:
+        per_case.setdefault(result.id, []).append(result.score)
+    # Every case weighs the same, however many times it ran.
+    means = [sum(scores) / len(scores) for scores in per_case.values()]
+    total = 100 * sum(means) / len(means) if means else 0.0
     return {
         "date": date.today().isoformat(),
         "label": label,
         "total": round(total, 1),
         "complete": run_ids == {c.id for c in cases},
-        "cases": len(results),
+        "cases": len(per_case),
+        "runs": len(results),
         "skipped": sorted({c.id for c in cases} - run_ids),
         "engines": engines,
         "checks": {name: f"{ok}/{n}" for name, (ok, n) in sorted(totals.items())},

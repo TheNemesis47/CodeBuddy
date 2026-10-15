@@ -30,7 +30,7 @@ protocol/      JSON Schemas (v0) + example messages: the contract between all pr
 brain/         Python daemon on 127.0.0.1:8790: context, model routing, streaming   (see brain/README.md)
 notch/         Swift package: notch panel, states, Sprout, markdown answers (CodeBuddyKit = logic)
 ide-pycharm/   Kotlin plugin: PSI context, #? / #!cmd triggers, sends to the brain
-evals/         snippets + expected outcomes, scores suggestion quality               (G10, later)
+evals/         29 cases + results: `buddy eval` scores suggestion quality         (see evals/README.md)
 quality/       floors.json: ratcheted numbers
 scripts/       check (the gate), guards, ratchet
 docs/ log/     tracking (see §8)

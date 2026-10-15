@@ -281,3 +281,22 @@ def test_rescore_rechecks_saved_answers_against_current_cases(tmp_path: Path) ->
     assert rescored["date"] == "2026-10-01"
     assert [r["id"] for r in rescored["results"]] == [data["id"]]  # removed cases drop out
     assert rescored["results"][0]["score"] < 1  # an empty answer fails the checks
+
+
+@pytest.mark.anyio
+async def test_repeated_hints_average_and_every_case_weighs_the_same() -> None:
+    answers = iter([GOOD_HINT, "Usa `with`, il file non viene chiuso.", GOOD_HINT, GOOD_HINT])
+
+    class Alternating(FakeModel):
+        async def stream(self, prompt):  # type: ignore[override]
+            self.chunks = (next(answers),)
+            async for event in super().stream(prompt):
+                yield event
+
+    cases = [case(), case(id="d")]
+    results = await EvalRun(Alternating(is_local=True), hint_repeat=2).run(cases)
+    assert [r.id for r in results] == ["c", "c", "d", "d"]
+    summary = summarize(results, cases, engines={})
+    assert (summary["cases"], summary["runs"]) == (2, 4)
+    # c: (1.0 + 0.8) / 2 = 0.9; d: 1.0 → (0.9 + 1.0) / 2
+    assert summary["total"] == 95.0
