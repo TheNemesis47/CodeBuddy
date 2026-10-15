@@ -11,6 +11,7 @@ from PySide6.QtGui import (
     QPainter,
     QPainterPath,
     QPaintEvent,
+    QScreen,
     QTextCharFormat,
     QTextCursor,
 )
@@ -18,7 +19,7 @@ from PySide6.QtWidgets import QApplication, QLabel, QMenu, QPushButton, QTextBro
 
 from codebuddy_overlay import x11
 from codebuddy_overlay.answers import Status
-from codebuddy_overlay.desktop import TopPlacement, X11WindowKind
+from codebuddy_overlay.desktop import Panel, X11WindowKind
 from codebuddy_overlay.geometry import EAR_WIDTH, PILL_HEIGHT, Layout, layout, top_center
 from codebuddy_overlay.island import State
 from codebuddy_overlay.log import log
@@ -70,7 +71,7 @@ class OverlayWindow(QWidget):
     def __init__(
         self,
         model: OverlayModel,
-        placement: TopPlacement | None = None,
+        panel: Panel | None = None,
         x11_kind: X11WindowKind = "override",
     ) -> None:
         platform = QApplication.platformName()
@@ -79,7 +80,7 @@ class OverlayWindow(QWidget):
             # Before the first show(): a WM reads the type when the window is mapped.
             failed = x11.set_window_type(int(self.winId()), x11.DOCK)
             log(f"X11 window type: {'dock' if failed is None else f'not set, {failed}'}")
-        self.placement = placement or TopPlacement()
+        self.panel = panel or Panel()
         self.setWindowTitle("CodeBuddy")
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
@@ -178,14 +179,22 @@ class OverlayWindow(QWidget):
         if streaming and at_bottom:  # follow the stream, unless the student scrolled up
             bar.setValue(bar.maximum())
 
+    def _screen(self) -> QScreen | None:
+        """The screen the panel belongs on, looked up by name every time: monitors come and go,
+        and under XWayland the whole layout can change when XWayland restarts mid-session."""
+        for screen in QApplication.screens():
+            if self.panel.screen and screen.name() == self.panel.screen:
+                return screen
+        return QApplication.primaryScreen()
+
     def _place(self) -> None:
-        screen = QApplication.primaryScreen()
+        screen = self._screen()
         size = self._layout
         if screen is None:
             self.resize(size.width, size.height)
             return
         area = screen.availableGeometry()
-        top = self.placement.y(screen.geometry().y(), area.y())
+        top = self.panel.top.y(screen.geometry().y(), area.y())
         x, y = top_center(area.x(), top, area.width(), size)
         self.setGeometry(x, y, size.width, size.height)
 

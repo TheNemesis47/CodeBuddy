@@ -34,9 +34,16 @@ The panel handles these by itself; nothing to configure on most desktops:
 - **Tiling window managers** (Hyprland, Sway, i3…): the panel is never tiled, moved, dimmed or
   given borders, needs no window rules, and shows on every workspace. On Hyprland it is a dock
   window (`_NET_WM_WINDOW_TYPE_DOCK`), because Hyprland gives no mouse events to unmanaged X11
-  windows; everywhere else it is an unmanaged (override-redirect) window. If the panel can't be
+  windows, and it asks Hyprland to pin it, because a dock there belongs to the workspace it opened
+  on; everywhere else it is an unmanaged (override-redirect) window. If the panel can't be
   hovered or clicked on your desktop, try the other one: `BUDDY_X11_WINDOW=dock ./codebuddy.sh` or
   `BUDDY_X11_WINDOW=override ./codebuddy.sh`, and tell us which works.
+- **More than one monitor:** the panel opens on the monitor the compositor says is focused. Qt is
+  no help here — XWayland publishes an X11 layout of its own, where "primary" can be any monitor
+  and the origins can be shifted, which is how the panel ended up off every screen in 0.1.1 — so
+  the compositor's monitor and Qt's screen are matched by connector name (`DP-2`, `eDP-1`). To
+  pick another one for a run: `BUDDY_MONITOR=DP-2 ./codebuddy.sh`. The log line says which screen
+  it chose and lists what Qt sees.
 - **A bar at the top** (Waybar, Omarchy's bar, swaybar, Hyprpanel…): on wlroots compositors
   XWayland is not told about the bar, so the panel asks the compositor how much space it reserves:
   `hyprctl -j monitors` on Hyprland, `swaymsg` on Sway. GNOME and KDE tell Qt directly. The log

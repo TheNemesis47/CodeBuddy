@@ -185,11 +185,11 @@ def test_code_gets_a_real_monospace_font(window, qapp: QApplication) -> None:
 
 def test_a_bar_the_desktop_hides_pushes_every_state_down(qapp: QApplication) -> None:
     """Hyprland + XWayland: Qt sees the whole screen free, the compositor reserves 30 px."""
-    from codebuddy_overlay.desktop import TopPlacement
+    from codebuddy_overlay.desktop import Panel, TopPlacement
 
     model = OverlayModel(ManualScheduler())
     model.set_connection(Connection.CONNECTED)
-    w = OverlayWindow(model, TopPlacement(reserved=30))
+    w = OverlayWindow(model, Panel(top=TopPlacement(reserved=30)))
     w.show()
     screen = qapp.primaryScreen()
     area, top = (
@@ -221,9 +221,30 @@ def test_the_app_places_the_panel_with_the_config_file(
     config.write_text("[overlay]\ntop_offset = 64\n", encoding="utf-8")
     monkeypatch.setenv("BUDDY_CONFIG", str(config))
     monkeypatch.delenv("BUDDY_TOP_OFFSET", raising=False)
-    assert overlay_app.placement(qapp) == TopPlacement(explicit=64)
+    for variable in ("HYPRLAND_INSTANCE_SIGNATURE", "SWAYSOCK", "WAYLAND_DISPLAY"):
+        monkeypatch.delenv(variable, raising=False)  # never ask the machine running the tests
+    assert overlay_app.placement(qapp).top == TopPlacement(explicit=64)
     monkeypatch.setenv("BUDDY_TOP_OFFSET", "12")
-    assert overlay_app.placement(qapp) == TopPlacement(explicit=12)
+    assert overlay_app.placement(qapp).top == TopPlacement(explicit=12)
+
+
+def test_the_panel_follows_the_screen_it_was_given_by_name(qapp: QApplication) -> None:
+    """XWayland's X11 layout need not match the compositor's, so the monitor is matched by its
+    connector name; an unknown one falls back to Qt's primary (0.1.1 report, bug 7)."""
+    from codebuddy_overlay.desktop import Panel
+
+    model = OverlayModel(ManualScheduler())
+    wanted = qapp.screens()[-1]
+    for panel, expected in (
+        (Panel(screen=wanted.name()), wanted),
+        (Panel(screen="DP-404"), qapp.primaryScreen()),
+        (Panel(), qapp.primaryScreen()),
+    ):
+        w = OverlayWindow(model, panel)
+        try:
+            assert w._screen() is expected
+        finally:
+            w.close()
 
 
 def test_a_dock_panel_is_a_dock_before_it_shows(qapp: QApplication) -> None:
