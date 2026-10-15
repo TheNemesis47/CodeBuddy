@@ -26,17 +26,19 @@ Read this file first, then the files below.
 ## 2. Map
 
 ```text
-protocol/      JSON Schemas (v0) + example messages: the contract between all processes
+protocol/      JSON Schemas (v0) + examples + behaviour scenarios shared by notch and overlay
 brain/         Python daemon on 127.0.0.1:8790: context, model routing, streaming   (see brain/README.md)
 notch/         Swift package: notch panel, states, Sprout, markdown answers (CodeBuddyKit = logic)
+overlay/       Python + PySide6: the same panel for Linux and Windows               (see overlay/README.md)
 ide-pycharm/   Kotlin plugin: PSI context, #? / #!cmd triggers, sends to the brain
 evals/         29 cases + results: `buddy eval` scores suggestion quality         (see evals/README.md)
 quality/       floors.json: ratcheted numbers
-scripts/       check (the gate), guards, ratchet
+scripts/       check (the gate, OS-aware), guards, ratchet, e2e_overlay.py, bench-latency
+packaging/     build.py: Linux/Windows tester packages (PyInstaller); CI in .github/workflows
 docs/ log/     tracking (see §8)
 ```
 
-**Boundaries:** `ide-pycharm` and `notch` never talk to each other or to a model. They only talk to
+**Boundaries:** `ide-pycharm`, `notch` and `overlay` never talk to each other or to a model. They only talk to
 `brain`, and only through messages defined in `protocol/`. The brain is the only process that
 calls models. (manual: see gaps G7)
 
@@ -98,13 +100,17 @@ number rises, raise its floor in `quality/floors.json`. **Never lower a floor.**
 
 It runs: the guards, protocol example validation, then for each module that exists: format check,
 lint (warnings as errors), typecheck and tests (brain: `ruff`, `pyright`, `pytest`; notch:
-`swift build`, `swift test`; plugin: `./gradlew test buildPlugin`), then the ratchet. Modules that
-don't exist yet are reported as `skip`, never as `ok`.
+`swift build`, `swift test`, macOS only; overlay: `ruff`, `pyright`, `pytest`; plugin: `./gradlew
+test buildPlugin`), then the ratchet. Modules that don't exist yet, or don't run on this OS, are
+reported as `skip`, never as `ok`. CI runs the same gate on Linux, Windows and macOS
+(`.github/workflows/ci.yml`).
 While iterating, run only the module you touch (e.g. `cd brain && uv run pytest -x`). The full gate
 is the final word.
 
 UI changes: run `cd notch && swift run CodeBuddy --demo --snapshots /tmp/shots` (a PNG per state)
-and look at the images. Put the paths in the devlog entry.
+and look at the images; for the overlay, `cd overlay && QT_QPA_PLATFORM=offscreen uv run
+codebuddy-overlay --demo --snapshots /tmp/shots` (CI uploads the Linux and Windows ones). A
+behaviour change goes into `protocol/scenarios/` so both UIs test it. Put the paths in the devlog.
 
 Then append a terse entry to `log/devlog.md` (what landed, numbers, what's still open). Sessions can
 end abruptly: the devlog plus a green tree is how the next agent picks up. **Keep the tree building

@@ -13,7 +13,14 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
 
     intellijPlatform {
-        local(providers.gradleProperty("pycharmPath"))
+        // The PyCharm installed on this machine when there is one (no multi-GB download); on CI
+        // and on Linux/Windows machines without it, the same version from JetBrains.
+        val localPyCharm = providers.gradleProperty("pycharmPath").orNull?.takeIf { file(it).exists() }
+        if (localPyCharm != null) {
+            local(localPyCharm)
+        } else {
+            create("PY", providers.gradleProperty("pycharmVersion").getOrElse("2026.2.3"))
+        }
         bundledPlugin("PythonCore")
         testFramework(TestFrameworkType.Platform)
     }

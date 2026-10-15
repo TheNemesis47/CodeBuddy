@@ -1,0 +1,30 @@
+{
+  "name": "hint-does-not-shrink-an-open-panel",
+  "description": "A hint arriving while the panel is open keeps it open.",
+  "delays": {
+    "expanded_to_peek": 20,
+    "peek_to_hidden": 8
+  },
+  "steps": [
+    {
+      "connection": "connected"
+    },
+    {
+      "click": true
+    },
+    {
+      "message": {
+        "v": 0,
+        "type": "answer_start",
+        "id": "h",
+        "kind": "hint",
+        "title": "t"
+      }
+    },
+    {
+      "expect": {
+        "state": "expanded"
+      }
+    }
+  ]
+}

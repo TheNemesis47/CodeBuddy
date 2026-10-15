@@ -25,3 +25,6 @@ build/
 
 # latency bench output (scripts/bench-latency)
 bench/
+
+# packaging output (packaging/build.py)
+dist/

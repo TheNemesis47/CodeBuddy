@@ -2,6 +2,24 @@
 
 Newest first. One entry per non-obvious decision.
 
+## 2026-10-15: Linux and Windows get a Python overlay; the Mac keeps the Swift notch
+
+**Decision.** The Mac keeps `notch/` (Swift, AppKit: it sits in the real notch). Linux and Windows
+get a new `overlay/` module in Python + PySide6: a frameless, always-on-top panel centred at the
+top of the primary screen, with the same three states (hidden → peek → expanded), the same Sprout
+moods, the same hint peek and the same timings. It talks to the brain with protocol v0 as a
+`notch` client, so the protocol does not change. The behaviour both clients must share is written
+once as JSON scenarios in `protocol/scenarios/`, replayed by the Swift tests and by the overlay
+tests. The brain needs no fork: `BUDDY_HOME` comes from `platformdirs` (unchanged on macOS),
+`claude` is found on `PATH` (`claude.exe`/`.cmd` on Windows). **Why.** Testers on Linux and
+Windows can't run AppKit; Qt is the one toolkit with a frameless always-on-top window, a
+WebSocket client and offscreen rendering (for CI snapshots) on both, and Python matches the brain.
+**Alternatives.** Rewriting the notch in Qt for all three OSes (rejected: the Mac notch integration
+is the product's best part on the Mac); Electron/Tauri (rejected: a second language and runtime);
+a tray icon only (rejected: no place to stream an answer). **Limits.** On Wayland, clients can't
+place their own windows: the panel may not sit exactly at the top centre (X11 and Windows are
+fine). **Rollback.** Delete `overlay/`; nothing else depends on it.
+
 ## 2026-10-14: How proactive hints are routed and limited (G6)
 
 **Decision.** (1) The brain looks for a local engine on every `idle` that passes the gate (a

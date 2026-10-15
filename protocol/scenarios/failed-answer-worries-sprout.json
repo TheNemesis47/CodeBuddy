@@ -1,0 +1,44 @@
+{
+  "name": "failed-answer-worries-sprout",
+  "description": "A failed answer releases the island and worries Sprout.",
+  "delays": {
+    "expanded_to_peek": 20,
+    "peek_to_hidden": 8
+  },
+  "steps": [
+    {
+      "connection": "connected"
+    },
+    {
+      "message": {
+        "v": 0,
+        "type": "answer_start",
+        "id": "a",
+        "kind": "theory",
+        "title": "t"
+      }
+    },
+    {
+      "message": {
+        "v": 0,
+        "type": "error",
+        "id": "a",
+        "message": "claude: quota"
+      }
+    },
+    {
+      "expect": {
+        "mood": "worried",
+        "peek_status": "!"
+      }
+    },
+    {
+      "advance": 28
+    },
+    {
+      "expect": {
+        "state": "hidden"
+      }
+    }
+  ]
+}

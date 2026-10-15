@@ -33,7 +33,7 @@ from buddy.prompting import build_prompt
 from buddy.triggers import parse_trigger_line
 
 EVALS = REPO / "evals"
-SCHEMA = json.loads((EVALS / "schema" / "case.schema.json").read_text())
+SCHEMA = json.loads((EVALS / "schema" / "case.schema.json").read_text(encoding="utf-8"))
 CASE_FILES = sorted((EVALS / "cases").glob("*.json"))
 
 
@@ -48,7 +48,7 @@ def test_there_are_25_to_30_cases_of_every_kind() -> None:
 
 @pytest.mark.parametrize("path", CASE_FILES, ids=lambda p: p.stem)
 def test_every_case_is_valid(path: Path) -> None:
-    data = json.loads(path.read_text())
+    data = json.loads(path.read_text(encoding="utf-8"))
     jsonschema.validate(data, SCHEMA)
     case = Case.from_json(data)
     assert case.id == path.stem
@@ -69,7 +69,7 @@ def test_every_case_is_valid(path: Path) -> None:
 
 
 def test_the_schema_rejects_a_bad_case() -> None:
-    bad = json.loads(CASE_FILES[0].read_text()) | {"kind": "#!alt"}
+    bad = json.loads(CASE_FILES[0].read_text(encoding="utf-8")) | {"kind": "#!alt"}
     with pytest.raises(jsonschema.ValidationError):
         jsonschema.validate(bad, SCHEMA)
 
@@ -234,7 +234,7 @@ def test_result_files_are_numbered_per_day(tmp_path: Path) -> None:
     day = date(2026, 10, 15)
     first = result_path(tmp_path, day)
     assert first.name == "2026-10-15.json"
-    first.write_text("{}")
+    first.write_text("{}", encoding="utf-8")
     second = result_path(tmp_path, day)
     assert second.name == "2026-10-15-2.json"
     names = ["2026-10-15-2.json", "2026-10-16.json", "2026-10-15.json", "2026-10-15-10.json"]
@@ -262,8 +262,8 @@ def test_buddy_eval_without_cases_fails_cleanly(
 def test_rescore_rechecks_saved_answers_against_current_cases(tmp_path: Path) -> None:
     cases_dir = tmp_path / "cases"
     cases_dir.mkdir()
-    data = json.loads(CASE_FILES[0].read_text())
-    (cases_dir / CASE_FILES[0].name).write_text(json.dumps(data))
+    data = json.loads(CASE_FILES[0].read_text(encoding="utf-8"))
+    (cases_dir / CASE_FILES[0].name).write_text(json.dumps(data), encoding="utf-8")
     saved = {
         "date": "2026-10-01",
         "label": "old",
@@ -275,9 +275,9 @@ def test_rescore_rechecks_saved_answers_against_current_cases(tmp_path: Path) ->
         ],
     }
     path = tmp_path / "result.json"
-    path.write_text(json.dumps(saved))
+    path.write_text(json.dumps(saved), encoding="utf-8")
     assert cli.main(["eval", "--cases", str(cases_dir), "--rescore", str(path)]) == 0
-    rescored = json.loads(path.read_text())
+    rescored = json.loads(path.read_text(encoding="utf-8"))
     assert rescored["date"] == "2026-10-01"
     assert [r["id"] for r in rescored["results"]] == [data["id"]]  # removed cases drop out
     assert rescored["results"][0]["score"] < 1  # an empty answer fails the checks

@@ -1,10 +1,22 @@
 #!/usr/bin/env sh
-# The single gate. Every step either passes, fails, or says "skip" with the gap that will add it.
+# The single gate. Every step either passes, fails, or says "skip" with the reason.
+# OS-aware: the Swift notch runs on macOS only; the overlay, brain and plugin run everywhere
+# (Linux, Windows under Git Bash, macOS). On Linux CI it runs under Xvfb (QT_QPA_PLATFORM=xcb).
 set -eu
 cd "$(dirname "$0")/.."
 
 step() { printf '\n== %s\n' "$1"; }
 skip() { printf 'skip: %s\n' "$1"; }
+
+case "$(uname -s)" in
+  Darwin) os=macos ;;
+  Linux) os=linux ;;
+  MINGW*|MSYS*|CYGWIN*) os=windows ;;
+  *) os=other ;;
+esac
+if command -v python3 >/dev/null 2>&1 && python3 -c 'import sys' >/dev/null 2>&1; then py=python3; else py=python; fi
+export CODEBUDDY_OS="$os"
+printf 'check on %s\n' "$os"
 
 step "guards"
 scripts/guard-assets
@@ -27,8 +39,14 @@ if [ -f brain/pyproject.toml ] && [ -d evals/cases ]; then
   (cd brain && uv run pytest -q tests/test_evals.py)
 else skip "evals/cases not created yet (G10)"; fi
 
+step "overlay (Python + Qt)"
+if [ -f overlay/pyproject.toml ]; then
+  (cd overlay && uv run ruff format --check . && uv run ruff check . && uv run pyright && uv run pytest -q)
+else skip "overlay/ not created yet"; fi
+
 step "notch (Swift)"
-if [ -f notch/Package.swift ]; then
+if [ "$os" != macos ]; then skip "notch is macOS only (the overlay covers $os)"
+elif [ -f notch/Package.swift ]; then
   (cd notch && swift build && swift test)
 else skip "notch/ not created yet (G3)"; fi
 
@@ -38,6 +56,6 @@ if [ -f ide-pycharm/gradlew ]; then
 else skip "ide-pycharm/ not created yet (G4)"; fi
 
 step "ratchet"
-python3 -I scripts/ratchet.py
+"$py" -I scripts/ratchet.py
 
 printf '\ncheck: OK\n'

@@ -1,13 +1,12 @@
 import json
 import os
-import stat
 import sys
 from pathlib import Path
 
 import pytest
 from conftest import FIXTURES
 
-from buddy.claude_cli import ClaudeCliModel, build_command, parse_line
+from buddy.claude_cli import ClaudeCliModel, build_command, find_claude, parse_line
 from buddy.models import Done, ModelError, TextDelta
 from buddy.prompting import Prompt
 
@@ -28,7 +27,7 @@ def test_command_disables_every_side_effect_and_keeps_code_out_of_argv() -> None
 def test_parse_fixture_stream() -> None:
     events = [
         e
-        for line in (FIXTURES / "claude_stream.jsonl").read_text().splitlines()
+        for line in (FIXTURES / "claude_stream.jsonl").read_text(encoding="utf-8").splitlines()
         if (e := parse_line(line)) is not None
     ]
     assert events == [
@@ -48,17 +47,16 @@ def test_error_result_raises() -> None:
         parse_line(json.dumps({"type": "result", "is_error": True, "result": "rate limited"}))
 
 
-def _fake_claude(tmp_path: Path, body: str) -> str:
-    """A stand-in `claude` executable: records stdin and argv, then runs `body`."""
-    script = tmp_path / "claude"
+def _fake_claude(tmp_path: Path, body: str) -> list[str]:
+    """A stand-in `claude`: records stdin and argv, then runs `body`. Run as `python script`, not
+    through a shebang, so it works the same on Windows."""
+    script = tmp_path / "fake_claude.py"
     script.write_text(
-        f"#!{sys.executable}\n"
         "import sys, pathlib\n"
         f"pathlib.Path({str(tmp_path / 'stdin.txt')!r}).write_text(sys.stdin.read())\n"
         f"pathlib.Path({str(tmp_path / 'argv.txt')!r}).write_text('\\n'.join(sys.argv))\n" + body
     )
-    script.chmod(script.stat().st_mode | stat.S_IEXEC)
-    return str(script)
+    return [sys.executable, str(script)]
 
 
 async def _collect(model: ClaudeCliModel) -> list:
@@ -71,8 +69,8 @@ async def test_model_streams_from_the_subprocess_with_prompt_on_stdin(tmp_path: 
     exe = _fake_claude(tmp_path, f"sys.stdout.write(open({str(fixture)!r}).read())\n")
     events = await _collect(ClaudeCliModel("sonnet", executable=exe))
     assert events[-1] == Done("claude-sonnet-5-5", 719, 8)
-    assert (tmp_path / "stdin.txt").read_text() == PROMPT.user
-    assert "SECRET-CODE" not in (tmp_path / "argv.txt").read_text()
+    assert (tmp_path / "stdin.txt").read_text(encoding="utf-8") == PROMPT.user
+    assert "SECRET-CODE" not in (tmp_path / "argv.txt").read_text(encoding="utf-8")
 
 
 @pytest.mark.anyio
@@ -85,7 +83,7 @@ async def test_model_reports_a_crash(tmp_path: Path) -> None:
 @pytest.mark.anyio
 async def test_missing_executable() -> None:
     with pytest.raises(ModelError, match="not installed"):
-        await _collect(ClaudeCliModel("sonnet", executable="/nonexistent/claude"))
+        await _collect(ClaudeCliModel("sonnet", executable=["/nonexistent/claude"]))
 
 
 @pytest.mark.live
@@ -94,3 +92,12 @@ async def test_missing_executable() -> None:
 async def test_live_claude() -> None:
     events = await _collect(ClaudeCliModel("sonnet"))
     assert isinstance(events[-1], Done)
+
+
+def test_claude_is_looked_up_on_path(monkeypatch: pytest.MonkeyPatch) -> None:
+    found = str(Path("bin") / "claude.exe")
+    monkeypatch.setattr("shutil.which", lambda name: found if name == "claude" else None)
+    assert find_claude() == [found]
+    assert build_command(PROMPT, "sonnet", find_claude())[0] == found
+    monkeypatch.setattr("shutil.which", lambda name: None)
+    assert find_claude() == ["claude"]  # unresolved: the spawn fails with "not installed"

@@ -40,6 +40,9 @@ def main(argv: list[str] | None = None) -> int:
     serve = sub.add_parser("serve", help="run the daemon on 127.0.0.1")
     serve.add_argument("--port", type=int, default=int(os.environ.get("BUDDY_PORT", DEFAULT_PORT)))
     serve.add_argument("--model", default="sonnet", help="claude model alias (default: sonnet)")
+    serve.add_argument(
+        "--stub", metavar="TEXT", help="answer every trigger with TEXT instead of Claude (tests)"
+    )
 
     latency = sub.add_parser("latency", help="first-token p50/p90/min/max from the latency log")
     latency.add_argument("--file", type=Path, help="default: $BUDDY_HOME/latency.jsonl")
@@ -275,9 +278,14 @@ def _serve(args: argparse.Namespace) -> int:
     print(f"buddy: proactive hints → {where}", file=sys.stderr)
     latency = LatencyLog(buddy_home() / FILE_NAME)
     print(f"buddy: latency log in {latency.path}", file=sys.stderr)
-    app = create_app(
-        ClaudeCliModel(args.model), token, proactive_cloud=proactive_cloud, latency=latency
-    )
+    if args.stub is not None:
+        from buddy.stub import StubModel
+
+        cloud = StubModel(args.stub)
+        print("buddy: triggers → stub model (no Claude)", file=sys.stderr)
+    else:
+        cloud = ClaudeCliModel(args.model)
+    app = create_app(cloud, token, proactive_cloud=proactive_cloud, latency=latency)
     # Loopback only, never configurable (SECURITY.md).
     uvicorn.run(app, host="127.0.0.1", port=args.port, log_level="info")
     return 0

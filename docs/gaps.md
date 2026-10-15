@@ -1,6 +1,6 @@
 # Where CodeBuddy falls short of the MVP
 
-> **Last reviewed:** 2026-10-15 · **Last updated:** 2026-10-15 · **Change:** G5 closed (first token p50 1572 ms over 10 runs); G10 closed (evals: 29 cases, `buddy eval`, eval score 94.5 → 99.1 in the ratchet); G14 added (human review of borderline eval answers)
+> **Last reviewed:** 2026-10-15 · **Last updated:** 2026-10-15 · **Change:** G9 closed (CI green on Linux, Windows, macOS, plus packages); G15 added (Linux/Windows testers: real machines, signing, release)
 
 Every known shortfall, one entry each, ranked by impact. This is the work list agents pick from:
 take the highest-ranked open entry, and when you close part of one, update its evidence and
@@ -18,7 +18,8 @@ estimate here. **Human** marks what an agent can't finish alone.
 | ~~G6~~ | ~~Proactive idle hint on the local engine + rate limit + no-cloud test (criterion 2)~~ (done 2026-10-14) | feature | — | — | agent |
 | G7 | Enforce module boundaries automatically | tooling | medium | 1 h | agent |
 | G8 | Sprout final design | feature | medium | — | **Human** |
-| G9 | CI on GitHub Actions (remote exists since 2026-10-15) | tooling | low | 1 h | agent |
+| ~~G9~~ | ~~CI on GitHub Actions~~ (done 2026-10-15: gate on 3 OSes, e2e, packages) | tooling | — | — | agent |
+| G15 | Linux/Windows: try the packages on real machines, code signing, publish the first (draft) release | release | blocks testers | 1–2 h | **Human** |
 | ~~G10~~ | ~~Evals: snippet set + scorer for suggestion quality~~ (done 2026-10-15: score 99.1) | tooling | — | — | agent |
 | G14 | Judge the borderline eval answers by hand; make the cases harder once the score saturates | quality | medium | 1 h | **Human** + agent |
 | G11 | Real-screen check of the notch: hover, click, Spaces, full screen | UX | medium | 1 h | **Human** |
@@ -135,11 +136,26 @@ proves that `idle` never reaches the cloud provider while `proactive_cloud = fal
 Concept: a seed → sprout → plant → tree that grows with the skill map. Needs an idea of the look
 (sketch, or concepts made with Draw Things) before it is drawn in SwiftUI `Canvas`.
 
-## G9: CI
+## G9: CI (closed 2026-10-15)
 
-The gate is local only (`scripts/check` + `pre-push`). The GitHub remote exists since 2026-10-15
-(https://github.com/TheNemesis47/CodeBuddy). Add one
-Actions job on macOS that runs `./scripts/check`.
+Done on branch `feat/cross-platform`: `.github/workflows/ci.yml` runs `scripts/check` (OS-aware:
+notch only on macOS, overlay everywhere) on ubuntu-latest (under Xvfb), windows-latest and
+macos-latest; uploads overlay demo snapshots per OS; runs the Linux e2e (fake trigger → `buddy
+serve --stub` → overlay); builds the Linux and Windows packages and runs the same e2e on each
+packaged build; on a `v*` tag it creates a **draft** release only. First green run: 38710592165.
+The original entry: the gate was local only; add an Actions job that runs `./scripts/check`.
+
+## G15: Linux and Windows testers (Human)
+
+**Evidence.** The packages are built and checked on CI runners only (headless Xvfb on Linux, the
+runner's desktop session on Windows): bundle smoke test, 8 demo snapshots, and an end-to-end answer
+from a stub model. Nobody has run them on a real desktop with a real PyCharm and a logged-in
+`claude`. They are not code-signed (SmartScreen will warn), and no release exists yet.
+**Done when.** (1) On a real Windows 10/11 and a real Linux desktop (X11 and, if you can, Wayland):
+unpack `CodeBuddy-<os>-0.1.0`, follow `docs/install/<os>.md`, ask a `#?` from PyCharm, and note in
+the devlog what was off (panel position, fonts, the brain not finding `claude`, focus stealing).
+(2) Decide on signing (Windows Authenticode certificate; Linux needs none for a tarball). (3) Push
+a `v0.1.0` tag, check the draft release CI creates, and publish it yourself.
 
 ## G11: Notch on the real screen (Human)
 

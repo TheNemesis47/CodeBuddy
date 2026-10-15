@@ -8,6 +8,7 @@ dependencies = [
     "fastapi>=0.143.1",
     "httpx2>=2.13.1",
     "jsonschema>=4.26.0",
+    "platformdirs>=4.5",
     "uvicorn[standard]>=0.54.0",
 ]
 

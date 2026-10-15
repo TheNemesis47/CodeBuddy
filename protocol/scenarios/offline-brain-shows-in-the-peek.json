@@ -1,0 +1,36 @@
+{
+  "name": "offline-brain-shows-in-the-peek",
+  "description": "With the brain down Sprout is worried and the peek says off.",
+  "delays": {
+    "expanded_to_peek": 20,
+    "peek_to_hidden": 8
+  },
+  "steps": [
+    {
+      "connection": "offline"
+    },
+    {
+      "expect": {
+        "mood": "worried",
+        "peek_status": "off"
+      }
+    },
+    {
+      "connection": "connecting"
+    },
+    {
+      "expect": {
+        "peek_status": "…"
+      }
+    },
+    {
+      "connection": "connected"
+    },
+    {
+      "expect": {
+        "mood": "idle",
+        "peek_status": ""
+      }
+    }
+  ]
+}

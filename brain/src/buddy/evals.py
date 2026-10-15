@@ -93,7 +93,10 @@ class Check:
 
 
 def load_cases(directory: Path) -> list[Case]:
-    return [Case.from_json(json.loads(p.read_text())) for p in sorted(directory.glob("*.json"))]
+    return [
+        Case.from_json(json.loads(p.read_text(encoding="utf-8")))
+        for p in sorted(directory.glob("*.json"))
+    ]
 
 
 def request_for(case: Case) -> Request:

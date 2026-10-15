@@ -17,7 +17,7 @@ import websockets
 async def main(out: Path) -> None:
     home = Path(os.environ["BUDDY_HOME"])
     port = os.environ.get("BUDDY_PORT", "8790")
-    token = (home / "token").read_text().strip()
+    token = (home / "token").read_text(encoding="utf-8").strip()
     async with websockets.connect(f"ws://127.0.0.1:{port}/ws") as ws:
         hello = {"v": 0, "type": "hello", "role": "notch", "token": token, "client": "bench/0"}
         await ws.send(json.dumps(hello))

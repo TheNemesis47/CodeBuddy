@@ -52,3 +52,19 @@ when a prompt changes and raise `eval_score` in `quality/floors.json`. Details: 
   time), prints `buddy latency` and stops everything. Output in `bench/LABEL/` (git-ignored):
   `home/latency.jsonl`, `answers.jsonl` (full texts, to compare quality), logs and `shots/`.
   Afterwards `cd ide-pycharm && ./gradlew --stop` stops the Gradle daemon.
+
+## Linux and Windows
+
+- Overlay (the panel on Linux/Windows): `cd overlay && uv run codebuddy-overlay` (with a brain
+  running), `--demo`, or `--demo --snapshots DIR`. Headless: `QT_QPA_PLATFORM=offscreen`. Tests:
+  `uv run pytest` (also replays `protocol/scenarios`, like the notch's `ScenarioTests`).
+- End to end without Claude: `uv run --project brain python scripts/e2e_overlay.py OUT` (fake trigger
+  client → `buddy serve --stub TEXT` → overlay); add `--bundle dist/CodeBuddy-<os>-0.1.0` to run it
+  on a packaged build.
+- Packages: `uv run --project overlay python packaging/build.py --plugin <plugin zip>` →
+  `dist/CodeBuddy-<os>-0.1.0.{zip,tar.gz}` (smoke-tested). Install guides: `INSTALL.md`,
+  `docs/install/`.
+- CI: `.github/workflows/ci.yml` runs `scripts/check` on ubuntu/windows/macos (Linux under Xvfb),
+  uploads overlay snapshots, the Linux e2e and the packages. Pushing a `v*` tag creates a **draft**
+  release; publishing it is a human step. `gh run download <id> -n overlay-snapshots-Linux` fetches
+  the snapshots.

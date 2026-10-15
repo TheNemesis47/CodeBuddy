@@ -8,8 +8,9 @@ The prompt goes through stdin, never argv, so it doesn't show up in `ps`.
 
 import asyncio
 import json
+import shutil
 import tempfile
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Sequence
 from pathlib import Path
 
 from buddy.models import Done, ModelError, ModelEvent, TextDelta
@@ -18,9 +19,16 @@ from buddy.prompting import Prompt
 TIMEOUT_S = 120
 
 
-def build_command(prompt: Prompt, model: str, executable: str = "claude") -> list[str]:
+def find_claude() -> list[str]:
+    """The `claude` CLI on PATH. On Windows that is `claude.exe` (native install) or `claude.cmd`
+    (npm); `shutil.which` tries PATHEXT, so both are found. Unresolved, the bare name is kept and
+    the spawn fails with a clear ModelError."""
+    return [shutil.which("claude") or "claude"]
+
+
+def build_command(prompt: Prompt, model: str, executable: Sequence[str] = ("claude",)) -> list[str]:
     return [
-        executable,
+        *executable,
         "-p",
         "--output-format", "stream-json",
         "--verbose",
@@ -66,10 +74,12 @@ def parse_line(line: str) -> ModelEvent | None:
 class ClaudeCliModel:
     is_local = False
 
-    def __init__(self, model: str = "sonnet", executable: str = "claude") -> None:
+    def __init__(self, model: str = "sonnet", executable: Sequence[str] | None = None) -> None:
+        """`executable` is the command prefix: default the `claude` found on PATH; tests pass
+        `[python, fake_claude.py]`, which runs the same on every OS."""
         self.name = f"claude-cli:{model}"
         self._model = model
-        self._executable = executable
+        self._executable = list(executable) if executable is not None else find_claude()
         self._cwd = Path(tempfile.mkdtemp(prefix="codebuddy-claude-"))
 
     async def stream(self, prompt: Prompt) -> AsyncIterator[ModelEvent]:
@@ -81,7 +91,7 @@ class ClaudeCliModel:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-        except FileNotFoundError as error:
+        except (FileNotFoundError, PermissionError) as error:
             raise ModelError("the `claude` CLI is not installed or not on PATH") from error
         assert process.stdin and process.stdout and process.stderr
         process.stdin.write(prompt.user.encode())
