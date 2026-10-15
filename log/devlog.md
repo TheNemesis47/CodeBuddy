@@ -24,6 +24,12 @@ Newest first. Terse. Written at the end of every task so the next agent can pick
   a pointer. New: `scripts/smoke_bundle_desktop.py` runs the packaged overlay with a fake
   `hyprctl` (package job, Linux), and `e2e_wayland.py` now moves a virtual pointer (`wlrctl` +
   `swaymsg seat - cursor`): hover → ears, click → open; it also uses `QT_QPA_PLATFORM=wayland;xcb`.
+  (wlrctl destroys its device at once, so `scripts/wl_pointer.py` keeps a
+  zwlr_virtual_pointer_v1 alive; the demo is sampled from when the pill shows, as XWayland can
+  take 5 s to start.) CI run 38746072727 green on every job; screenshots
+  `docs/screenshots/overlay/ci-sway-pointer-{peek,expanded}.png` (opened: cursor on the pill,
+  panel under swaybar). The package smoke test passed in the real PyInstaller build (offset 30
+  from the fake hyprctl, clean LD_LIBRARY_PATH, dock set, config 64 used).
 - **Numbers:** brain 262, plugin 48, overlay 112 (floors raised); notch 42; eval 99.1.
 - **Still open:** Hyprland itself is not in CI. G17 human check with the next build (hover,
   click, workspaces, the "panel no longer drawn after 15 min" observation). G16.
