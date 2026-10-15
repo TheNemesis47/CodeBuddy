@@ -28,7 +28,8 @@ from wl_pointer import VirtualPointer
 ROOT = Path(__file__).resolve().parent.parent
 SCREEN = (1920, 1080)
 SIZES = {"hidden": (80, 24), "peek": (232, 24), "expanded": (520, 380)}  # overlay geometry.py
-SAMPLE_S = 9.0
+SAMPLE_S = 9.0  # the demo's timeline, from the moment the pill shows
+START_S = 20.0  # Sway starts XWayland on the first X client: seconds, some runs
 
 CONFIG = """
 xwayland enable
@@ -180,7 +181,7 @@ def inside(out: Path) -> None:
                 "codebuddy_overlay.app",
                 "--demo",
                 "--quit-after",
-                str(SAMPLE_S + 3),
+                str(START_S + SAMPLE_S),
             ],
             env=env,
             stdout=log_path.open("wb"),
@@ -188,7 +189,11 @@ def inside(out: Path) -> None:
         )
         seen: dict[tuple[int, int, int, int], float] = {}
         shots: dict[str, str] = {}
+        launched = time.monotonic()
+        while panel_geometry() is None and time.monotonic() - launched < START_S:
+            time.sleep(0.1)
         started = time.monotonic()
+        result["start_s"] = round(started - launched, 2)
         while time.monotonic() - started < SAMPLE_S:
             geometry = panel_geometry()
             if geometry is not None and geometry not in seen:
@@ -200,6 +205,7 @@ def inside(out: Path) -> None:
                     subprocess.run(["grim", str(shot)], check=False)
                     shots[state] = shot.name
             time.sleep(0.1)
+        overlay.kill()  # the demo is over; its log lines are flushed as they are written
         overlay.wait(timeout=10)
         log = log_path.read_text(errors="replace")
         problems = []
