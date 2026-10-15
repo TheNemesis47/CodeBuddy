@@ -1,6 +1,6 @@
 # Where CodeBuddy falls short of the MVP
 
-> **Last reviewed:** 2026-10-14 · **Last updated:** 2026-10-14 · **Change:** G6 closed (proactive hints on the local engine); G13 now covers hints too
+> **Last reviewed:** 2026-10-15 · **Last updated:** 2026-10-15 · **Change:** G5 closed (first token p50 1572 ms over 10 runs through the plugin's code path); G13 now also covers latency from a real Enter
 
 Every known shortfall, one entry each, ranked by impact. This is the work list agents pick from:
 take the highest-ranked open entry, and when you close part of one, update its evidence and
@@ -14,7 +14,7 @@ estimate here. **Human** marks what an agent can't finish alone.
 | ~~G2~~ | ~~Brain: daemon, `buddy ask` CLI, Claude CLI provider, WebSocket with token~~ (done 2026-10-14) | feature | — | — | agent |
 | ~~G3~~ | ~~Notch: extract panel from Coucou, Sprout placeholder, `--demo`~~ (done 2026-10-14) | feature | — | — | agent |
 | ~~G4~~ | ~~PyCharm plugin: skeleton, trigger detection, context, send~~ (done 2026-10-14) | feature | — | — | agent |
-| G5 | Latency p50 over 10 real runs (criterion 1); wiring is done. **Risk: first token 1.3–5.8 s** | perf | blocks next stage | 2 h | agent + **Human** (G13) |
+| ~~G5~~ | ~~Latency p50 over 10 real runs (criterion 1)~~ (done 2026-10-15: p50 1572 ms) | perf | — | — | agent |
 | ~~G6~~ | ~~Proactive idle hint on the local engine + rate limit + no-cloud test (criterion 2)~~ (done 2026-10-14) | feature | — | — | agent |
 | G7 | Enforce module boundaries automatically | tooling | medium | 1 h | agent |
 | G8 | Sprout final design | feature | medium | — | **Human** |
@@ -84,17 +84,25 @@ message to a brain stub.
 on Enter. Context comes from PSI (enclosing function and class, ±60 lines). All I/O runs off the EDT
 (golden rule 1).
 
-## G5: End-to-end
+## G5: End-to-end latency (closed 2026-10-15)
 
-**Progress (2026-10-14).** Wiring done and checked twice: a plugin-like Python client
-(first token 1265 ms) and the plugin's own code via `LiveBrainE2ETest` (2278 ms), both shown in the
-notch. Criterion 3: ~300–350 input tokens per trigger on small files, well under 8k (measured).
-Criterion 4: covered by plugin tests. Left: criterion 1 as a p50 over 10 runs from the real IDE.
+Done on branch `feat/brain-latency`. Every `answer_end` (triggers, hints, `buddy ask`) appends one
+line (id, kind, model, first_token_ms, total_ms, input_tokens) to `$BUDDY_HOME/latency.jsonl`;
+`buddy latency [--kind K] [--last N]` prints first-token p50/p90/min/max. `scripts/bench-latency
+LABEL [serve options]` starts a brain, the notch and an answer recorder, sends 10 `#?` triggers on
+10 different files of `brain/src/buddy/` through the plugin's own code (`LiveLatencyBenchTest`:
+`TriggerDispatcher.prepare` on PSI, then `BrainConnection`), one at a time, and stops everything.
+**Result, Claude Sonnet 5.5 through `claude -p`:** first token p50 **1572 ms** (p90 1896, range
+1397–2097); repeat run p50 **1634 ms** (p90 1947, range 1492–2967). Criterion 1 is met, so none of
+the fallbacks (Haiku for `#?`, a warm process, a shorter prompt, prompt caching) was needed.
+Criterion 3: 1656–3167 input tokens per trigger as Claude counts them (the brain's estimate was
+678–1636: the CLI adds its own overhead), under 8k. The number starts when the brain receives the
+trigger (SPEC.md defines it so); the Enter → PSI → localhost send part isn't in it. Open: that part
+in a real IDE (G13); answers run ~1000–1200 characters, so the panel scrolls and its first line
+hides under the header (devlog 2026-10-15). The original entry:
 
-**Evidence.** `buddy ask` against Claude through the subscription (Sonnet 5.5, ~1.0k input
+**Evidence (at the time).** `buddy ask` against Claude through the subscription (Sonnet 5.5, ~1.0k input
 tokens): first token p50 2.9 s, range 1.6–5.8 s, over 15 runs on 2026-10-14: large run-to-run variance.
-Criterion 1 (p50 ≤ 3 s) is **at risk**. Ideas to measure: `--model haiku` for `#?`, a warm process,
-a shorter system prompt. `--effort low` made no clear difference (3 runs).
 **Done when.** In the sandbox PyCharm, `#?` produces an answer in the notch. The brain logs
 first-token latency and input tokens. Criteria 1, 3 and 4 are measured over 10 runs and written in
 ROADMAP.md.
@@ -149,7 +157,9 @@ off in the devlog.
 (`llama-server -m ~/Documents/AI/models/gguf/Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf --alias
 Qwen3-Coder-30B-A3B --port 8080 -ngl 999 -fa on -c 16384 --jinja`) and pause while typing. Note in
 the devlog what felt slow, wrong or noisy, whether typing ever stuttered (golden rule 1), whether
-hints came too often or too rarely, and what the answers looked like.
+hints came too often or too rarely, and what the answers looked like. After a few `#?`, run
+`cd brain && uv run buddy latency --kind question` and note whether the wait from Enter felt
+longer than its p50 (the brain's clock starts when the trigger arrives).
 
 ## G12: Screen Recording for agents (Human)
 
