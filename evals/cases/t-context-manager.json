@@ -1,0 +1,21 @@
+{
+  "id": "t-context-manager",
+  "title": "Theory: context managers",
+  "kind": "#!teoria",
+  "line": 5,
+  "language": "italiano",
+  "code": "import json\n\n\ndef load(path):\n    #!teoria context manager\n    f = open(path)\n    data = json.load(f)\n    return data\n",
+  "concepts": {
+    "context-manager": [
+      "__enter__",
+      "__exit__",
+      "\\bwith\\b",
+      "risors"
+    ]
+  },
+  "forbidden": [],
+  "fix_lines": [
+    "with open(path) as f:"
+  ],
+  "rubric": "Four parts: what it is, why it exists (cleanup even on errors), a minimal example that isn't the student's code, where it applies at line 6."
+}

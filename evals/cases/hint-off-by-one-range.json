@@ -1,0 +1,29 @@
+{
+  "id": "hint-off-by-one-range",
+  "title": "range end one past the last index",
+  "kind": "hint",
+  "line": 3,
+  "language": "italiano",
+  "code": "def last_three(items):\n    result = []\n    for i in range(len(items) - 3, len(items) + 1):\n        result.append(items[i])\n    return result\n",
+  "concepts": {
+    "index-bounds": [
+      "indic",
+      "index",
+      "IndexError",
+      "fuori",
+      "ultim",
+      "limit",
+      "estrem",
+      "\\+ ?1"
+    ]
+  },
+  "forbidden": [
+    "range\\(len\\(items\\) - 3, len\\(items\\)\\)",
+    "items\\[-3:\\]"
+  ],
+  "fix_lines": [
+    "for i in range(len(items) - 3, len(items)):",
+    "return items[-3:]"
+  ],
+  "rubric": "Makes the student look at the range end: len(items) is already past the last valid index. Does not give the corrected range."
+}

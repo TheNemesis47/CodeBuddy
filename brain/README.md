@@ -8,6 +8,7 @@ uv run buddy ask src/x.py:12 "why …"         # explicit question about line 12
 uv run buddy ask src/x.py:12 --show-prompt   # print the prompt, call nothing (offline)
 uv run buddy serve                           # WebSocket on 127.0.0.1:8790/ws
 uv run buddy latency --kind question --last 10   # first-token p50/p90/min/max
+uv run buddy eval --repeat 3                 # score answers on ../evals/cases (see evals/README.md)
 uv run pytest                                # offline tests (fake models)
 ```
 

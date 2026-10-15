@@ -1,5 +1,5 @@
-"""`buddy ask` (one answer in the terminal, no UI), `buddy serve` (the daemon) and `buddy latency`
-(first-token percentiles from the latency log)."""
+"""`buddy ask` (one answer in the terminal, no UI), `buddy serve` (the daemon), `buddy latency`
+(first-token percentiles from the latency log) and `buddy eval` (score answers on evals/cases)."""
 
 import argparse
 import asyncio
@@ -45,12 +45,37 @@ def main(argv: list[str] | None = None) -> int:
     latency.add_argument("--file", type=Path, help="default: $BUDDY_HOME/latency.jsonl")
     latency.add_argument("--kind", choices=["question", "theory", "hint"], help="only this kind")
     latency.add_argument("--last", type=int, metavar="N", help="only the last N answers")
+    ev = sub.add_parser("eval", help="score answers on evals/cases (hints on the local engine)")
+    ev.add_argument("--cases", type=Path, help="default: evals/cases above the current folder")
+    ev.add_argument("--only", action="append", metavar="ID", help="run only this case (repeatable)")
+    ev.add_argument(
+        "--triggers",
+        action="store_true",
+        help="also run #? / #!teoria cases on Claude (uses quota)",
+    )
+    ev.add_argument("--model", default="sonnet", help="claude model alias for triggers")
+    ev.add_argument(
+        "--repeat", type=int, default=1, metavar="N", help="run each hint case N times (sampled)"
+    )
+    ev.add_argument(
+        "--judge", choices=["none", "local", "claude"], default="none", help="LLM judge on rubrics"
+    )
+    ev.add_argument("--label", default="", help="a note stored in the result")
+    ev.add_argument("--out", type=Path, help="default: evals/results/<date>.json")
+    ev.add_argument(
+        "--rescore",
+        type=Path,
+        metavar="RESULT",
+        help="re-check the answers saved in RESULT against the current cases; calls no model",
+    )
 
     args = parser.parse_args(argv)
     if args.command == "ask":
         return _ask(args)
     if args.command == "latency":
         return _latency(args)
+    if args.command == "eval":
+        return asyncio.run(_eval(args))
     return _serve(args)
 
 
@@ -155,6 +180,78 @@ def _latency(args: argparse.Namespace) -> int:
     )
     if summary.without_text:
         print(f"({summary.without_text} answers ended without text and are left out)")
+    return 0
+
+
+async def _eval(args: argparse.Namespace) -> int:
+    import json
+
+    from buddy.claude_cli import ClaudeCliModel
+    from buddy.evals import (
+        CaseResult,
+        EvalRun,
+        find_evals_dir,
+        load_cases,
+        rescore,
+        result_path,
+        summarize,
+    )
+    from buddy.local import LocalModel, detect_local_model
+
+    evals_dir = find_evals_dir(Path.cwd())
+    cases_dir = args.cases or (evals_dir / "cases" if evals_dir else None)
+    if cases_dir is None or not cases_dir.is_dir():
+        print("buddy: no evals/cases folder found; pass --cases", file=sys.stderr)
+        return 2
+    cases = load_cases(cases_dir)
+    if args.only:
+        cases = [c for c in cases if c.id in set(args.only)]
+    if args.rescore:
+        saved = json.loads(args.rescore.read_text(encoding="utf-8"))
+        summary = summarize(
+            rescore(saved, cases), cases, label=saved.get("label", ""), engines=saved["engines"]
+        )
+        summary["date"] = saved["date"]
+        (args.out or args.rescore).write_text(
+            json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        )
+        print(f"total {saved['total']} → {summary['total']} · {summary['checks']}")
+        return 0
+    local = await detect_local_model()
+    if local is None:
+        print("buddy: no local engine on :8080 or :8000 (hints need one)", file=sys.stderr)
+        return 2
+    trigger_model = ClaudeCliModel(args.model) if args.triggers else None
+    judge = None
+    if args.judge == "local":
+        judge = LocalModel(local.base_url, local.name, max_tokens=200)
+    elif args.judge == "claude":
+        judge = ClaudeCliModel(args.model)
+
+    async def progress(result: CaseResult) -> None:
+        failed = [c.name for c in result.checks if not c.passed]
+        note = result.error or (f"failed: {', '.join(failed)}" if failed else "all checks pass")
+        judged = f" · judge {result.judge.get('score')}" if result.judge else ""
+        print(f"{result.score:4.2f}  {result.id:<28} {note}{judged}", flush=True)
+
+    run = EvalRun(local, trigger_model, judge, progress=progress, hint_repeat=args.repeat)
+    results = await run.run(cases)
+    engines = {"hint": local.name, "hint_engine": local.base_url}
+    if trigger_model:
+        engines["trigger"] = trigger_model.name
+    if judge:
+        engines["judge"] = judge.name
+    summary = summarize(results, cases, label=args.label, engines=engines)
+    out = args.out or result_path((evals_dir or cases_dir.parent) / "results")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(
+        f"total {summary['total']} over {summary['cases']} cases "
+        f"({summary['runs']} runs) · {summary['checks']}"
+    )
+    if summary["judge_mean"] is not None:
+        print(f"judge mean {summary['judge_mean']} / 5")
+    print(f"saved {out}" + ("" if summary["complete"] else " (incomplete: not for the ratchet)"))
     return 0
 
 

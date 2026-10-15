@@ -20,6 +20,13 @@ if [ -f brain/pyproject.toml ] && ls protocol/schemas/*.json >/dev/null 2>&1; th
   (cd brain && uv run pytest -q tests/test_protocol.py)
 else skip "schemas or their validator not created yet (G1, G2)"; fi
 
+step "eval cases"
+if [ -f brain/pyproject.toml ] && [ -d evals/cases ]; then
+  # Offline: the cases against evals/schema and the scorer on canned answers. Running the models
+  # is `buddy eval` (by hand: it needs a local engine, and --triggers uses Claude quota).
+  (cd brain && uv run pytest -q tests/test_evals.py)
+else skip "evals/cases not created yet (G10)"; fi
+
 step "notch (Swift)"
 if [ -f notch/Package.swift ]; then
   (cd notch && swift build && swift test)

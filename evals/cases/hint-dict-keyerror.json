@@ -1,0 +1,27 @@
+{
+  "id": "hint-dict-keyerror",
+  "title": "Incrementing a missing dict key",
+  "kind": "hint",
+  "line": 4,
+  "language": "italiano",
+  "code": "def count_words(text):\n    counts = {}\n    for word in text.split():\n        counts[word] += 1\n    return counts\n",
+  "concepts": {
+    "missing-key": [
+      "KeyError",
+      "chiave",
+      "non esist",
+      "prima volta",
+      "manc"
+    ]
+  },
+  "forbidden": [
+    "\\.get\\(",
+    "defaultdict",
+    "Counter",
+    "setdefault"
+  ],
+  "fix_lines": [
+    "counts[word] = counts.get(word, 0) + 1"
+  ],
+  "rubric": "Says the first time a word is seen its key doesn't exist yet, so += fails. Does not name get/defaultdict/Counter."
+}

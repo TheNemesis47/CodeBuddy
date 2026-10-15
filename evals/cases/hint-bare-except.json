@@ -1,0 +1,27 @@
+{
+  "id": "hint-bare-except",
+  "title": "Bare except swallows everything",
+  "kind": "hint",
+  "line": 4,
+  "language": "italiano",
+  "code": "def parse_age(text):\n    try:\n        return int(text)\n    except:\n        return 0\n",
+  "concepts": {
+    "bare-except": [
+      "tutt[ei]",
+      "qualsiasi",
+      "ogni (tipo di )?(errore|eccezione)",
+      "nascond",
+      "bare",
+      "KeyboardInterrupt",
+      "specific",
+      "generic"
+    ]
+  },
+  "forbidden": [
+    "except ValueError"
+  ],
+  "fix_lines": [
+    "except ValueError:"
+  ],
+  "rubric": "Says a bare except catches every error, hiding bugs. Does not name the exact exception to catch."
+}

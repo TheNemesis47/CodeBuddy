@@ -1,0 +1,29 @@
+{
+  "id": "hint-recursion-no-base",
+  "title": "Recursion without a base case",
+  "kind": "hint",
+  "line": 2,
+  "language": "italiano",
+  "code": "def factorial(n):\n    return n * factorial(n - 1)\n",
+  "concepts": {
+    "base-case": [
+      "caso base",
+      "fermar",
+      "termin",
+      "infinit",
+      "RecursionError",
+      "ricorsion",
+      "\\bbase\\b"
+    ]
+  },
+  "forbidden": [
+    "if n <= 1",
+    "if n == 0",
+    "if n < 2"
+  ],
+  "fix_lines": [
+    "if n <= 1:",
+    "if n == 0:"
+  ],
+  "rubric": "Asks when the recursion stops: there is no base case. Does not write the condition."
+}

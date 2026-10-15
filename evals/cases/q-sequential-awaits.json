@@ -1,0 +1,23 @@
+{
+  "id": "q-sequential-awaits",
+  "title": "Downloads run one after another",
+  "kind": "#?",
+  "line": 12,
+  "language": "italiano",
+  "code": "import asyncio\n\n\nasync def download(url):\n    await asyncio.sleep(1)\n    return url\n\n\nasync def main(urls):\n    results = []\n    for url in urls:\n        #? perché ci mette un secondo per ogni url?\n        results.append(await download(url))\n    return results\n",
+  "concepts": {
+    "concurrency": [
+      "sequenz",
+      "uno (alla volta|dopo l'altro)",
+      "gather",
+      "concorren",
+      "aspett",
+      "attend"
+    ]
+  },
+  "forbidden": [],
+  "fix_lines": [
+    "results = await asyncio.gather(*(download(url) for url in urls))"
+  ],
+  "rubric": "Explains that awaiting inside the loop waits for each download before starting the next. May name asyncio.gather, without writing the rewritten main."
+}

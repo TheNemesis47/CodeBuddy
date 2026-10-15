@@ -1,6 +1,6 @@
 # Where CodeBuddy falls short of the MVP
 
-> **Last reviewed:** 2026-10-15 · **Last updated:** 2026-10-15 · **Change:** G5 closed (first token p50 1572 ms over 10 runs through the plugin's code path); G13 now also covers latency from a real Enter
+> **Last reviewed:** 2026-10-15 · **Last updated:** 2026-10-15 · **Change:** G5 closed (first token p50 1572 ms over 10 runs); G10 closed (evals: 29 cases, `buddy eval`, eval score 94.5 → 99.1 in the ratchet); G14 added (human review of borderline eval answers)
 
 Every known shortfall, one entry each, ranked by impact. This is the work list agents pick from:
 take the highest-ranked open entry, and when you close part of one, update its evidence and
@@ -19,7 +19,8 @@ estimate here. **Human** marks what an agent can't finish alone.
 | G7 | Enforce module boundaries automatically | tooling | medium | 1 h | agent |
 | G8 | Sprout final design | feature | medium | — | **Human** |
 | G9 | CI on GitHub Actions | tooling | low | 1 h | **Human** (create remote) |
-| G10 | Evals: snippet set + scorer for suggestion quality | tooling | high (after MVP) | 6 h | agent |
+| ~~G10~~ | ~~Evals: snippet set + scorer for suggestion quality~~ (done 2026-10-15: score 99.1) | tooling | — | — | agent |
+| G14 | Judge the borderline eval answers by hand; make the cases harder once the score saturates | quality | medium | 1 h | **Human** + agent |
 | G11 | Real-screen check of the notch: hover, click, Spaces, full screen | UX | medium | 1 h | **Human** |
 | G13 | Install the plugin in your real PyCharm and use `#?` / `#!teoria` and idle hints on real code | feature | blocks next stage | 45 min | **Human** |
 | G12 | Grant Screen Recording to the terminal so agents can `screencapture` the real screen (today: view snapshots only) | tooling | low | 5 min | **Human** |
@@ -166,7 +167,31 @@ longer than its p50 (the brain's clock starts when the trigger arrives).
 `screencapture` fails with "could not create image from display": the terminal has no Screen
 Recording permission (System Settings → Privacy & Security → Screen Recording).
 
-## G10: Evals
+## G10: Evals (closed 2026-10-15)
+
+Done on branch `feat/evals`. `evals/cases/`: 29 snippets (18 `hint`, 8 `#?`, 3 `#!teoria`:
+missing `with`, off-by-one, mutable defaults, scope, `is` vs `==`, typing, async, generators…),
+validated against `evals/schema/case.schema.json` by `scripts/check`. `buddy eval` builds the real
+prompt for each case and scores 5 deterministic checks (concept, shape, no_leak, no_fix,
+language); `--triggers` runs `#?`/`#!teoria` on Claude, `--judge local|claude` adds a rubric grade
+(reported, not ratcheted), `--repeat N` samples hints N times, `--rescore` re-checks saved answers.
+`scripts/ratchet` reads the latest committed complete result. **Baseline 94.5 → 99.1** after
+`hint.md` (name the problem, never the fix; one concrete sentence, at most one question that
+doesn't contain the answer) and `system.md` (never write the corrected line). Hints:
+Qwen3-Coder-30B-A3B on llama.cpp; triggers: Sonnet 5.5. Details and examples in the devlog.
+Open: G14 (borderline answers, harder cases). The original entry:
 
 After the MVP. 20–30 real snippets with expected concept tags and "good hint" rubrics. Reuse ideas
 from `~/Work/testM5/benchkit`. Add the score to `quality/floors.json`.
+
+## G14: Borderline eval answers (Human)
+
+**Evidence.** The deterministic checks miss some things, and the local judge is noisy (it once
+graded a hint 2 for *not* giving the `None` fix, and 5 for `#?` answers that wrote the corrected
+line). Examples to look at in `evals/results/2026-10-15-2.json`: `hint-remove-while-iterating`
+(a confident but wrong `UnboundLocalError` diagnosis, judge 2: the "be concrete" rule can make the
+local model guess), `hint-missing-await` («manca `await`» still leaks in 2 of 3 runs), and
+`#?` answers that are 6+ paragraphs (pass the 15-line shape check, still long for the notch).
+**Done when.** You've read those answers and marked each as fine / too revealing / wrong in the
+devlog; an agent turns the verdicts into tighter regexes or new cases. Once the score sits at
+≥ 99 for two runs, add harder cases (the score should have room to rise).

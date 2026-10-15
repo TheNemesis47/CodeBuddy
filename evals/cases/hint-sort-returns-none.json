@@ -1,0 +1,25 @@
+{
+  "id": "hint-sort-returns-none",
+  "title": "list.sort() returns None",
+  "kind": "hint",
+  "line": 2,
+  "language": "italiano",
+  "code": "def top_scores(scores):\n    ranked = scores.sort(reverse=True)\n    return ranked[:3]\n",
+  "concepts": {
+    "in-place": [
+      "None",
+      "in place",
+      "sul posto",
+      "restituisc",
+      "ritorn",
+      "modific"
+    ]
+  },
+  "forbidden": [
+    "sorted\\("
+  ],
+  "fix_lines": [
+    "ranked = sorted(scores, reverse=True)"
+  ],
+  "rubric": "Says .sort() sorts in place and returns None, so ranked is None. Does not suggest sorted()."
+}

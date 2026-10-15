@@ -2,6 +2,61 @@
 
 Newest first. Terse. Written at the end of every task so the next agent can pick up.
 
+## 2026-10-15 12:30: G10 evals (branch feat/evals, from main)
+
+- **Landed:** `evals/cases/` 29 cases (18 `hint`, 8 `#?`, 3 `#!teoria`) + `evals/schema/case.schema.json`;
+  `brain/src/buddy/evals.py` + `buddy eval` (real `build_prompt` per case; checks concept, shape
+  (hint ≤ 3 lines and no code block, `#?` ≤ 15 lines), no_leak (forbidden regexes), no_fix (no
+  answer line contains a corrected line), language; optional `--judge local|claude`; `--repeat`,
+  `--rescore`, `--only`); results in `evals/results/<date>[-N].json`. `scripts/ratchet`:
+  `eval_score` = total of the latest committed complete result. `scripts/check`: "eval cases" step
+  (offline: schema + scorer on canned answers). Ideas from benchkit's graders: automatic checks
+  first, a judge or a human only for what they can't see; per-case fraction of checks passed.
+- **Numbers:** brain tests 137 → 175 (`test_evals.py`: pass and fail for each check, every case
+  valid, run/summary/rescore/repeat); floors `brain_tests` 175, `eval_score` **99.1**.
+- **Engine and models:** hints: Qwen3-Coder-30B-A3B-Instruct-Q4_K_M on llama.cpp `llama-server`
+  :8080 (`-ngl 999 -fa on -c 16384 --jinja`, temp 0.6/top_p 0.95 as in production); triggers:
+  Claude Sonnet 5.5 via `claude -p`; judge: the same local Qwen.
+- **Scores:**
+
+  | Run | Prompts | Hints | Total (29 cases) | Leaks (no_leak fails) | Corrected lines written | Judge |
+  |---|---|---:|---:|---|---|---|
+  | `results/2026-10-15.json` (baseline) | `main` | ×1 | **94.5** | 3/29 | 5/29 (all `#?`) | 4.07 |
+  | scratch | old `hint.md` | ×3 | hints 94.8 | 7/54 | 1/54 | — |
+  | scratch | `hint.md` v1 (name the problem, not the fix) | ×3 | hints 95.9 | 4/54 (but 7 vague hints miss the concept) | 0 | — |
+  | scratch | v2 (first sentence: the concrete problem) | ×3 | hints 96.3 | 9/54 ("why not use `X`?") | 1 | — |
+  | scratch | **v3** (+ the question must not contain the answer, no "without `X`") | ×3 | hints **97.8**, again **98.5** | 6/54, 3/54 | 0 | — |
+  | scratch | v4 (+ "don't say what is missing" + self-check) | ×3 | hints 95.9 | 7/54 + 3 too long | 0 | — (reverted) |
+  | `results/2026-10-15-2.json` (improved) | v3 + `system.md` (never write the corrected line) | ×3 | **99.1** | 3/65 | **0/65** | 3.89 (hint 3.67, `#?` 5.0, teoria 5.0) |
+
+  The baseline was re-scored once after two case fixes (`ombra` → `ombr`: «ombreggia» does name
+  shadowing; `global` leak regex widened: «dichiarato come `global`» names the fix), via
+  `--rescore`. The judge mean fell only because hints are now 54 of 65 judged answers; per kind it
+  is flat (hint 3.72 → 3.67) or up (`#?` 4.5 → 5.0). The `system.md` example is not an eval case
+  (kept out to avoid tuning to the test set).
+- **Before / after:**
+  1. `hint-missing-with` (the known leak). Before: «Apri il file con `with` per evitare problemi di
+     chiusura del file…» (no_leak ✗, judge 3). After: «Il problema è che il file aperto non viene
+     chiuso, causando un potenziale accumulo di risorse. Che cosa succede se la funzione viene
+     chiamata più volte?» (all pass, judge 5).
+  2. `q-while-misses-zero` (`#?`). Before: walks the loop, then «Usa `>=` invece di `>`:» and a
+     code block `while n >= 0:` (no_fix ✗). After: same walk-through, then «devi cambiare
+     l'operatore di confronto in modo che anche il valore 0 renda la condizione vera. Pensa a quale
+     operatore significa "maggiore **o uguale**"», an example on other code (`while x < 5`), and
+     «prova a fare una traccia a mano con `n = 2`» (all pass, judge 5).
+  3. `hint-unbound-local`. Before: «…senza averlo dichiarato come `global` o `nonlocal`…»
+     (no_leak ✗). After (final run, 3 of 3 pass): «La variabile `count` è usata prima di essere
+     assegnata nella funzione `increment`, causando un errore `UnboundLocalError`. Perché il nome
+     `count` non si riferisce alla variabile globale definita alla riga 1?» (one v3 scratch run
+     still said `global`).
+- **Worse / still open:** v3's "be concrete" rule can make the local model guess with confidence:
+  `hint-remove-while-iterating` once claimed an `UnboundLocalError` (concept ✗, judge 2).
+  `hint-missing-await` still says «manca `await`» in 2 of 3 runs. `#?` answers are often 6+
+  paragraphs (inside 15 lines, still long for the notch). The local judge is noisy and once
+  rewarded giving the fix. All in **G14 (Human)**: judge the borderline answers, then harder cases.
+- **Processes:** `llama-server` stopped after the runs (`pgrep llama-server` empty).
+- **Still open:** G14 (Human: borderline answers), G13 (Human: real PyCharm), G11, G12, G8;
+  agent: G7 (G5 merged into main together with this branch on 2026-10-15).
 ## 2026-10-15 10:10: G5 latency (branch feat/brain-latency)
 
 - **Landed:** brain `latency.py`: every `answer_end` (triggers, hints, `buddy ask`) appends

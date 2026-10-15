@@ -1,0 +1,21 @@
+{
+  "id": "q-missing-with",
+  "title": "Why does the file stay open?",
+  "kind": "#?",
+  "line": 5,
+  "language": "italiano",
+  "code": "import json\n\n\ndef load(path):\n    #? perché il file resta aperto?\n    f = open(path)\n    data = json.load(f)\n    return data\n",
+  "concepts": {
+    "context-manager": [
+      "\\bwith\\b",
+      "context manager",
+      "\\bclose",
+      "chiu[sd]"
+    ]
+  },
+  "forbidden": [],
+  "fix_lines": [
+    "with open(path) as f:"
+  ],
+  "rubric": "Explains that nothing closes the file and why that matters; may name `with` as the idiom, but does not rewrite the student's lines."
+}

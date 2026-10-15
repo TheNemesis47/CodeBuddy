@@ -1,0 +1,24 @@
+{
+  "id": "hint-missing-await",
+  "title": "Coroutine called without await",
+  "kind": "hint",
+  "line": 10,
+  "language": "italiano",
+  "code": "import asyncio\n\n\nasync def fetch(n):\n    await asyncio.sleep(0.1)\n    return n * 2\n\n\nasync def main():\n    result = fetch(3)\n    print(result)\n",
+  "concepts": {
+    "coroutine": [
+      "corout",
+      "non (viene )?esegu",
+      "asincron",
+      "oggetto",
+      "async"
+    ]
+  },
+  "forbidden": [
+    "\\bawait\\b"
+  ],
+  "fix_lines": [
+    "result = await fetch(3)"
+  ],
+  "rubric": "Says calling an async function returns a coroutine object that hasn't run. Does not write `await`."
+}

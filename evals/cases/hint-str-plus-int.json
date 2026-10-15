@@ -1,0 +1,30 @@
+{
+  "id": "hint-str-plus-int",
+  "title": "Concatenating a string and an int",
+  "kind": "hint",
+  "line": 2,
+  "language": "italiano",
+  "code": "def greet(name, age):\n    return \"Ciao \" + name + \", hai \" + age + \" anni\"\n\n\nprint(greet(\"Ada\", 36))\n",
+  "concepts": {
+    "types": [
+      "\\btip",
+      "TypeError",
+      "\\bint\\b",
+      "\\bstr\\b",
+      "stringa",
+      "numer",
+      "concaten"
+    ]
+  },
+  "forbidden": [
+    "str\\(age\\)",
+    "\\bf\\\"",
+    "\\bf'",
+    "f-string"
+  ],
+  "fix_lines": [
+    "return f\"Ciao {name}, hai {age} anni\"",
+    "return \"Ciao \" + name + \", hai \" + str(age) + \" anni\""
+  ],
+  "rubric": "Says age is an int and + between str and int raises TypeError. No conversion or f-string written."
+}

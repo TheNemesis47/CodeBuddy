@@ -1,0 +1,28 @@
+{
+  "id": "hint-floor-division",
+  "title": "Average with floor division",
+  "kind": "hint",
+  "line": 3,
+  "language": "italiano",
+  "code": "def average(values):\n    total = sum(values)\n    return total // len(values)\n",
+  "concepts": {
+    "integer-division": [
+      "\\binter[ao]\\b",
+      "integer",
+      "tronc",
+      "arrotond",
+      "decimal",
+      "float",
+      "divisione",
+      "//"
+    ]
+  },
+  "forbidden": [
+    "total / len",
+    "singol[ao] `?/`?"
+  ],
+  "fix_lines": [
+    "return total / len(values)"
+  ],
+  "rubric": "Points at `//`: it drops the decimal part, so an average is wrong. Does not give the corrected operator."
+}
