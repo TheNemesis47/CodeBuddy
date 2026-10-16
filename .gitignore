@@ -28,3 +28,4 @@ bench/
 
 # packaging output (packaging/build.py)
 dist/
+packaging/assets/raw/

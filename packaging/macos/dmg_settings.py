@@ -15,7 +15,7 @@ show_tab_view = False
 show_toolbar = False
 show_pathbar = False
 show_sidebar = False
-icon_locations = {"CodeBuddy.app": (165, 195), "Applications": (495, 195)}
+icon_locations = {"CodeBuddy.app": (165, 172), "Applications": (495, 172)}
 if plugin:
-    icon_locations[os.path.basename(plugin)] = (330, 345)
+    icon_locations[os.path.basename(plugin)] = (330, 305)
 format = "UDZO"

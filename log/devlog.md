@@ -19,11 +19,15 @@ Newest first. Terse. Written at the end of every task so the next agent can pick
   background; `codesign -v` ok; the app's demo saved 9 snapshots; run from the bundle with
   `BUDDY_PORT=8795`: the bundled brain listened, the notch connected, `kill` → app quit → brain
   stopped ("Finished server process" in brain.log).
+- **Art:** Draw Things (FLUX.2 Klein 9B, 10 steps, 1 image each: icon 71 s, scene 104 s), composed
+  by `make_art.py` (transparent icon corners; a light card under the dmg icons because Finder
+  labels are black). Prompts and seeds in `packaging/assets/README.md`; raw images not committed.
+  dmg rebuilt with it (25 MB, AppIcon.icns 1024 px); window layout checked on a drawn preview (no
+  Screen Recording for a real Finder shot, G12).
 - **Not verified here:** Setup.exe and the AppImage (no Windows/Linux on this Mac): CI builds them.
-  The art is a fallback gradient + Sprout until Draw Things runs (its HTTP API was off).
 - **Tests:** brain 283, notch 47; floors raised. Gate green.
-- **Still open:** Draw Things art (`packaging/assets/raw/`, then `make_art.py`); a CI run of the
-  package jobs; Gatekeeper/SmartScreen still warn (G15, signing is human).
+- **Still open:** the CI run of the package jobs; Gatekeeper/SmartScreen still warn (G15, signing
+  is human); the icon stands in for Sprout's final design (G8).
 
 ## 2026-10-16 12:30: deep theory and #!approfondisci (branch feat/brain-deeper-theory)
 

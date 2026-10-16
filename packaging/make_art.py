@@ -58,22 +58,26 @@ def dmg_background(scale: int) -> QImage:
     image = scene(w, h)
     p = QPainter(image)
     p.setRenderHint(QPainter.RenderHint.Antialiasing)
-    p.fillRect(0, 0, w, h, QColor(0, 0, 0, 90))  # keeps Finder's white labels readable
-    # Arrow from the app (165, 195) to Applications (495, 195), in dmg points.
+    # Finder draws the icon labels in black: the icons sit on a light card so they stay readable.
+    card = QPainterPath()
+    card.addRoundedRect(
+        QRectF(40 * scale, 112 * scale, 580 * scale, 270 * scale),
+        22 * scale,
+        22 * scale,
+    )
+    p.fillPath(card, QColor(244, 248, 245, 232))
+    # Arrow from the app (165, 172) to Applications (495, 172), in dmg points.
     pen = QPen(
-        QColor(255, 255, 255, 210),
-        5 * scale,
-        Qt.PenStyle.SolidLine,
-        Qt.PenCapStyle.RoundCap,
+        QColor(46, 125, 70), 5 * scale, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap
     )
     p.setPen(pen)
-    y = 185 * scale
+    y = 162 * scale
     p.drawLine(QPointF(250 * scale, y), QPointF(400 * scale, y))
     head = QPainterPath(QPointF(412 * scale, y))
     head.lineTo(392 * scale, y - 13 * scale)
     head.lineTo(392 * scale, y + 13 * scale)
     head.closeSubpath()
-    p.fillPath(head, QColor(255, 255, 255, 210))
+    p.fillPath(head, QColor(46, 125, 70))
     title = QFont("Helvetica Neue", 22 * scale, QFont.Weight.Bold)
     p.setFont(title)
     p.setPen(QColor(255, 255, 255))
@@ -90,7 +94,7 @@ def dmg_background(scale: int) -> QImage:
     p.setFont(QFont("Helvetica Neue", 11 * scale))
     p.setPen(QColor(220, 230, 224))
     p.drawText(
-        QRectF(0, 392 * scale, w, 22 * scale),
+        QRectF(0, 398 * scale, w, 22 * scale),
         Qt.AlignmentFlag.AlignCenter,
         "Il plugin per PyCharm: Settings → Plugins → ⚙ → Install Plugin from Disk…",
     )
@@ -126,12 +130,32 @@ def wizard() -> QImage:
     return image
 
 
+def squircle(raw: QImage) -> QImage:
+    """The model paints the rounded square on a white page: keep only the inside, transparent
+    corners, at 1024 px."""
+    size = 1024
+    src = raw.scaled(size, size, Qt.AspectRatioMode.IgnoreAspectRatio,
+                     Qt.TransformationMode.SmoothTransformation)  # fmt: skip
+    icon = QImage(size, size, QImage.Format.Format_ARGB32)
+    icon.fill(QColor(0, 0, 0, 0))
+    p = QPainter(icon)
+    p.setRenderHint(QPainter.RenderHint.Antialiasing)
+    clip = QPainterPath()
+    inset = 12
+    clip.addRoundedRect(
+        QRectF(inset, inset, size - 2 * inset, size - 2 * inset), 210, 210
+    )
+    p.setClipPath(clip)
+    p.drawImage(0, 0, src)
+    p.end()
+    return icon
+
+
 def main() -> int:
     QGuiApplication(sys.argv[:1])
     raw_icon = QImage(str(RAW / "icon.png"))
     if not raw_icon.isNull():
-        raw_icon.scaled(1024, 1024, Qt.AspectRatioMode.KeepAspectRatio,
-                        Qt.TransformationMode.SmoothTransformation).save(str(ASSETS / "icon.png"))  # fmt: skip
+        squircle(raw_icon).save(str(ASSETS / "icon.png"))
     dmg_background(1).save(str(ASSETS / "dmg-background.png"))
     dmg_background(2).save(str(ASSETS / "dmg-background@2x.png"))
     wizard().save(str(ASSETS / "wizard.png"))
