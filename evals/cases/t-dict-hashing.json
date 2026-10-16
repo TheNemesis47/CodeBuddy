@@ -1,0 +1,21 @@
+{
+  "id": "t-dict-hashing",
+  "title": "Theory: how a dict finds a key",
+  "kind": "#!teoria",
+  "line": 4,
+  "language": "italiano",
+  "code": "def count_words(text):\n    counts = {}\n    for word in text.split():\n        #!teoria come fa un dizionario a trovare una chiave così in fretta\n        counts[word] = counts.get(word, 0) + 1\n    return counts\n",
+  "concepts": {
+    "hash-table": [
+      "hash",
+      "tabella"
+    ],
+    "complexity": [
+      "O\\(1\\)",
+      "costante"
+    ]
+  },
+  "forbidden": [],
+  "fix_lines": [],
+  "rubric": "Explains hash tables as CPython does them (hash(), slots, collisions and probing, resizing), average O(1) vs worst case and why keys must be hashable and immutable, connects to line 5, and gives pointers to read next."
+}

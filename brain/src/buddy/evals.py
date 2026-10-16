@@ -6,6 +6,8 @@ answer with deterministic checks:
 
 - concept:  names at least one expected concept (case regexes);
 - shape:    hints ≤ 3 lines with no code block, `#?` answers ≤ 15 lines (the notch is small);
+            `#!teoria` goes deep: ≥ 15 lines, a "how it really works" part and a "further
+            reading" list of ≥ 2 bullets (the user asked for depth, 2026-10-16);
 - no_leak:  none of the case's forbidden regexes, i.e. it doesn't name the fix;
 - no_fix:   no answer line contains a corrected line (whitespace and backticks ignored);
 - language: the prose is in the language the brain asked for.
@@ -32,6 +34,10 @@ from buddy.triggers import parse_trigger_line
 
 HINT_MAX_LINES = 3
 QUESTION_MAX_LINES = 15
+THEORY_MIN_LINES = 15
+_MECHANISM = re.compile(r"come funziona( davvero)?|how it (really )?works|under the hood", re.I)
+_FURTHER = re.compile(r"per approfondire|further reading|to go further|go deeper", re.I)
+_BULLET = re.compile(r"^\s*([-*•]|\d+[.)])\s+\S")
 KINDS: dict[str, RequestKind] = {"hint": "hint", "#?": "question", "#!teoria": "theory"}
 
 # Short function words, counted outside code to tell Italian prose from English prose. ("a" is
@@ -141,7 +147,7 @@ def check_concept(case: Case, answer: str) -> Check:
 
 
 def check_shape(case: Case, answer: str) -> Check | None:
-    """None when the kind has no shape rule (theory is long by design)."""
+    """Hints and `#?` must stay short; theory must go deep."""
     lines = len(_nonblank_lines(answer))
     if case.kind == "hint":
         if "```" in answer:
@@ -151,7 +157,23 @@ def check_shape(case: Case, answer: str) -> Check | None:
     if case.kind == "#?":
         ok = 0 < lines <= QUESTION_MAX_LINES
         return Check("shape", ok, f"{lines} lines (max {QUESTION_MAX_LINES})")
+    if case.kind == "#!teoria":
+        return check_depth(answer)
     return None
+
+
+def check_depth(answer: str) -> Check:
+    """A theory answer explains the mechanism and says where to go next."""
+    lines = _nonblank_lines(answer)
+    if len(lines) < THEORY_MIN_LINES:
+        return Check("shape", False, f"{len(lines)} lines (min {THEORY_MIN_LINES})")
+    if not _MECHANISM.search(answer):
+        return Check("shape", False, "no 'how it really works' part")
+    further = next((i for i, line in enumerate(lines) if _FURTHER.search(line)), None)
+    bullets = 0 if further is None else sum(bool(_BULLET.match(x)) for x in lines[further + 1 :])
+    if bullets < 2:
+        return Check("shape", False, f"'further reading' has {bullets} bullets (min 2)")
+    return Check("shape", True, f"{len(lines)} lines, mechanism, {bullets} pointers")
 
 
 def check_no_leak(case: Case, answer: str) -> Check:
@@ -274,7 +296,7 @@ class CaseResult:
 
 @dataclass
 class EvalRun:
-    hint_model: Model
+    hint_model: Model | None
     trigger_model: Model | None = None  # None: triggers are skipped (they cost Claude quota)
     judge_model: Model | None = None
     language: str = "italiano"

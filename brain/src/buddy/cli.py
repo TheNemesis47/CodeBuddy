@@ -54,7 +54,11 @@ def main(argv: list[str] | None = None) -> int:
 
     latency = sub.add_parser("latency", help="first-token p50/p90/min/max from the latency log")
     latency.add_argument("--file", type=Path, help="default: $BUDDY_HOME/latency.jsonl")
-    latency.add_argument("--kind", choices=["question", "theory", "hint"], help="only this kind")
+    latency.add_argument(
+        "--kind",
+        choices=["question", "theory", "deeper", "hint", "review"],
+        help="only this kind",
+    )
     latency.add_argument("--last", type=int, metavar="N", help="only the last N answers")
     ev = sub.add_parser("eval", help="score answers on evals/cases (hints on the local engine)")
     ev.add_argument("--cases", type=Path, help="default: evals/cases above the current folder")
@@ -150,7 +154,9 @@ def _ask(args: argparse.Namespace) -> int:
             ClaudeCliModel(args.model),
             prompt,
             id=str(uuid.uuid4()),
-            kind=request.kind,
+            kind="question"
+            if request.kind == "question"
+            else "theory",  # `buddy ask` asks only these
             title=request.text,
             emit=emit,
         )
@@ -228,13 +234,15 @@ async def _eval(args: argparse.Namespace) -> int:
         )
         print(f"total {saved['total']} → {summary['total']} · {summary['checks']}")
         return 0
-    local = await detect_local_model()
-    if local is None:
-        print("buddy: no local engine on :8080 or :8000 (hints need one)", file=sys.stderr)
-        return 2
+    local = None  # only hints and the local judge need an engine: `--only t-…` runs without one
+    if any(not c.is_trigger for c in cases) or args.judge == "local":
+        local = await detect_local_model()
+        if local is None:
+            print("buddy: no local engine on :8080 or :8000 (hints need one)", file=sys.stderr)
+            return 2
     trigger_model = ClaudeCliModel(args.model) if args.triggers else None
     judge = None
-    if args.judge == "local":
+    if args.judge == "local" and local is not None:
         judge = LocalModel(local.base_url, local.name, max_tokens=200)
     elif args.judge == "claude":
         judge = ClaudeCliModel(args.model)
@@ -247,7 +255,7 @@ async def _eval(args: argparse.Namespace) -> int:
 
     run = EvalRun(local, trigger_model, judge, progress=progress, hint_repeat=args.repeat)
     results = await run.run(cases)
-    engines = {"hint": local.name, "hint_engine": local.base_url}
+    engines = {"hint": local.name, "hint_engine": local.base_url} if local else {}
     if trigger_model:
         engines["trigger"] = trigger_model.name
     if judge:

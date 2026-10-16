@@ -19,5 +19,5 @@
   "fix_lines": [
     "values = list(squares(4))"
   ],
-  "rubric": "Four parts; explains lazy, one-shot iteration, and connects it to the two sums in the student's code."
+  "rubric": "Deep shape: how it really works (the generator object, frames suspended at `yield`, StopIteration), lazy one-shot iteration connected to the two sums in the student's code, and pointers to read next."
 }

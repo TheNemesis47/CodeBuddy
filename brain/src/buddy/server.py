@@ -11,6 +11,7 @@ import json
 import logging
 import time
 from collections.abc import Awaitable
+from dataclasses import replace
 from typing import Any, Literal
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -76,6 +77,8 @@ class Brain:
         self.notch = NotchHub()
         self.project: ProjectMap | None = None
         self.project_hash: str | None = None
+        # The last theory the student read, for `#!approfondisci`: (topic, answer text).
+        self.last_theory: tuple[str, str] | None = None
         self._tasks: set[asyncio.Task[Message | None]] = set()
 
     def apply_settings(self) -> None:
@@ -147,9 +150,15 @@ class Brain:
         )
 
     async def _answer(self, trigger: dict[str, Any]) -> Message:
-        prompt = build_prompt(
-            self._request(trigger, trigger["kind"], trigger["text"]), self.answer_language
-        )
+        kind, text = trigger["kind"], trigger["text"]
+        request = self._request(trigger, kind, text)
+        topic = text or f"the concept at line {trigger['line']} of {trigger['file']}"
+        title = text or trigger["file"]
+        if kind == "deeper" and self.last_theory:
+            topic = self.last_theory[0]
+            request = replace(request, previous_topic=topic, previous_answer=self.last_theory[1])
+            title = f"approfondimento: {text or topic}"
+        prompt = build_prompt(request, self.answer_language)
         log.info(
             "trigger %s %s:%s ~%d tokens in",
             trigger["kind"],
@@ -157,15 +166,24 @@ class Brain:
             trigger["line"],
             prompt.estimated_tokens(),
         )
+        parts: list[str] = []
+
+        async def emit(message: Message) -> None:
+            if message["type"] == "answer_delta":
+                parts.append(message["text"])
+            await self.notch.broadcast(message)
+
         final = await run_answer(
             self.model,
             prompt,
             id=trigger["id"],
-            kind=trigger["kind"],
-            title=trigger["text"] or trigger["file"],
-            emit=self.notch.broadcast,
+            kind="question" if kind == "question" else "theory",  # the panel shows deeper as theory
+            title=title,
+            emit=emit,
         )
-        self._log_latency(final, trigger["kind"])
+        if kind != "question" and final["type"] == "answer_end":
+            self.last_theory = (topic, "".join(parts))
+        self._log_latency(final, kind)
         return final
 
     async def _proactive(self, event: dict[str, Any], kind: Literal["hint", "review"]) -> Message:

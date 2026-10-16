@@ -40,9 +40,9 @@ CASE_FILES = sorted((EVALS / "cases").glob("*.json"))
 # ---------------------------------------------------------------- the cases themselves
 
 
-def test_there_are_25_to_30_cases_of_every_kind() -> None:
+def test_there_are_25_to_40_cases_of_every_kind() -> None:
     cases = load_cases(EVALS / "cases")
-    assert 25 <= len(cases) <= 30
+    assert 25 <= len(cases) <= 40
     assert {c.kind for c in cases} == {"hint", "#?", "#!teoria"}
 
 
@@ -124,11 +124,43 @@ def test_shape_fails_for_an_empty_answer() -> None:
     assert result is not None and not result.passed
 
 
-def test_shape_limits_questions_and_skips_theory() -> None:
+def test_shape_limits_questions() -> None:
     question = case(kind="#?")
     assert check_shape(question, "riga\n" * 15).passed  # type: ignore[union-attr]
     assert not check_shape(question, "riga\n" * 16).passed  # type: ignore[union-attr]
-    assert check_shape(case(kind="#!teoria"), "riga\n" * 40) is None
+
+
+DEEP_THEORY = "\n".join(
+    [
+        "**In breve**: un context manager gestisce una risorsa.",
+        *[f"Riga di spiegazione {i}." for i in range(10)],
+        "**Come funziona davvero**: `with` chiama `__enter__`, poi `__exit__` anche su errore.",
+        "**Per approfondire**",
+        "- La sezione *With Statement Context Managers* del Data model",
+        "- PEP 343",
+        "Scrivi `#!approfondisci` per andare ancora più a fondo.",
+    ]
+)
+
+
+def test_theory_must_go_deep() -> None:
+    theory = case(kind="#!teoria")
+    assert check_shape(theory, DEEP_THEORY).passed  # type: ignore[union-attr]
+    short = check_shape(theory, "**Come funziona davvero**: così.\n**Per approfondire**\n- PEP 343")
+    assert short is not None and not short.passed and "min 15" in short.detail
+
+
+@pytest.mark.parametrize(
+    ("change", "detail"),
+    [
+        (("**Come funziona davvero**", "**Dettagli**"), "how it really works"),
+        (("- PEP 343", "PEP 343"), "1 bullets"),
+        (("**Per approfondire**", "**Altro**"), "0 bullets"),
+    ],
+)
+def test_theory_without_mechanism_or_pointers_fails(change: tuple[str, str], detail: str) -> None:
+    result = check_shape(case(kind="#!teoria"), DEEP_THEORY.replace(*change))
+    assert result is not None and not result.passed and detail in result.detail
 
 
 def test_no_leak_passes_without_forbidden_tokens() -> None:
@@ -193,9 +225,9 @@ def test_a_leaking_hint_loses_the_checks_it_fails() -> None:
     assert score == pytest.approx(3 / 5)
 
 
-def test_theory_is_scored_on_four_checks() -> None:
+def test_theory_is_scored_on_five_checks_depth_included() -> None:
     _, checks = score_answer(case(kind="#!teoria", forbidden=[]), "Il file va chiuso.")
-    assert len(checks) == 4
+    assert [c.name for c in checks] == ["concept", "shape", "no_leak", "no_fix", "language"]
 
 
 def test_judge_reply_is_parsed() -> None:

@@ -20,8 +20,10 @@ It is **not** an autocomplete. It never edits my code. It talks; I write.
 - **US1, question.** I type `#? why doesn't this close the file?` on its own line and press
   Enter. Within seconds Sprout peeks out of the notch and the answer streams in the expanded panel,
   about the code around that line.
-- **US2, theory.** I type `#!teoria context manager`. I get a short explanation of the concept
-  (what it is, why it exists, a minimal example) tied to my code.
+- **US2, theory.** I type `#!teoria context manager`. I get an explanation of the concept tied to
+  my code: what it is, why it exists, how it really works underneath, the math when there is some,
+  a minimal example, and what to read next (made deep at the user's request, 2026-10-16).
+  `#!approfondisci [focus]` goes one level further on the last theory.
 - **US3, proactive.** I stop typing for a few seconds. Sprout, using the model in the settings
   (until 2026-10-16: the **local** model), peeks out with **one** short hint on how to continue. It shows at most one hint every N minutes, and only if
   the code changed since the last one.

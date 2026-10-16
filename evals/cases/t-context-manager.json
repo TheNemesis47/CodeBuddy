@@ -17,5 +17,5 @@
   "fix_lines": [
     "with open(path) as f:"
   ],
-  "rubric": "Four parts: what it is, why it exists (cleanup even on errors), a minimal example that isn't the student's code, where it applies at line 6."
+  "rubric": "Deep shape: what it is, why (cleanup even on errors), how it really works (`__enter__`/`__exit__` and when each runs, what `__exit__` receives on an exception), a minimal example that isn't the student's code, where it applies at line 6, and pointers (the with statement docs, PEP 343)."
 }

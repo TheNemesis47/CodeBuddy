@@ -13,7 +13,8 @@ Mac it appears in the notch; on Linux and Windows it uses a small panel.
 | You write | You get |
 |---|---|
 | `#? perché non chiude il file?` + Enter | An answer about the code around that line, streamed into the panel |
-| `#!teoria context manager` + Enter | A short explanation of the concept, tied to your code |
+| `#!teoria context manager` + Enter | The theory, in depth: how it really works underneath, the math when there is some, a small example, where it is in your code, and what to read next |
+| `#!approfondisci` (or `#!approfondisci la matematica`) + Enter | One level deeper on the last theory: the implementation, the math, edge cases, design trade-offs |
 | *(nothing: you stop typing for 4 s)* | At most one small hint every 3 minutes, only when the code has changed |
 | Ctrl+S (Cmd+S) | A short review of the saved file: what's wrong and one or two ways to fix it, in words |
 

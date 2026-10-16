@@ -8,10 +8,17 @@ here a line is just text.
 from dataclasses import dataclass
 from typing import Literal
 
-type TriggerKind = Literal["question", "theory"]
+type TriggerKind = Literal["question", "theory", "deeper"]
 
-# `#!<command>` → kind. Italian and English spellings. `alt` and `review` come after the MVP.
-COMMANDS: dict[str, TriggerKind] = {"teoria": "theory", "theory": "theory"}
+# `#!<command>` → kind. Italian and English spellings. `#!approfondisci` goes one level deeper on
+# the last theory (or on its own topic). `alt` comes after the MVP.
+COMMANDS: dict[str, TriggerKind] = {
+    "teoria": "theory",
+    "theory": "theory",
+    "approfondisci": "deeper",
+    "approfondimento": "deeper",
+    "deeper": "deeper",
+}
 
 
 @dataclass(frozen=True)

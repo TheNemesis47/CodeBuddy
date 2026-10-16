@@ -29,6 +29,39 @@ def test_system_prompt_sets_the_answer_language() -> None:
     assert "Answer in English." in build_prompt(REQUEST, answer_language="English").system
 
 
+def test_theory_goes_deep_with_mechanism_math_and_pointers() -> None:
+    user = build_prompt(replace(REQUEST, kind="theory", text="dimmi la teoria che c'è dietro")).user
+    assert "**Come funziona davvero**" in user
+    assert "**La matematica**" in user and "never invent some" in user
+    assert "**Per approfondire**" in user and "#!approfondisci" in user
+    assert "phrased as a request" in user  # "dimmi la teoria…" means the concept at that line
+
+
+def test_deeper_builds_on_the_explanation_the_student_read() -> None:
+    deeper = replace(
+        REQUEST,
+        kind="deeper",
+        text="la matematica",
+        previous_topic="context manager",
+        previous_answer="**In breve**: gestisce una risorsa.",
+    )
+    user = build_prompt(deeper).user
+    assert "explanation of **context manager**" in user
+    assert "on: **la matematica**" in user
+    assert "**In breve**: gestisce una risorsa." in user
+    assert "don't repeat" in user
+
+
+def test_deeper_without_a_theory_before_it_is_a_theory() -> None:
+    user = build_prompt(replace(REQUEST, kind="deeper", text="decoratori")).user
+    assert "theory of: **decoratori**" in user
+
+
+def test_a_long_previous_answer_is_cut() -> None:
+    deeper = replace(REQUEST, kind="deeper", previous_topic="x", previous_answer="a" * 50_000)
+    assert len(build_prompt(deeper).user) < MAX_USER_CHARS
+
+
 def test_theory_prompt_uses_the_topic_or_the_line() -> None:
     theory = replace(REQUEST, kind="theory", text="context manager")
     assert "theory of: **context manager**" in build_prompt(theory).user

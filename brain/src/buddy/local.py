@@ -25,7 +25,8 @@ DETECT_TIMEOUT_S = 0.5
 CONNECT_TIMEOUT_S = 1.0
 TIMEOUT_S = 30
 HINT_MAX_TOKENS = 160  # ~3 short lines; a hint that runs longer is cut, not waited for
-ANSWER_MAX_TOKENS = 1500  # `#?` / `#!teoria` on an OpenAI-compatible provider
+# Every request on an OpenAI-compatible provider; a deep `#!teoria` runs ~1000 to 2000 tokens.
+ANSWER_MAX_TOKENS = 3000
 ANSWER_TIMEOUT_S = 120
 # Qwen's recommended sampling for code (~/Work/testM5/MODELS.md).
 TEMPERATURE = 0.6

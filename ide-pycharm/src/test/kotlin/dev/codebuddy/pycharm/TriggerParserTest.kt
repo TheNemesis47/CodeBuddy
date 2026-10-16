@@ -18,6 +18,15 @@ class TriggerParserTest {
     }
 
     @Test
+    fun deeperFiresWithOrWithoutAFocus() {
+        assertEquals(Trigger(TriggerKind.DEEPER, ""), TriggerParser.parse("#!approfondisci"))
+        assertEquals(Trigger(TriggerKind.DEEPER, "la matematica"), TriggerParser.parse("    #! approfondisci la matematica"))
+        assertEquals(Trigger(TriggerKind.DEEPER, ""), TriggerParser.parse("#!Approfondimento"))
+        assertEquals(Trigger(TriggerKind.DEEPER, "bytecode"), TriggerParser.parse("#!deeper bytecode"))
+        assertNull(TriggerParser.unknownCommand("#!approfondisci"))
+    }
+
+    @Test
     fun normalCommentsDoNotFire() {
         for (line in listOf("# teoria context manager", "# ? no", "#?", "#!", "#!alt", "#!review x", "#!boh x", "#! boh x", "#!/usr/bin/env python3", "x = 1  #? why", "")) {
             assertNull(line, TriggerParser.parse(line))
@@ -28,7 +37,7 @@ class TriggerParserTest {
     fun unknownCommandsAreNamedButShebangsAndKnownOnesAreNot() {
         assertEquals("boh", TriggerParser.unknownCommand("#!boh x"))
         assertEquals("alt", TriggerParser.unknownCommand("    #! alt"))
-        for (line in listOf("#!teoria x", "#! THEORY", "#!/usr/bin/env python3", "#! /usr/bin/env python3", "#!", "#!  ", "#? q", "# boh", "#!py3 x")) {
+        for (line in listOf("#!teoria x", "#! THEORY", "#!approfondisci", "#!/usr/bin/env python3", "#! /usr/bin/env python3", "#!", "#!  ", "#? q", "# boh", "#!py3 x")) {
             assertNull(line, TriggerParser.unknownCommand(line))
         }
     }

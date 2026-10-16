@@ -1,7 +1,7 @@
 {
-  "brain_tests": 262,
+  "brain_tests": 282,
   "notch_tests": 44,
-  "plugin_tests": 58,
+  "plugin_tests": 60,
   "eval_score": 99.1,
   "overlay_tests": 121
 }

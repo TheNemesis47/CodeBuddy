@@ -2,6 +2,29 @@
 
 Newest first. Terse. Written at the end of every task so the next agent can pick up.
 
+## 2026-10-16 12:30: deep theory and #!approfondisci (branch feat/brain-deeper-theory)
+
+- **From the user:** a `#!` theory question ("dimmi la teoria che c'è dietro") came back like a
+  `#?` answer; they wanted how it really works, some math, and something to dig further into.
+- **Landed:** `prompts/theory.md` rewritten (7 bold parts, 25–45 lines, math only when real, "Per
+  approfondire" with docs/PEPs, next concept, one exercise, a pointer to `#!approfondisci`);
+  `prompts/deeper.md`; trigger kind `deeper` (brain `triggers.py`, plugin `Triggers.kt`, protocol
+  `trigger.json` + `examples/trigger.deeper.json`); `Brain.last_theory` keeps the last finished
+  theory; `ANSWER_MAX_TOKENS` 3000. Evals: theory's shape check is now a depth check (≥ 15 lines,
+  a mechanism part, ≥ 2 pointers); 2 new cases (`t-recursion-math` written as a request,
+  `t-dict-hashing`), 31 cases; rubrics updated; `buddy eval --triggers --only t-…` no longer needs
+  a local engine.
+- **Live, Claude Sonnet:** the 5 theory cases score **100.0** (5/5 on every check), result in the
+  scratchpad (an `--only` run is incomplete, not committed). `t-recursion-math`: frames and the
+  call stack, `T(n) = T(n-1) + T(n-2) + 1`, `O(φⁿ)` with φ explained, ~29.8 M calls for n = 35,
+  memoization named in words only. `#!approfondisci` on it: bytecode (`dis`), 3.11 frames, Binet
+  derived from `r² = r + 1`, edge cases, why no tail calls, autograd and the KV-cache. First token
+  for theory was 7.8 s on one run (not in criterion 1, which is `#?`): watch it.
+- **Tests:** brain 262 → **282**, plugin 58 → **60**; floors raised. Gate green. `eval_score` stays
+  99.1 until a full run (needs the local engine for hints) is committed.
+- **Still open:** a full `buddy eval --repeat 3 --triggers` with the new depth check, committed;
+  hints now go to the settings model, so G16 (evals on the settings provider) matters more.
+
 ## 2026-10-16 12:05: the trigger line goes once sent (branch feat/plugin-erase-trigger-line)
 
 - **From the user:** after Enter the `#?` line should go; several tries left many lines behind.

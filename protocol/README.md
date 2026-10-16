@@ -9,7 +9,7 @@ JSON over WebSocket, one message per frame, on `ws://127.0.0.1:8790/ws`. Every m
 |---|---|---|
 | `hello` | client → brain | First frame: role (`ide`/`notch`) + local token. Anything else first closes the socket |
 | `welcome` | brain → client | Hello accepted |
-| `trigger` | ide → brain | `#? …` (question) or `#!teoria …` (theory) with code context |
+| `trigger` | ide → brain | `#? …` (question), `#!teoria …` (theory) or `#!approfondisci …` (deeper) with code context |
 | `idle` | ide → brain | User paused typing: the brain may peek with one hint |
 | `review` | ide → brain | User saved the file (Ctrl+S / Cmd+S): the brain may review the whole file |
 | `project_map` | ide → brain | File tree + signatures, sent when its hash changes |

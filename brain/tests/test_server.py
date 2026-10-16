@@ -518,3 +518,56 @@ async def test_reviews_go_to_your_own_server_when_the_settings_pick_it(
     await send(brain, review_event(1))
     assert len(engine.requests) == 1
     assert "saved `src/shapes.py`" in json.dumps(engine.requests[0], ensure_ascii=False)
+
+
+# #!approfondisci: one level below the last theory.
+
+
+def theory_then_deeper(text: str = "") -> tuple[dict, dict]:
+    theory = example("trigger.theory")
+    return theory, example("trigger.deeper") | {"text": text}
+
+
+@pytest.mark.anyio
+async def test_deeper_builds_on_the_last_theory_answer() -> None:
+    model = FakeModel(("**In breve**: ", "gestisce una risorsa."))
+    brain, notch, _ = make_brain(model)
+    theory, deeper = theory_then_deeper("la matematica")
+    await send(brain, theory, deeper)
+    assert len(model.prompts) == 2
+    assert "explanation of **context manager**" in model.prompts[1].user
+    assert "**In breve**: gestisce una risorsa." in model.prompts[1].user
+    starts = [m for m in notch.received if m["type"] == "answer_start"]
+    assert starts[1]["kind"] == "theory"  # the panel shows it as theory
+    assert starts[1]["title"] == "approfondimento: la matematica"
+
+
+@pytest.mark.anyio
+async def test_deeper_again_goes_below_the_previous_deeper(cloud: FakeModel) -> None:
+    brain, _, _ = make_brain(cloud)
+    theory, deeper = theory_then_deeper()
+    await send(brain, theory, deeper, deeper | {"id": "deeper-2"})
+    assert brain.last_theory is not None and brain.last_theory[0] == "context manager"
+    assert "explanation of **context manager**" in cloud.prompts[2].user
+
+
+@pytest.mark.anyio
+async def test_deeper_with_no_theory_yet_is_a_theory_of_its_own_topic(cloud: FakeModel) -> None:
+    brain, notch, _ = make_brain(cloud)
+    await send(brain, example("trigger.deeper"))
+    assert "theory of: **la matematica**" in cloud.prompts[0].user
+    assert notch.received[0]["kind"] == "theory"
+
+
+@pytest.mark.anyio
+async def test_a_failed_theory_is_not_what_deeper_builds_on() -> None:
+    brain, _, _ = make_brain(FakeModel(("mezza",), fail="quota finita"))
+    await send(brain, example("trigger.theory"))
+    assert brain.last_theory is None
+
+
+@pytest.mark.anyio
+async def test_a_question_does_not_replace_the_theory_to_go_deeper_on(cloud: FakeModel) -> None:
+    brain, _, _ = make_brain(cloud)
+    await send(brain, example("trigger.theory"), example("trigger.question"))
+    assert brain.last_theory is not None and brain.last_theory[0] == "context manager"

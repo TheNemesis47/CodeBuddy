@@ -55,6 +55,12 @@ class PluginFlowTest : BasePlatformTestCase() {
         assertEquals("theory", JsonParser.parseString(sent.single().second).asJsonObject["kind"].asString)
     }
 
+    fun testEnterAfterDeeperSendsADeeperTrigger() {
+        val message = JsonParser.parseString(pressEnterAfter("#!approfondisci la matematica<caret>\nx = 1\n").single().second).asJsonObject
+        assertEquals("deeper", message["kind"].asString)
+        assertEquals("la matematica", message["text"].asString)
+    }
+
     fun testEnterAfterTheoryWithASpaceSendsATrigger() {
         val sent = pressEnterAfter("#! teoria context manager<caret>\nx = 1\n")
         val message = JsonParser.parseString(sent.single().second).asJsonObject

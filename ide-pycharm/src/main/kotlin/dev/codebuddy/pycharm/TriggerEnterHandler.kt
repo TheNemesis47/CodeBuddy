@@ -33,7 +33,7 @@ class TriggerEnterHandler : EnterHandlerDelegateAdapter() {
 }
 
 fun unknownCommandHint(command: String): String =
-    "CodeBuddy: il comando #!$command non esiste. Usa #!teoria <argomento> oppure #? <domanda>."
+    "CodeBuddy: il comando #!$command non esiste. Usa #? <domanda>, #!teoria <argomento> o #!approfondisci."
 
 /** A small hint at the caret; an application service so tests can see what was said. */
 interface EditorHints {

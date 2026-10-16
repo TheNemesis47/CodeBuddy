@@ -2,6 +2,23 @@
 
 Newest first. One entry per non-obvious decision.
 
+## 2026-10-16: Theory goes deep; `#!approfondisci` goes one level further
+
+**Decision.** `prompts/theory.md` asks for 25–45 lines in seven bold parts: in breve, perché
+esiste, come funziona davvero (the mechanism), la matematica (only when real, plain text or
+Unicode, every symbol explained), esempio minimo, nel tuo codice, per approfondire (docs/PEPs by
+name, URLs only on docs.python.org / peps.python.org, the next concept, one exercise). A topic
+phrased as a request ("dimmi la teoria che c'è dietro") means the concept at that line. New
+trigger kind `deeper` (`#!approfondisci`, `#!approfondimento`, `#!deeper`): the brain keeps the
+last finished theory (topic, text) in memory and `prompts/deeper.md` goes below it without
+repeating it; with no theory yet it is a theory of its own topic. The panel shows it as theory.
+The eval's shape check for theory became a depth check. `ANSWER_MAX_TOKENS` 1500 → 3000.
+**Why.** The user found `#!teoria` no different from `#?` (2026-10-16) and wanted the mechanism,
+the math and something to dig further into.
+**Alternatives.** A new answer kind for the UI: one more label for the same panel. Keeping the
+last theory per file: one learner, one thread; per brain is enough.
+**Rollback.** Revert `theory.md`; `deeper` without previous text already falls back to theory.
+
 ## 2026-10-16: The trigger line goes once the brain has it
 
 **Decision.** After Enter on a `#?` / `#!cmd` line, the plugin erases that line once the brain

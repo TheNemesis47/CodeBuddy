@@ -1,17 +1,23 @@
 package dev.codebuddy.pycharm
 
 /** Protocol v0 trigger kinds (`protocol/schemas/trigger.json`). */
-enum class TriggerKind(val wire: String) { QUESTION("question"), THEORY("theory") }
+enum class TriggerKind(val wire: String) { QUESTION("question"), THEORY("theory"), DEEPER("deeper") }
 
 data class Trigger(val kind: TriggerKind, val text: String)
 
 /**
- * Parses the text of one comment: `#? question` or `#!teoria topic`.
+ * Parses the text of one comment: `#? question`, `#!teoria topic` or `#!approfondisci [focus]`.
  * Mirrors `brain/src/buddy/triggers.py`. `# teoria …`, `#!alt` (after the MVP) and an empty `#?`
  * don't fire. Whether the comment is a whole-line comment is decided by [TriggerDetector] via PSI.
  */
 object TriggerParser {
-    private val commands = mapOf("teoria" to TriggerKind.THEORY, "theory" to TriggerKind.THEORY)
+    private val commands = mapOf(
+        "teoria" to TriggerKind.THEORY,
+        "theory" to TriggerKind.THEORY,
+        "approfondisci" to TriggerKind.DEEPER,
+        "approfondimento" to TriggerKind.DEEPER,
+        "deeper" to TriggerKind.DEEPER,
+    )
 
     fun parse(comment: String): Trigger? {
         val s = comment.trim()

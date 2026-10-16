@@ -20,6 +20,7 @@ MAX_USER_CHARS = 28_000
 MAX_HINT_USER_CHARS = 12_000
 MAX_MAP_FILES = 200
 MAX_LINE_CHARS = 400  # minified code: one line could blow the budget alone
+MAX_PREVIOUS_CHARS = 6_000  # the explanation `#!approfondisci` builds on
 
 
 @dataclass(frozen=True)
@@ -39,6 +40,9 @@ class Request:
     window_code: str
     scope: str | None = None
     project: ProjectMap | None = None
+    # `deeper` only: the theory it goes beyond (its topic and the answer the student read).
+    previous_topic: str = ""
+    previous_answer: str = ""
 
 
 @dataclass(frozen=True)
@@ -84,7 +88,15 @@ def _render_user(request: Request, *, with_map: bool) -> str:
         head = _template("question").substitute(
             file=request.file, line=request.line, text=request.text
         )
-    else:
+    elif request.kind == "deeper" and request.previous_answer:
+        head = _template("deeper").substitute(
+            file=request.file,
+            line=request.line,
+            topic=request.previous_topic,
+            focus=f", on: **{request.text}**" if request.text else "",
+            previous=request.previous_answer[:MAX_PREVIOUS_CHARS],
+        )
+    else:  # theory, or `deeper` with no theory before it: the theory prompt is deep already
         topic = request.text or f"the concept used at line {request.line}"
         head = _template("theory").substitute(file=request.file, line=request.line, topic=topic)
 

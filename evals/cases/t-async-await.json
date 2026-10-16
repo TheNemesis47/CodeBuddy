@@ -18,5 +18,5 @@
   "fix_lines": [
     "results = await asyncio.gather(*(download(url) for url in urls))"
   ],
-  "rubric": "Four parts; explains coroutines and the event loop, and that the loop at line 12 awaits one download at a time."
+  "rubric": "Deep shape: what it is, why, how it really works (coroutine objects, the event loop scheduling them, what `await` suspends), a minimal example, that the loop at line 12 awaits one download at a time (in words), and pointers to read next."
 }

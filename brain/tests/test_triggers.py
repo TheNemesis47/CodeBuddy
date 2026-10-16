@@ -14,6 +14,10 @@ from buddy.triggers import ParsedTrigger, parse_trigger_line
         ("#!teoria", ParsedTrigger("theory", "")),
         ("#! teoria context manager", ParsedTrigger("theory", "context manager")),
         ("#!   theory", ParsedTrigger("theory", "")),
+        ("#!approfondisci", ParsedTrigger("deeper", "")),
+        ("#!approfondisci la matematica", ParsedTrigger("deeper", "la matematica")),
+        ("#! Approfondimento", ParsedTrigger("deeper", "")),
+        ("#!deeper bytecode", ParsedTrigger("deeper", "bytecode")),
     ],
 )
 def test_triggers_fire(line: str, expected: ParsedTrigger) -> None:
