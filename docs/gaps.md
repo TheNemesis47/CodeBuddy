@@ -19,7 +19,7 @@ estimate here. **Human** marks what an agent can't finish alone.
 | G7 | Enforce module boundaries automatically | tooling | medium | 1 h | agent |
 | G8 | Sprout final design | feature | medium | — | **Human** |
 | ~~G9~~ | ~~CI on GitHub Actions~~ (done 2026-10-15: gate on 3 OSes, e2e, packages) | tooling | — | — | agent |
-| G15 | Linux/Windows: try the packages on real machines, code signing (v0.1.0 published as pre-release 2026-10-15; Wayland/top-bar report fixed 2026-10-15) | release | blocks testers | 1–2 h | **Human** |
+| G15 | Try the 0.2.0 installers on real machines (dmg, Setup.exe, AppImage), code signing (v0.1.0 pre-release 2026-10-15; installers 2026-10-16) | release | blocks testers | 1–2 h | **Human** |
 | G16 | Evals per answers provider: `buddy eval --triggers` on the provider in the settings (OpenRouter, your server), not only Claude | quality | medium | 2 h | agent |
 | G17 | Try the settings page in your real PyCharm: OpenRouter with a key, your Mac over WireGuard (`allow_remote`), and the panel on Hyprland | feature | medium | 30 min | **Human** |
 | ~~G10~~ | ~~Evals: snippet set + scorer for suggestion quality~~ (done 2026-10-15: score 99.1) | tooling | — | — | agent |
@@ -147,7 +147,12 @@ serve --stub` → overlay); builds the Linux and Windows packages and runs the s
 packaged build; on a `v*` tag it creates a **draft** release only. First green run: 38710592165.
 The original entry: the gate was local only; add an Actions job that runs `./scripts/check`.
 
-## G15: Linux and Windows testers (Human)
+## G15: Testers on every OS (Human)
+
+**Progress (2026-10-16).** 0.2.0 has installers: `CodeBuddy-macos-0.2.0.dmg` (built and run on
+this Mac), `CodeBuddy-Setup-0.2.0.exe` and `CodeBuddy-0.2.0-x86_64.AppImage` (built by CI).
+Left: install each on a real machine, and signing (Apple Developer ID + notarization, Windows
+Authenticode).
 
 **Progress (2026-10-15).** v0.1.0 published as a pre-release with per-OS install notes:
 https://github.com/TheNemesis47/CodeBuddy/releases/tag/v0.1.0 (CI run 38714216496, all green).
@@ -164,6 +169,10 @@ the devlog what was off (panel position, fonts, the brain not finding `claude`, 
 a `v0.1.0` tag, check the draft release CI creates, and publish it yourself.
 
 ## G16: Evals per answers provider
+
+**Since 2026-10-16** hints and reviews use the settings model too, so this matters more: `buddy
+eval` still scores hints on a local engine, not on the settings provider.
+
 
 **Evidence (2026-10-15).** A live `#?` answered by Qwen3-Coder-30B-A3B (llama.cpp, through the
 settings' OpenAI-compatible provider) rewrote the student's line ("Dovrebbe diventare: `with open(path)

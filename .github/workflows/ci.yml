@@ -154,6 +154,7 @@ jobs:
       - name: appimagetool (Linux)
         if: runner.os == 'Linux'
         run: |
+          sudo apt-get install -yq desktop-file-utils  # appimagetool refuses to run without it
           curl -fsSL -o appimagetool https://github.com/AppImage/appimagetool/releases/download/1.9.0/appimagetool-x86_64.AppImage
           chmod +x appimagetool
       - name: Qt and Xvfb (Linux)
