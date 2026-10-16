@@ -28,7 +28,6 @@
       "additionalProperties": false,
       "required": [
         "answers",
-        "hints",
         "network",
         "overlay"
       ],
@@ -85,7 +84,8 @@
             "proactive_cloud": {
               "type": "boolean"
             }
-          }
+          },
+          "description": "Ignored since 0.2 (one model answers everything); an older settings page may still send it."
         },
         "network": {
           "type": "object",
@@ -146,7 +146,8 @@
             "string",
             "null"
           ],
-          "maxLength": 500
+          "maxLength": 500,
+          "description": "Ignored since 0.2, like `settings.hints`."
         }
       }
     }

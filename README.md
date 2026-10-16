@@ -14,12 +14,13 @@ Mac it appears in the notch; on Linux and Windows it uses a small panel.
 |---|---|
 | `#? perché non chiude il file?` + Enter | An answer about the code around that line, streamed into the panel |
 | `#!teoria context manager` + Enter | A short explanation of the concept, tied to your code |
-| *(nothing: you stop typing for 4 s)* | At most one small hint every 3 minutes, from a **local** model only, and only when the code has changed |
+| *(nothing: you stop typing for 4 s)* | At most one small hint every 3 minutes, only when the code has changed |
+| Ctrl+S (Cmd+S) | A short review of the saved file: what's wrong and one or two ways to fix it, in words |
 
-Proactive hints never go to the cloud unless you turn it on. Questions you ask go to Claude through
-your Claude Code subscription by default; in **PyCharm → Settings → Tools → CodeBuddy** you can pick
-OpenRouter or your own OpenAI-compatible server instead (for example your Mac over WireGuard), and
-where the hint engine runs. There are no API keys in this repo.
+One model does all of it: Claude through your Claude Code subscription by default. In **PyCharm →
+Settings → Tools → CodeBuddy** you can pick OpenRouter or your own OpenAI-compatible server instead
+(llama.cpp on this computer keeps your code local; your Mac over WireGuard works too). There are no
+API keys in this repo.
 
 ## Install
 
@@ -37,8 +38,8 @@ Linux and the PyCharm plugin. On a Mac you build from source.
 ```
 PyCharm plugin ──ws──▶ brain (Python, 127.0.0.1:8790) ──ws──▶ notch (macOS, Swift)
                          │                                  └▶ overlay (Linux/Windows, PySide6)
-                         ├── local: llama.cpp :8080 / MTPLX :8000  (proactive hints)
-                         └── cloud: Claude via the `claude` CLI     (your questions)
+                         └── the model in the settings: Claude via the `claude` CLI (default),
+                             OpenRouter, or your own server (llama.cpp, LM Studio…)
 ```
 
 | Folder | What it is |

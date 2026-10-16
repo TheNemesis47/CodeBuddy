@@ -67,3 +67,54 @@ def test_over_budget_drops_map_then_trims_window_but_keeps_the_marked_line() -> 
 def test_very_long_lines_are_cut() -> None:
     minified = replace(REQUEST, line=3, window_code="x = '" + "a" * 100_000 + "'")
     assert len(build_prompt(minified).user) < 2_000
+
+
+SAVED_FILE = "\n".join(
+    [
+        "class Rect:",
+        "    def __init__(self, w, h):",
+        "        self.w = w",
+        "        self.h = h",
+        "",
+        "    def area(self):",
+        "        self.w * self.h",
+    ]
+)
+REVIEW = Request(
+    kind="review",
+    text="",
+    file="src/shapes.py",
+    line=6,
+    language="python",
+    window_start=1,
+    window_code=SAVED_FILE,
+)
+
+
+def test_a_review_shows_the_whole_saved_file_with_the_cursor_marked() -> None:
+    prompt = build_prompt(REVIEW)
+    assert "saved `src/shapes.py`" in prompt.user
+    assert "→    6 |     def area(self):" in prompt.user
+    assert "     1 | class Rect:" in prompt.user and "     7 |" in prompt.user
+
+
+def test_a_review_has_its_own_rules_never_the_fix_and_alternatives() -> None:
+    system = build_prompt(REVIEW).system
+    assert "Answer in italiano." in system
+    assert "Never write the student's code" in system
+    assert "one or two directions" in system
+    assert "✓" in system  # a fine file gets one line, not invented problems
+    assert system != build_prompt(REQUEST).system
+
+
+def test_a_huge_saved_file_is_trimmed_around_the_cursor() -> None:
+    code = "\n".join(f"x{i} = {i}" for i in range(6000))
+    prompt = build_prompt(replace(REVIEW, line=3000, window_code=code))
+    assert len(prompt.user) <= MAX_USER_CHARS
+    assert "→ 3000 | x2999 = 2999" in prompt.user
+
+
+def test_a_review_sees_the_project_map_for_design_problems() -> None:
+    project = ProjectMap(["src/shapes.py", "src/draw.py"], {"src/shapes.py": ["class Rect"]})
+    prompt = build_prompt(replace(REVIEW, project=project))
+    assert "- src/draw.py" in prompt.user

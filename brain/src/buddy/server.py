@@ -10,8 +10,8 @@ import asyncio
 import json
 import logging
 import time
-from collections.abc import Awaitable, Callable
-from typing import Any
+from collections.abc import Awaitable
+from typing import Any, Literal
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from starlette.websockets import WebSocketState
@@ -19,9 +19,8 @@ from starlette.websockets import WebSocketState
 from buddy import __version__
 from buddy.answers import Message, run_answer
 from buddy.auth import token_matches
-from buddy.hints import HintGate, window_key
+from buddy.hints import REVIEW_INTERVAL_S, HintGate, window_key
 from buddy.latency import LatencyLog
-from buddy.local import detect_local_model
 from buddy.models import Model, ModelError
 from buddy.prompting import ProjectMap, Request, RequestKind, build_prompt
 from buddy.protocol import ProtocolError, validate
@@ -54,29 +53,24 @@ class NotchHub:
                 self._clients.discard(ws)
 
 
-type DetectLocal = Callable[[], Awaitable[Model | None]]
-
-
 class Brain:
-    """Routes IDE events to models. Explicit triggers go to the cloud model; `idle` goes to the
-    local engine, or to the cloud only when `proactive_cloud` is on (docs/decisions.md)."""
+    """Routes IDE events to the one model in the settings, local or cloud (docs/decisions.md):
+    triggers always, `idle` through the hint gate, `review` (a save) through the review gate."""
 
     def __init__(
         self,
-        cloud: Model,
+        model: Model,
         answer_language: str = "italiano",
         *,
-        detect_local: DetectLocal = detect_local_model,
-        proactive_cloud: bool = False,
         hints: HintGate | None = None,
+        reviews: HintGate | None = None,
         latency: LatencyLog | None = None,
         settings: SettingsStore | None = None,
     ) -> None:
-        self.cloud = cloud
+        self.model = model
         self.answer_language = answer_language
-        self.detect_local = detect_local
-        self.proactive_cloud = proactive_cloud
         self.hints = hints or HintGate()
+        self.reviews = reviews or HintGate(REVIEW_INTERVAL_S)
         self.latency = latency
         self.settings = settings
         self.notch = NotchHub()
@@ -85,12 +79,10 @@ class Brain:
         self._tasks: set[asyncio.Task[Message | None]] = set()
 
     def apply_settings(self) -> None:
-        """Take the models from the settings: at start and after the settings page saves."""
+        """Take the model from the settings: at start and after the settings page saves."""
         if self.settings is None:
             return
-        self.cloud = self.settings.answers_model()
-        self.detect_local = self.settings.detect_hints()
-        self.proactive_cloud = self.settings.proactive_cloud
+        self.model = self.settings.answers_model()
         for line in self.settings.describe():
             log.info("%s", line)
 
@@ -100,7 +92,9 @@ class Brain:
             case "settings_get" | "settings_set" | "models_get":
                 return await self._settings_request(message)
             case "trigger":
-                self.hints.pause()  # a hint must not replace the answer the student asked for
+                # A hint or a review must not replace the answer the student asked for.
+                self.hints.pause()
+                self.reviews.pause()
                 self._spawn(self._answer(message))
             case "project_map":
                 self.project = ProjectMap(message["tree"], message["symbols"])
@@ -108,7 +102,11 @@ class Brain:
             case "idle":
                 # Checked here, in order: two idle events can't both pass the gate.
                 if self.hints.try_start(window_key(message)):
-                    self._spawn(self._hint(message))
+                    self._spawn(self._proactive(message, "hint"))
+            case "review":
+                if self.reviews.try_start(window_key(message)):
+                    self.hints.pause()  # the review is on screen: no hint on top of it
+                    self._spawn(self._proactive(message, "review"))
             case other:
                 raise ProtocolError(f"{other} is not an ide → brain message")
         return None
@@ -160,7 +158,7 @@ class Brain:
             prompt.estimated_tokens(),
         )
         final = await run_answer(
-            self.cloud,
+            self.model,
             prompt,
             id=trigger["id"],
             kind=trigger["kind"],
@@ -170,33 +168,25 @@ class Brain:
         self._log_latency(final, trigger["kind"])
         return final
 
-    async def _hint(self, idle: dict[str, Any]) -> Message | None:
+    async def _proactive(self, event: dict[str, Any], kind: Literal["hint", "review"]) -> Message:
+        """A hint (after `idle`) or a review (after a save): the student didn't ask in words."""
         started = time.monotonic()
-        model = await self.detect_local()
-        if model is None and self.proactive_cloud:
-            model = self.cloud
-        if model is None:
-            self.hints.undo()  # nothing was shown: the next changed window may try again
-            log.info("idle %s:%s: no local engine, no hint", idle["file"], idle["line"])
-            return None
-        prompt = build_prompt(self._request(idle, "hint", ""), self.answer_language)
+        prompt = build_prompt(self._request(event, kind, ""), self.answer_language)
         log.info(
-            "idle %s:%s → hint on %s ~%d tokens in",
-            idle["file"],
-            idle["line"],
-            model.name,
+            "%s %s:%s → %s on %s ~%d tokens in",
+            event["type"],
+            event["file"],
+            event["line"],
+            kind,
+            self.model.name,
             prompt.estimated_tokens(),
         )
+        title = f"{event['file']}:{event['line']}" if kind == "hint" else event["file"]
         final = await run_answer(
-            model,
-            prompt,
-            id=idle["id"],
-            kind="hint",
-            title=f"{idle['file']}:{idle['line']}",
-            emit=self.notch.broadcast,
+            self.model, prompt, id=event["id"], kind=kind, title=title, emit=self.notch.broadcast
         )
-        log.info("hint %s in %d ms", final["type"], round((time.monotonic() - started) * 1000))
-        self._log_latency(final, "hint")
+        log.info("%s %s in %d ms", kind, final["type"], round((time.monotonic() - started) * 1000))
+        self._log_latency(final, kind)
         return final
 
     def _log_latency(self, final: Message, kind: str) -> None:
@@ -228,13 +218,12 @@ def _error(id_: str | None, message: str) -> Message:
 
 
 def create_app(
-    cloud: Model,
+    model: Model,
     token: str,
     answer_language: str = "italiano",
     *,
-    detect_local: DetectLocal = detect_local_model,
-    proactive_cloud: bool = False,
     hints: HintGate | None = None,
+    reviews: HintGate | None = None,
     latency: LatencyLog | None = None,
     settings: SettingsStore | None = None,
 ) -> FastAPI:
@@ -246,11 +235,10 @@ def create_app(
         openapi_url=None,
     )
     brain = Brain(
-        cloud,
+        model,
         answer_language,
-        detect_local=detect_local,
-        proactive_cloud=proactive_cloud,
         hints=hints,
+        reviews=reviews,
         latency=latency,
         settings=settings,
     )

@@ -9,13 +9,10 @@ import com.intellij.openapi.ui.ComboBox
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPasswordField
-import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.JBTextField
-import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.Row
 import com.intellij.ui.dsl.builder.panel
-import com.intellij.util.ui.JBUI
 import java.util.UUID
 import javax.swing.DefaultComboBoxModel
 import javax.swing.JButton
@@ -43,13 +40,6 @@ class CodeBuddyConfigurable(private val requests: BrainRequests = BrainRequests(
     internal val key = JBPasswordField().apply { columns = KEY_COLUMNS }
     private val keyState = JBLabel()
     private val clearKey = JButton("Remove saved key")
-    internal val hintUrls = JBTextArea(3, 40).apply { border = JBUI.Borders.empty(4) }
-    internal val hintModel = ComboBox<String>().apply { isEditable = true }
-    private val loadHintModels = JButton("Load models")
-    private val hintModelsStatus = JBLabel()
-    internal val hintKey = JBPasswordField().apply { columns = KEY_COLUMNS }
-    private val hintKeyState = JBLabel()
-    internal val proactiveCloud = JBCheckBox("When no hint engine answers, use the answers provider (your code goes there)")
     internal val allowRemote = JBCheckBox("Allow servers on other machines, e.g. your Mac over WireGuard (your code goes there)")
     internal val autoOffset = JBCheckBox("Automatic", true)
     internal val offset = JSpinner(SpinnerNumberModel(0, 0, 2000, 1))
@@ -67,7 +57,6 @@ class CodeBuddyConfigurable(private val requests: BrainRequests = BrainRequests(
         }
         autoOffset.addActionListener { offset.isEnabled = !autoOffset.isSelected }
         loadModels.addActionListener { loadAnswerModels() }
-        loadHintModels.addActionListener { loadHintModels() }
         clearKey.addActionListener {
             selectedProvider().keyName?.let { pendingClears += it }
             key.text = ""
@@ -75,7 +64,7 @@ class CodeBuddyConfigurable(private val requests: BrainRequests = BrainRequests(
         }
         val page = panel {
             row { cell(status).align(AlignX.FILL) }
-            group("Answers to #? and #!teoria") {
+            group("The model (it answers #?, #!teoria, the hints and the review on save)") {
                 row("Provider:") {
                     cell(provider).align(AlignX.FILL)
                         .comment("Claude follows the tutor's rules best; smaller models give away the fix more often.")
@@ -93,22 +82,6 @@ class CodeBuddyConfigurable(private val requests: BrainRequests = BrainRequests(
                     cell(keyState)
                     cell(clearKey)
                 }
-            }
-            group("Proactive hints (after 4 s without typing)") {
-                row("Engines:") {
-                    scrollCell(hintUrls).align(Align.FILL)
-                        .comment("One OpenAI-compatible address per line, asked in order. Default: llama.cpp :8080, MTPLX :8000 on this computer.")
-                }
-                row("Model:") {
-                    cell(hintModel).align(AlignX.FILL).resizableColumn()
-                    cell(loadHintModels)
-                }
-                row("") { cell(hintModelsStatus) }
-                row("API key:") {
-                    cell(hintKey).align(AlignX.FILL).resizableColumn()
-                    cell(hintKeyState)
-                }
-                row { cell(proactiveCloud) }
             }
             group("Network") {
                 row { cell(allowRemote) }
@@ -156,11 +129,10 @@ class CodeBuddyConfigurable(private val requests: BrainRequests = BrainRequests(
             else -> "not set"
         }
         clearKey.isVisible = name != null && loaded?.keysSet?.get(name) == true
-        hintKeyState.text = if (loaded?.keysSet?.get("hints_server") == true) "saved" else "optional"
     }
 
     private fun setEditable(editable: Boolean) {
-        listOf(provider, model, loadModels, url, key, clearKey, hintUrls, hintModel, loadHintModels, hintKey, proactiveCloud, allowRemote, autoOffset)
+        listOf(provider, model, loadModels, url, key, clearKey, allowRemote, autoOffset)
             .forEach { it.isEnabled = editable }
         offset.isEnabled = editable && !autoOffset.isSelected
     }
@@ -212,10 +184,6 @@ class CodeBuddyConfigurable(private val requests: BrainRequests = BrainRequests(
         model.editor.item = s.model
         url.text = s.url
         key.text = ""
-        hintUrls.text = s.hintUrls.joinToString("\n")
-        hintModel.selectedItem = s.hintModel
-        hintKey.text = ""
-        proactiveCloud.isSelected = s.proactiveCloud
         allowRemote.isSelected = s.allowRemote
         autoOffset.isSelected = s.topOffset == null
         offset.value = s.topOffset ?: 0
@@ -233,17 +201,6 @@ class CodeBuddyConfigurable(private val requests: BrainRequests = BrainRequests(
             val id = UUID.randomUUID().toString()
             val reply = requests.ask(id, SettingsMessages.models(id, chosen.wire, url.text.trim(), typedKey))
             onEdt { showModels(reply, model, modelsStatus) }
-        }
-    }
-
-    private fun loadHintModels() {
-        val first = BuddySettings.parseUrls(hintUrls.text).firstOrNull().orEmpty()
-        val typedKey = String(hintKey.password).ifBlank { null }
-        hintModelsStatus.text = "asking…"
-        background {
-            val id = UUID.randomUUID().toString()
-            val reply = requests.ask(id, SettingsMessages.models(id, "hints", first, typedKey))
-            onEdt { showModels(reply, hintModel, hintModelsStatus) }
         }
     }
 
@@ -271,9 +228,6 @@ class CodeBuddyConfigurable(private val requests: BrainRequests = BrainRequests(
         provider = selectedProvider(),
         model = (model.editor.item ?: model.selectedItem)?.toString()?.trim().orEmpty(),
         url = url.text.trim(),
-        hintUrls = BuddySettings.parseUrls(hintUrls.text),
-        hintModel = (hintModel.editor.item ?: hintModel.selectedItem)?.toString()?.trim().orEmpty(),
-        proactiveCloud = proactiveCloud.isSelected,
         allowRemote = allowRemote.isSelected,
         topOffset = if (autoOffset.isSelected) null else (offset.value as Int),
     )
@@ -283,8 +237,6 @@ class CodeBuddyConfigurable(private val requests: BrainRequests = BrainRequests(
         pendingClears.forEach { changes[it] = null }
         val typed = String(key.password).trim()
         selectedProvider().keyName?.let { if (typed.isNotEmpty()) changes[it] = typed }
-        val typedHint = String(hintKey.password).trim()
-        if (typedHint.isNotEmpty()) changes["hints_server"] = typedHint
         return changes
     }
 

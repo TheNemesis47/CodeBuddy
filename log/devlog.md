@@ -2,6 +2,31 @@
 
 Newest first. Terse. Written at the end of every task so the next agent can pick up.
 
+## 2026-10-16 11:40: one model for everything, review on Ctrl+S (branch feat/one-model-and-save-review)
+
+- **From the user (2026-10-16):** "il modello selezionato, che sia locale o che sia in cloud, è
+  quello che deve fare tutto", and a check of the file on Ctrl+S that says what's off and "potresti
+  fare questa cosa, oppure quest'altra".
+- **One model:** `[hints]` (engine list, `proactive_cloud`, `BUDDY_PROACTIVE_CLOUD`, the hint key)
+  removed from `settings.py`/`providers.py`/`keys.py`; `Brain` has one `model`. Old `[hints]`
+  tables, `hints` in `settings_set` and the `hints_server` key are accepted and ignored. The
+  PyCharm page lost its "Proactive hints" group. docs/decisions.md, SPEC.md (US3, routing,
+  criterion 2 annotated), SECURITY.md, AGENTS.md, README/INSTALL updated.
+- **Review on save:** new `review` message (protocol v0, additive: README explains), `answer_start`
+  kind `review`. Plugin: `SaveReviewListener` (AnActionListener on `SaveAll`/`SaveDocument`, so
+  autosave never fires it) + `ReviewDispatcher` (whole file, off the EDT; > 200k chars → the ±60
+  window). Brain: `prompts/review.md`, its own `HintGate(30 s)` keyed on the file text; triggers
+  pause hints and reviews, a review pauses hints. Notch + overlay: a review peeks with a preview
+  like a hint (scenario `review-after-save-peeks-and-opens-on-click`).
+- **Live, Claude Sonnet via `claude -p`, `protocol/examples/review.json`:** found the missing
+  `return` (line 7) and `scale` ignoring `h` (line 10) with two directions each, suggested a
+  `@property` with its trade-off, no corrected line.
+- **Tests:** brain 262 (16 tests of the old local-only routing replaced by tests of the new
+  routing, the review gate, prompt and protocol), plugin 48 → **53**, overlay 117 → **118**, notch
+  42 (the new scenario runs inside the scenario test). Floors raised. `./scripts/check` green.
+- **Still open:** `buddy eval` has no review cases yet; reviews and hints on Claude use quota
+  (rate limits above); try Ctrl+S in the real PyCharm (G13).
+
 ## 2026-10-15 16:25: the panel's monitor, and the pin it needed (branch fix/overlay-hyprland)
 
 - **From the tester's second report** (`~/Work/codebuddy-0.1.1-report.md`, Omarchy, two monitors,

@@ -10,7 +10,7 @@
 | Python toolchain | — | `uv` 0.12 and Python 3.14 are installed |
 | Plugin toolchain | — | JDK 21 is installed; Gradle comes through the wrapper |
 
-## Local models (for proactive hints)
+## Local models (optional: pick one as the model in the settings, and for `buddy eval`)
 
 The engines are managed by AIStatus (`~/Work/ai-menubar`) or by hand. The model choice is explained
 in `~/Work/testM5/MODELS.md`.
@@ -19,8 +19,9 @@ in `~/Work/testM5/MODELS.md`.
   from `~/Documents/AI/models/gguf/`.
 - MTPLX: `mtplx serve` on `:8000` (OpenAI + Anthropic API).
 - Check which one is up: `curl -s localhost:8080/v1/models; curl -s localhost:8000/v1/models`.
-- Proactive hints use whichever is up (Qwen3-Coder-30B-A3B preferred). Without a local engine there
-  are no hints; `BUDDY_PROACTIVE_CLOUD=1 uv run buddy serve` lets them use Claude instead.
+- Since 2026-10-16 hints use the model in the settings, like every other request. To keep
+  everything local, pick "OpenAI-compatible server" with `http://127.0.0.1:8080` in the settings.
+  `buddy eval` still scores hints on whichever engine is up (Qwen3-Coder-30B-A3B preferred).
 - Live idle run through the plugin's code: `BUDDY_PORT=… BUDDY_HOME=… ./gradlew test --rerun -Pe2e
   --tests '*LiveBrainE2ETest.testIdleReachesTheBrain'` with the brain and notch running.
 

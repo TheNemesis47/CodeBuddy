@@ -11,7 +11,7 @@ from typing import Literal
 
 from buddy.triggers import TriggerKind
 
-type RequestKind = TriggerKind | Literal["hint"]
+type RequestKind = TriggerKind | Literal["hint", "review"]
 
 # ~8k input tokens at ~4 chars/token (SPEC.md, criterion 3). Over budget, the project map goes
 # first, then the window shrinks around the marked line.
@@ -57,7 +57,8 @@ def _template(name: str) -> Template:
 
 def build_prompt(request: Request, answer_language: str = "italiano") -> Prompt:
     hint = request.kind == "hint"
-    system = _template("hint" if hint else "system").substitute(language=answer_language)
+    template = {"hint": "hint", "review": "review"}.get(request.kind, "system")
+    system = _template(template).substitute(language=answer_language)
     budget = MAX_HINT_USER_CHARS if hint else MAX_USER_CHARS
     user = _render_user(request, with_map=not hint)
     if len(user) > budget:
@@ -73,6 +74,11 @@ def _render_user(request: Request, *, with_map: bool) -> str:
         head = (
             f"The student stopped typing in `{request.file}` at line {request.line}, marked `→`. "
             "Give one nudge."
+        )
+    elif request.kind == "review":
+        head = (
+            f"The student saved `{request.file}`; the cursor is at line {request.line}, marked "
+            "`→`. Review the file."
         )
     elif request.kind == "question":
         head = _template("question").substitute(

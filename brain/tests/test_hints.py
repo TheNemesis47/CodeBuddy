@@ -1,6 +1,4 @@
-import pytest
-
-from buddy.hints import HINT_INTERVAL_S, HintGate, proactive_cloud_from_env, window_key
+from buddy.hints import HINT_INTERVAL_S, REVIEW_INTERVAL_S, HintGate, window_key
 
 
 class Clock:
@@ -35,16 +33,6 @@ def test_unchanged_code_never_gets_a_second_hint() -> None:
     assert gate.try_start(window_key(idle("x = 1", file="b.py")))  # another file is new code
 
 
-def test_undo_gives_the_slot_back() -> None:
-    clock = Clock()
-    gate = HintGate(clock=clock)
-    assert gate.try_start(window_key(idle("x = 1")))
-    clock.now += 200
-    assert gate.try_start(window_key(idle("x = 2")))
-    gate.undo()  # no engine answered for x = 2
-    assert gate.try_start(window_key(idle("x = 3")))  # x = 1 is still the last real hint
-
-
 def test_an_explicit_answer_pauses_hints_for_the_interval() -> None:
     clock = Clock()
     gate = HintGate(clock=clock)
@@ -54,16 +42,23 @@ def test_an_explicit_answer_pauses_hints_for_the_interval() -> None:
     assert gate.try_start(window_key(idle("x = 1")))
 
 
-@pytest.mark.parametrize(
-    ("env", "expected"),
-    [
-        ({}, False),
-        ({"BUDDY_PROACTIVE_CLOUD": ""}, False),
-        ({"BUDDY_PROACTIVE_CLOUD": "0"}, False),
-        ({"BUDDY_PROACTIVE_CLOUD": "false"}, False),
-        ({"BUDDY_PROACTIVE_CLOUD": "1"}, True),
-        ({"BUDDY_PROACTIVE_CLOUD": " TRUE "}, True),
-    ],
-)
-def test_proactive_cloud_is_off_unless_explicitly_set(env: dict, expected: bool) -> None:
-    assert proactive_cloud_from_env(env) is expected
+def test_a_pause_does_not_count_as_a_hint_for_that_code() -> None:
+    """After the pause, the code the student had before the trigger may still get its hint."""
+    clock = Clock()
+    gate = HintGate(clock=clock)
+    assert gate.try_start(window_key(idle("x = 1")))
+    clock.now += 200
+    gate.pause()
+    clock.now += 180
+    assert not gate.try_start(window_key(idle("x = 1")))  # still the last hinted code
+    assert gate.try_start(window_key(idle("x = 2")))
+
+
+def test_a_review_gate_is_keyed_on_the_whole_saved_file() -> None:
+    clock = Clock()
+    gate = HintGate(REVIEW_INTERVAL_S, clock=clock)
+    assert REVIEW_INTERVAL_S == 30
+    assert gate.try_start(window_key(idle("class A: ...")))
+    clock.now += 30
+    assert not gate.try_start(window_key(idle("class A: ...")))  # saved again, nothing changed
+    assert gate.try_start(window_key(idle("class A:\n    x = 1")))

@@ -28,7 +28,8 @@
       "enum": [
         "question",
         "theory",
-        "hint"
+        "hint",
+        "review"
       ]
     },
     "title": {

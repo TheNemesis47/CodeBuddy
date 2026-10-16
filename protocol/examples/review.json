@@ -1,0 +1,7 @@
+{
+  "v": 0, "type": "review", "id": "d4e5f6a7-0000-4000-8000-000000000001",
+  "file": "src/shapes.py", "line": 9, "language": "python",
+  "window": {"start": 1, "code": "class Rect:\n    def __init__(self, w, h):\n        self.w = w\n        self.h = h\n\n    def area(self):\n        self.w * self.h\n\n    def scale(self, k):\n        return Rect(self.w * k, self.h)\n"},
+  "scope": null,
+  "project": "a1b2c3"
+}

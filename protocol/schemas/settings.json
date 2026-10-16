@@ -31,7 +31,6 @@
       "additionalProperties": false,
       "required": [
         "answers",
-        "hints",
         "network",
         "overlay"
       ],
@@ -61,32 +60,6 @@
               "type": "string",
               "maxLength": 500,
               "description": "openai-compatible only; empty otherwise"
-            }
-          }
-        },
-        "hints": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "urls",
-            "model",
-            "proactive_cloud"
-          ],
-          "properties": {
-            "urls": {
-              "type": "array",
-              "maxItems": 10,
-              "items": {
-                "type": "string",
-                "maxLength": 500
-              }
-            },
-            "model": {
-              "type": "string",
-              "maxLength": 200
-            },
-            "proactive_cloud": {
-              "type": "boolean"
             }
           }
         },
@@ -130,17 +103,13 @@
       "additionalProperties": false,
       "required": [
         "openrouter",
-        "answers_server",
-        "hints_server"
+        "answers_server"
       ],
       "properties": {
         "openrouter": {
           "type": "boolean"
         },
         "answers_server": {
-          "type": "boolean"
-        },
-        "hints_server": {
           "type": "boolean"
         }
       }

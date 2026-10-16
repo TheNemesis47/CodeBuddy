@@ -23,7 +23,6 @@ class SettingsMessagesTest {
         val view = SettingsView.fromMessage(example("settings"))
         assertEquals(Provider.OPENAI_COMPATIBLE, view.settings.provider)
         assertEquals("http://10.0.0.2:8080", view.settings.url)
-        assertEquals(listOf("http://127.0.0.1:8080", "http://10.0.0.2:8080"), view.settings.hintUrls)
         assertTrue(view.settings.allowRemote)
         assertNull(view.settings.topOffset)
         assertEquals(true, view.keysSet["openrouter"])
@@ -66,11 +65,10 @@ class SettingsMessagesTest {
     }
 
     @Test
-    fun engineAddressesAreOnePerLineOrCommaSeparated() {
-        assertEquals(
-            listOf("http://127.0.0.1:8080", "http://10.0.0.2:8080", "http://a:1"),
-            BuddySettings.parseUrls(" http://127.0.0.1:8080\n\nhttp://10.0.0.2:8080 , http://a:1\n"),
-        )
+    fun thereIsNoSeparateHintEngineAnyMore() {
+        // One model answers everything (docs/decisions.md): the page sends no `hints` section.
+        val wire = parse(Json.encode(BuddySettings().toWire()))
+        assertEquals(setOf("answers", "network", "overlay"), wire.keySet())
     }
 
     @Test

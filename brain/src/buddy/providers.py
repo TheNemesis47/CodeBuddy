@@ -1,24 +1,16 @@
-"""Settings → models. The brain asks this for the model that answers `#?` / `#!teoria` and for
-the function that finds the hint engine, and hands it the settings page's changes.
+"""Settings → the model. The brain asks this for the one model that answers every request
+(`#?`, `#!teoria`, proactive hints, the review on save) and hands it the settings page's changes.
 
-Routing stays the brain's (docs/decisions.md): answers go to the provider picked here; hints go
-to the hint engines, and to the answers provider only with `proactive_cloud`.
+One model does everything (docs/decisions.md, 2026-10-16): the one picked here, local or cloud.
 """
 
-from collections.abc import AsyncIterator, Awaitable, Callable, Mapping
+from collections.abc import AsyncIterator, Callable, Mapping
 from pathlib import Path
 from typing import Any
 
 from buddy.claude_cli import ClaudeCliModel
 from buddy.keys import KeyStore
-from buddy.local import (
-    ANSWER_MAX_TOKENS,
-    ANSWER_TIMEOUT_S,
-    PREFERRED_MODEL,
-    OpenAIModel,
-    detect_local_model,
-    list_models,
-)
+from buddy.local import ANSWER_MAX_TOKENS, ANSWER_TIMEOUT_S, OpenAIModel, list_models
 from buddy.models import Model, ModelError, ModelEvent
 from buddy.prompting import Prompt
 from buddy.settings import (
@@ -29,10 +21,7 @@ from buddy.settings import (
     load,
     save,
     to_dict,
-    with_env,
 )
-
-type DetectLocal = Callable[[], Awaitable[Model | None]]
 
 SETTINGS_PAGE = "PyCharm → Settings → Tools → CodeBuddy"
 
@@ -52,7 +41,7 @@ class MissingKeyModel:
 
 
 class SettingsStore:
-    """The settings file + keys + environment, and the models they describe.
+    """The settings file + keys, and the model they describe.
 
     `answers_override` (from `buddy serve --stub` or `--model`) wins over the file for answers,
     as command-line flags win over everything else."""
@@ -61,7 +50,6 @@ class SettingsStore:
         self,
         path: Path,
         keys: KeyStore,
-        env: Mapping[str, str],
         *,
         answers_override: tuple[Model, str] | None = None,
         make_claude: Callable[[str], Model] = ClaudeCliModel,
@@ -69,17 +57,18 @@ class SettingsStore:
     ) -> None:
         self.path = path
         self.keys = keys
-        self._env = env
         self._override = answers_override
         self._make_claude = make_claude
         self._openrouter_url = openrouter_url
         self.saved = load(path)  # raises SettingsError: the brain refuses to start on a bad file
-        self.effective, self.env_overrides = with_env(self.saved, env)
+
+    @property
+    def effective(self) -> Settings:
+        return self.saved
 
     @property
     def overrides(self) -> list[str]:
-        flags = [f"answers → {self._override[1]}"] if self._override else []
-        return flags + self.env_overrides
+        return [f"answers → {self._override[1]}"] if self._override else []
 
     # Models
 
@@ -119,26 +108,9 @@ class SettingsStore:
             case _:
                 return self._make_claude(answers.model)
 
-    def detect_hints(self) -> DetectLocal:
-        hints = self.effective.hints
-        key = self.keys.get("hints_server")
-
-        async def detect() -> Model | None:
-            if not hints.urls:
-                return None
-            return await detect_local_model(
-                hints.urls, preferred=hints.model or PREFERRED_MODEL, api_key=key
-            )
-
-        return detect
-
-    @property
-    def proactive_cloud(self) -> bool:
-        return self.effective.hints.proactive_cloud
-
     def describe(self) -> list[str]:
         """Startup log lines: where the code goes."""
-        answers, hints = self.effective.answers, self.effective.hints
+        answers = self.effective.answers
         where = {
             "claude-code": f"Claude Code CLI ({answers.model})",
             "openrouter": f"OpenRouter ({answers.model})",
@@ -146,13 +118,7 @@ class SettingsStore:
         }[answers.provider]
         if self._override:
             where = f"{self._override[1]} (command line)"
-        hint_where = ", ".join(hints.urls) or "nowhere (no hint engine set)"
-        fallback = " else the answers provider" if hints.proactive_cloud else " only"
-        lines = [
-            f"settings: {self.path}",
-            f"answers (#?, #!teoria) → {where}",
-            f"proactive hints → {hint_where}{fallback}",
-        ]
+        lines = [f"settings: {self.path}", f"every request (#?, #!teoria, hints, review) → {where}"]
         lines += [f"override: {o}" for o in self.overrides]
         remote = self.effective.remote_urls()
         if remote:
@@ -179,7 +145,6 @@ class SettingsStore:
             self.keys.update(keys)
         save(self.path, settings)
         self.saved = settings
-        self.effective, self.env_overrides = with_env(settings, self._env)
         return settings
 
     async def models(self, provider: str, url: str = "", key: str | None = None) -> list[str]:
@@ -190,11 +155,10 @@ class SettingsStore:
                 return list(CLAUDE_MODELS)
             case "openrouter":
                 ids = await list_models(self._openrouter_url, key or self.keys.get("openrouter"))
-            case "openai-compatible" | "hints":
+            case "openai-compatible":
                 if not url:
                     raise ModelError("type the server's address first")
-                name = "answers_server" if provider == "openai-compatible" else "hints_server"
-                ids = await list_models(url, key or self.keys.get(name))
+                ids = await list_models(url, key or self.keys.get("answers_server"))
             case _:
                 raise ModelError(f"unknown provider {provider!r}")
         return sorted(ids, key=str.lower)

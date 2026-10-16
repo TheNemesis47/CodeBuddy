@@ -11,7 +11,7 @@ from buddy.local import ANSWER_MAX_TOKENS, OpenAIModel
 from buddy.models import Done, ModelError, TextDelta
 from buddy.prompting import Prompt
 from buddy.providers import MissingKeyModel, SettingsStore, answers_override_for
-from buddy.settings import Answers, Hints, Network, Settings, SettingsError, save, to_dict
+from buddy.settings import Answers, Network, Settings, SettingsError, save, to_dict
 
 PROMPT = Prompt("system", "user")
 
@@ -22,7 +22,6 @@ def make_store(
     *,
     keys: dict[str, str] | None = None,
     openrouter_url: str = "http://127.0.0.1:9",
-    env: dict[str, str] | None = None,
 ) -> SettingsStore:
     if settings is not None:
         save(tmp_path / "config.toml", settings)
@@ -32,7 +31,6 @@ def make_store(
     return SettingsStore(
         tmp_path / "config.toml",
         key_store,
-        env or {},
         make_claude=lambda model: FakeModel(("claude ", model)),
         openrouter_url=openrouter_url,
     )
@@ -95,18 +93,10 @@ def test_a_remote_engine_shows_where_it_runs() -> None:
     assert OpenAIModel("http://127.0.0.1:8080/v1/", "qwen").base_url == "http://127.0.0.1:8080"
 
 
-@pytest.mark.anyio
-async def test_hint_engines_come_from_the_settings(tmp_path: Path, engine: FakeEngine) -> None:
-    store = make_store(tmp_path, Settings(hints=Hints((engine.url,), "qwen3-coder", False)))
-    store.keys.update({"hints_server": "hint-key"})
-    model = await store.detect_hints()()
-    assert model is not None and model.name == CODER
-    assert engine.headers_seen[-1]["Authorization"] == "Bearer hint-key"
-
-
-@pytest.mark.anyio
-async def test_no_hint_engine_set_means_no_hints(tmp_path: Path) -> None:
-    assert await make_store(tmp_path, Settings(hints=Hints((), "", False))).detect_hints()() is None
+def test_an_old_settings_page_may_still_send_the_hint_engine_key(tmp_path: Path) -> None:
+    store = make_store(tmp_path)
+    store.update(to_dict(Settings()), {"hints_server": "old", "openrouter": "sk-or-1"})
+    assert store.view()["keys"] == {"openrouter": True, "answers_server": False}
 
 
 @pytest.mark.anyio
@@ -116,7 +106,8 @@ async def test_models_for_the_settings_page(tmp_path: Path, engine: FakeEngine) 
     assert await store.models("openrouter", key="sk-try") == [CODER]
     assert engine.headers_seen[-1]["Authorization"] == "Bearer sk-try"
     assert await store.models("openai-compatible", engine.url + "/v1") == [CODER]
-    assert await store.models("hints", engine.url) == [CODER]
+    with pytest.raises(ModelError, match="unknown provider"):
+        await store.models("hints", engine.url)  # no separate hint engine any more
 
 
 @pytest.mark.anyio
@@ -125,7 +116,7 @@ async def test_models_errors_are_messages_for_the_page(tmp_path: Path, closed_ur
     with pytest.raises(ModelError, match="address first"):
         await store.models("openai-compatible", "")
     with pytest.raises(ModelError, match="not reachable"):
-        await store.models("hints", closed_url)
+        await store.models("openai-compatible", closed_url)
 
 
 def test_saving_bad_settings_saves_nothing(tmp_path: Path) -> None:
@@ -164,11 +155,9 @@ def test_command_line_wins_over_the_file(tmp_path: Path) -> None:
     store = SettingsStore(
         tmp_path / "config.toml",
         KeyStore(tmp_path / "keys.json", env={}),
-        {"BUDDY_PROACTIVE_CLOUD": "1"},
         answers_override=override,
     )
     assert store.answers_model().name == "stub"
-    assert store.proactive_cloud is True
     assert any("--stub" in o for o in store.overrides)
-    assert any("BUDDY_PROACTIVE_CLOUD" in o for o in store.view()["overrides"])
+    assert any("--stub" in o for o in store.view()["overrides"])
     assert answers_override_for(None, None) is None

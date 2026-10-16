@@ -30,14 +30,9 @@ def cloud() -> FakeModel:
     return FakeModel(("Perché ", "manca `with`."))
 
 
-async def no_local_engine() -> None:
-    return None
-
-
 @pytest.fixture
 def client(cloud: FakeModel) -> Iterator[TestClient]:
-    # Tests never look for a real engine on :8080/:8000.
-    with TestClient(server.create_app(cloud, TOKEN, detect_local=no_local_engine)) as test_client:
+    with TestClient(server.create_app(cloud, TOKEN)) as test_client:
         yield test_client
 
 
@@ -157,15 +152,14 @@ def test_project_map_is_used_only_when_the_hash_matches(
     assert "Project files" not in cloud.prompts[1].user
 
 
-def test_idle_never_reaches_the_cloud(client: TestClient, cloud: FakeModel) -> None:
-    idle, theory = example("idle"), example("trigger.theory")
+def test_idle_gets_a_hint_from_the_same_model(client: TestClient, cloud: FakeModel) -> None:
+    idle = example("idle")
     with connect(client, "notch") as notch, connect(client, "ide") as ide:
         ide.send_json(idle)
-        ide.send_json(theory)  # handled after idle, so it works as a barrier
-        received = receive_until_end(notch, theory["id"])
-    assert idle["id"] not in {m["id"] for m in received}
+        received = receive_until_end(notch, idle["id"])
+    assert received[0]["type"] == "answer_start" and received[0]["kind"] == "hint"
     assert len(cloud.prompts) == 1
-    assert "theory of: **context manager**" in cloud.prompts[0].user
+    assert "nudge" in cloud.prompts[0].system
 
 
 @pytest.mark.parametrize(
@@ -204,16 +198,9 @@ class Clock:
         return self.now
 
 
-def make_brain(
-    cloud: FakeModel, local: FakeModel | None, *, proactive_cloud: bool = False
-) -> tuple[server.Brain, RecordingSocket, Clock]:
-    async def detect() -> FakeModel | None:
-        return local
-
+def make_brain(model: FakeModel) -> tuple[server.Brain, RecordingSocket, Clock]:
     clock = Clock()
-    brain = server.Brain(
-        cloud, detect_local=detect, proactive_cloud=proactive_cloud, hints=HintGate(clock=clock)
-    )
+    brain = server.Brain(model, hints=HintGate(clock=clock))
     notch = RecordingSocket()
     brain.notch.add(notch)  # type: ignore[arg-type]
     return brain, notch, clock
@@ -232,9 +219,8 @@ async def send(brain: server.Brain, *messages: dict) -> None:
 
 
 @pytest.mark.anyio
-async def test_idle_streams_a_hint_from_the_local_engine(cloud: FakeModel) -> None:
-    local = FakeModel(("Guarda ", "`with`."), is_local=True)
-    brain, notch, _ = make_brain(cloud, local)
+async def test_idle_streams_a_hint_from_the_settings_model(cloud: FakeModel) -> None:
+    brain, notch, _ = make_brain(cloud)
     await send(brain, idle_event(1))
     assert [m["type"] for m in notch.received] == [
         "answer_start",
@@ -244,57 +230,31 @@ async def test_idle_streams_a_hint_from_the_local_engine(cloud: FakeModel) -> No
     ]
     assert notch.received[0]["kind"] == "hint"
     assert notch.received[0]["title"] == "src/load.py:6"
-    assert len(local.prompts) == 1
-    assert "nudge" in local.prompts[0].system
-    assert cloud.prompts == []
-
-
-@pytest.mark.anyio
-async def test_no_local_engine_means_no_hint_and_nothing_to_the_cloud(cloud: FakeModel) -> None:
-    brain, notch, clock = make_brain(cloud, None)
-    for n in range(5):
-        await send(brain, idle_event(n))
-        clock.now += 1000
-    assert notch.received == []
-    assert cloud.prompts == []
-
-
-@pytest.mark.anyio
-async def test_idle_never_reaches_the_cloud_while_proactive_cloud_is_off(cloud: FakeModel) -> None:
-    """Every path: engine up, engine down, engine failing. The cloud model sees only triggers."""
-    for local in (
-        FakeModel(is_local=True),
-        None,
-        FakeModel(("half",), fail="engine crashed", is_local=True),
-    ):
-        brain, _, clock = make_brain(cloud, local)
-        for n in range(3):
-            await send(brain, idle_event(n))
-            clock.now += 1000
-    assert cloud.prompts == []
-
-
-@pytest.mark.anyio
-async def test_proactive_cloud_is_the_only_way_idle_reaches_claude(cloud: FakeModel) -> None:
-    brain, notch, _ = make_brain(cloud, None, proactive_cloud=True)
-    await send(brain, idle_event(1))
     assert len(cloud.prompts) == 1
+    assert "nudge" in cloud.prompts[0].system
+
+
+@pytest.mark.anyio
+async def test_hints_and_triggers_go_to_the_same_model(cloud: FakeModel) -> None:
+    """One model does everything (docs/decisions.md): local or cloud, whatever the settings say."""
+    local = FakeModel(("Guarda.",), is_local=True)
+    for model in (cloud, local):
+        brain, _, _ = make_brain(model)
+        await send(brain, idle_event(1), example("trigger.question"))
+        assert [("nudge" in p.system) for p in model.prompts] == [True, False]
+
+
+@pytest.mark.anyio
+async def test_a_failing_model_ends_the_hint_with_an_error(cloud: FakeModel) -> None:
+    brain, notch, _ = make_brain(FakeModel(("half",), fail="engine crashed", is_local=True))
+    await send(brain, idle_event(1))
+    assert [m["type"] for m in notch.received][-1] == "error"
     assert notch.received[0]["kind"] == "hint"
 
 
 @pytest.mark.anyio
-async def test_proactive_cloud_still_prefers_the_local_engine(cloud: FakeModel) -> None:
-    local = FakeModel(is_local=True)
-    brain, _, _ = make_brain(cloud, local, proactive_cloud=True)
-    await send(brain, idle_event(1))
-    assert len(local.prompts) == 1
-    assert cloud.prompts == []
-
-
-@pytest.mark.anyio
 async def test_one_hint_every_three_minutes_and_only_for_changed_code(cloud: FakeModel) -> None:
-    local = FakeModel(is_local=True)
-    brain, notch, clock = make_brain(cloud, local)
+    brain, notch, clock = make_brain(cloud)
     await send(brain, idle_event(1))  # t = 0: shown
     clock.now += 60
     await send(brain, idle_event(2))  # t = 60 s: changed, but too soon
@@ -306,39 +266,15 @@ async def test_one_hint_every_three_minutes_and_only_for_changed_code(cloud: Fak
     await send(brain, idle_event(3) | {"id": "unchanged"})  # t = 960 s: unchanged since then
     starts = [m["id"] for m in notch.received if m["type"] == "answer_start"]
     assert starts == ["idle-1", "idle-3"]
-    assert len(local.prompts) == 2
-
-
-@pytest.mark.anyio
-async def test_no_engine_does_not_use_up_the_rate_limit(cloud: FakeModel) -> None:
-    local = FakeModel(is_local=True)
-    brain, notch, _ = make_brain(cloud, None)
-    await send(brain, idle_event(1))  # engine down: nothing shown
-    brain.detect_local = lambda: _ready(local)
-    await send(brain, idle_event(2))  # engine up a second later: the hint comes
-    assert [m["id"] for m in notch.received if m["type"] == "answer_start"] == ["idle-2"]
-
-
-async def _ready(model: FakeModel) -> FakeModel:
-    return model
-
-
-@pytest.mark.anyio
-async def test_a_trigger_still_goes_to_the_cloud_with_a_local_engine_up(cloud: FakeModel) -> None:
-    local = FakeModel(is_local=True)
-    brain, _, _ = make_brain(cloud, local)
-    await send(brain, example("trigger.question"))
-    assert len(cloud.prompts) == 1
-    assert local.prompts == []
+    assert len(cloud.prompts) == 2
 
 
 @pytest.mark.anyio
 async def test_no_hint_right_after_a_trigger(cloud: FakeModel) -> None:
     """`#?` + Enter, then 4 s of no typing: the idle hint must not replace the answer."""
-    local = FakeModel(is_local=True)
-    brain, notch, _ = make_brain(cloud, local)
+    brain, notch, _ = make_brain(cloud)
     await send(brain, example("trigger.question"), idle_event(1))
-    assert local.prompts == []
+    assert len(cloud.prompts) == 1
     assert {m["id"] for m in notch.received} == {example("trigger.question")["id"]}
 
 
@@ -347,8 +283,7 @@ async def test_every_answer_and_hint_is_logged_with_its_latency(
     cloud: FakeModel, tmp_path: Path
 ) -> None:
     path = tmp_path / "latency.jsonl"
-    local = FakeModel(("Guarda.",), is_local=True)
-    brain, _, _ = make_brain(cloud, local)
+    brain, _, _ = make_brain(cloud)
     brain.latency = LatencyLog(path)
     await send(brain, idle_event(1), example("trigger.question"))
     records = read_records(path)
@@ -363,7 +298,7 @@ async def test_every_answer_and_hint_is_logged_with_its_latency(
 @pytest.mark.anyio
 async def test_a_failed_answer_is_not_logged(tmp_path: Path) -> None:
     path = tmp_path / "latency.jsonl"
-    brain, notch, _ = make_brain(FakeModel(fail="quota finita"), None)
+    brain, notch, _ = make_brain(FakeModel(fail="quota finita"))
     brain.latency = LatencyLog(path)
     await send(brain, example("trigger.question"))
     assert notch.received[-1]["type"] == "error"
@@ -396,7 +331,7 @@ def test_the_settings_page_reads_the_settings_without_keys(
         reply = request(ide, example("settings_get"))
     assert reply["type"] == "settings"
     assert reply["settings"]["answers"]["provider"] == "claude-code"
-    assert reply["keys"] == {"openrouter": True, "answers_server": False, "hints_server": False}
+    assert reply["keys"] == {"openrouter": True, "answers_server": False}
     assert reply["path"] == str(tmp_path / "config.toml")
     assert "sk-or-very-secret" not in json.dumps(reply)
 
@@ -414,7 +349,7 @@ def test_saving_switches_the_answering_model_at_once(
         with connect(test_client, "ide") as ide:
             reply = request(ide, new)
             assert reply["type"] == "settings" and reply["keys"]["openrouter"] is True
-            assert app.state.brain.cloud.name == "openrouter:z-ai/glm-4.6"
+            assert app.state.brain.model.name == "openrouter:z-ai/glm-4.6"
         with connect(test_client, "notch") as notch, connect(test_client, "ide") as ide:
             trigger = example("trigger.question")
             ide.send_json(trigger)
@@ -427,7 +362,7 @@ def test_saving_switches_the_answering_model_at_once(
 
 def test_bad_settings_get_an_error_and_change_nothing(tmp_path: Path, cloud: FakeModel) -> None:
     app, store = settings_app(tmp_path, cloud)
-    before = app.state.brain.cloud
+    before = app.state.brain.model
     remote = example("settings_set") | {
         "settings": example("settings_set")["settings"] | {"network": {"allow_remote": False}}
     }
@@ -435,7 +370,7 @@ def test_bad_settings_get_an_error_and_change_nothing(tmp_path: Path, cloud: Fak
         reply = request(ide, remote)
     assert reply["type"] == "error" and "allow_remote" in reply["message"]
     assert not (tmp_path / "config.toml").exists()
-    assert app.state.brain.cloud is before
+    assert app.state.brain.model is before
     assert store.effective.answers.provider == "claude-code"
 
 
@@ -459,35 +394,127 @@ def test_a_brain_without_settings_says_so(client: TestClient) -> None:
 
 
 @pytest.mark.anyio
-async def test_hints_never_reach_openrouter_while_proactive_cloud_is_off(
-    tmp_path: Path, engine, closed_url: str
-) -> None:
-    """OpenRouter answers `#?`; the hint engine is down. Idle must not fall back to OpenRouter."""
+async def test_hints_follow_the_model_the_settings_page_picks(tmp_path: Path, engine) -> None:
+    """Pick OpenRouter on the page: from then on the idle hints go there too, like `#?`."""
     from test_providers import make_store
 
-    from buddy.settings import Answers, Hints, Settings
+    from buddy.settings import Answers, Settings, to_dict
 
-    store = make_store(
-        tmp_path,
-        Settings(Answers("openrouter", "z-ai/glm-4.6", ""), Hints((closed_url,), "", False)),
-        keys={"openrouter": "sk-or-1"},
-        openrouter_url=engine.url,
-    )
+    first = FakeModel()
+    store = make_store(tmp_path, keys={"openrouter": "sk-or-1"}, openrouter_url=engine.url)
+    brain = server.Brain(first, settings=store)
+    await send(brain, idle_event(1))
+    assert len(first.prompts) == 1 and engine.requests == []
+    store.update(to_dict(Settings(Answers("openrouter", "z-ai/glm-4.6", ""))))
+    brain.apply_settings()
+    brain.hints = HintGate()
+    await send(brain, idle_event(2))
+    assert len(engine.requests) == 1
+    assert len(first.prompts) == 1
+
+
+# Review on save (Ctrl+S): same model, its own gate.
+
+
+def review_event(n: int, file: str = "src/shapes.py") -> dict:
+    review = example("review")
+    code = review["window"]["code"] + f"# v{n}\n"
+    return review | {"id": f"review-{n}", "file": file, "window": {"start": 1, "code": code}}
+
+
+@pytest.mark.anyio
+async def test_a_save_streams_a_review_of_the_file(cloud: FakeModel) -> None:
+    brain, notch, _ = make_brain(cloud)
+    await send(brain, review_event(1))
+    assert notch.received[0]["type"] == "answer_start"
+    assert notch.received[0]["kind"] == "review"
+    assert notch.received[0]["title"] == "src/shapes.py"
+    assert notch.received[-1]["type"] == "answer_end"
+    assert len(cloud.prompts) == 1
+    assert "saved `src/shapes.py`" in cloud.prompts[0].user
+    assert "self.w * self.h" in cloud.prompts[0].user
+
+
+@pytest.mark.anyio
+async def test_saving_an_unchanged_file_again_gets_no_second_review(cloud: FakeModel) -> None:
+    brain, notch, clock = make_brain(cloud)
+    brain.reviews = HintGate(30, clock=clock)
+    await send(brain, review_event(1))
+    clock.now += 600
+    await send(brain, review_event(1) | {"id": "again"})
+    assert [m["id"] for m in notch.received if m["type"] == "answer_start"] == ["review-1"]
+
+
+@pytest.mark.anyio
+async def test_at_most_one_review_every_30_seconds(cloud: FakeModel) -> None:
+    brain, notch, clock = make_brain(cloud)
+    brain.reviews = HintGate(30, clock=clock)
+    await send(brain, review_event(1))
+    clock.now += 10
+    await send(brain, review_event(2))  # changed, but Ctrl+S again 10 s later
+    clock.now += 20
+    await send(brain, review_event(3))
+    starts = [m["id"] for m in notch.received if m["type"] == "answer_start"]
+    assert starts == ["review-1", "review-3"]
+
+
+@pytest.mark.anyio
+async def test_a_review_never_replaces_the_answer_to_a_question(cloud: FakeModel) -> None:
+    brain, notch, clock = make_brain(cloud)
+    brain.reviews = HintGate(30, clock=clock)
+    await send(brain, example("trigger.question"), review_event(1))
+    assert {m["id"] for m in notch.received} == {example("trigger.question")["id"]}
+    clock.now += 30
+    await send(brain, review_event(2))
+    assert notch.received[-1]["id"] == "review-2"
+
+
+@pytest.mark.anyio
+async def test_no_idle_hint_on_top_of_a_review(cloud: FakeModel) -> None:
+    brain, notch, _ = make_brain(cloud)
+    await send(brain, review_event(1), idle_event(1))
+    assert {m["id"] for m in notch.received} == {"review-1"}
+
+
+def test_a_review_over_the_socket_reaches_the_notch(client: TestClient) -> None:
+    review = example("review")
+    with connect(client, "notch") as notch, connect(client, "ide") as ide:
+        ide.send_json(review)
+        received = receive_until_end(notch, review["id"])
+    assert all(validate(m) for m in received)
+    assert received[0]["kind"] == "review"
+
+
+@pytest.mark.anyio
+async def test_a_failing_model_ends_the_review_with_an_error() -> None:
+    brain, notch, _ = make_brain(FakeModel(("half",), fail="quota finita"))
+    await send(brain, review_event(1))
+    assert notch.received[0]["kind"] == "review"
+    assert notch.received[-1]["type"] == "error"
+    assert "quota finita" in notch.received[-1]["message"]
+
+
+@pytest.mark.anyio
+async def test_reviews_are_logged_with_their_latency(cloud: FakeModel, tmp_path: Path) -> None:
+    brain, _, _ = make_brain(cloud)
+    brain.latency = LatencyLog(tmp_path / "latency.jsonl")
+    await send(brain, review_event(1))
+    assert [(r["kind"], r["id"]) for r in read_records(tmp_path / "latency.jsonl")] == [
+        ("review", "review-1")
+    ]
+
+
+@pytest.mark.anyio
+async def test_reviews_go_to_your_own_server_when_the_settings_pick_it(
+    tmp_path: Path, engine
+) -> None:
+    from test_providers import make_store
+
+    from buddy.settings import Answers, Settings
+
+    store = make_store(tmp_path, Settings(Answers("openai-compatible", CODER, engine.url)))
     brain = server.Brain(FakeModel(), settings=store)
     brain.apply_settings()
-    for n in range(3):
-        await send(brain, idle_event(n))
-        brain.hints = HintGate()  # no rate limit in the way: every idle tries
-    assert engine.requests == []
-    store.update(
-        to_settings_dict(Answers("openrouter", "z-ai/glm-4.6", ""), Hints((closed_url,), "", True))
-    )
-    brain.apply_settings()
-    await send(brain, idle_event(9))
-    assert len(engine.requests) == 1  # proactive_cloud on: now, and only now, it may
-
-
-def to_settings_dict(answers, hints) -> dict:
-    from buddy.settings import Settings, to_dict
-
-    return to_dict(Settings(answers, hints))
+    await send(brain, review_event(1))
+    assert len(engine.requests) == 1
+    assert "saved `src/shapes.py`" in json.dumps(engine.requests[0], ensure_ascii=False)

@@ -2,6 +2,29 @@
 
 Newest first. One entry per non-obvious decision.
 
+## 2026-10-16: One model does everything; Ctrl+S asks for a review
+
+**Decision.** The model picked in the settings (Claude Code, OpenRouter or the user's own
+OpenAI-compatible server, local or not) answers every request: `#?`, `#!teoria`, the proactive
+hint after `idle`, and the new `review` sent when the user presses Ctrl+S / Cmd+S in a Python
+file. The `[hints]` section (hint engine list, `proactive_cloud`, `BUDDY_PROACTIVE_CLOUD`,
+`BUDDY_HINTS_API_KEY`) is gone; an old file's `[hints]` table is ignored, and an old settings
+page's `hints` / `hints_server` fields are accepted and dropped. Reviews have their own gate (only
+a changed file, at most one every 30 s); a trigger pauses hints and reviews, a review pauses
+hints. The plugin listens to the `SaveAll`/`SaveDocument` actions, not to document saves, so
+PyCharm's autosave never asks for a review. A review peeks with a preview like a hint, it doesn't
+open the panel.
+**Why.** The user asked for it (2026-10-16: "il modello selezionato, che sia locale o che sia in
+cloud, è quello che deve fare tutto"). Two models meant two setups and hints that silently did
+nothing without llama.cpp running. Ctrl+S is the user's own gesture, so it may reach the cloud
+model like a trigger. Peeking keeps a frequent Ctrl+S from covering the code.
+**Supersedes** "Proactive suggestions stay local by default" (2026-10-14) and the routing part of
+"How proactive hints are routed" (2026-10-14). With Claude picked, idle hints now send the code
+around the cursor to Claude, at most once every 3 minutes (SECURITY.md).
+**Alternatives.** A per-feature model setting: the user rejected two models. Opening the panel
+on every review: too intrusive for a key pressed this often.
+**Rollback.** `git revert` of the branch `feat/one-model-and-save-review`.
+
 ## 2026-10-15: The panel's monitor comes from the compositor, matched to Qt by connector name
 
 **Decision.** `panel_placement` asks the compositor for its monitors (`hyprctl -j monitors`,
@@ -91,7 +114,7 @@ directory with the prompt on stdin. (4) `httpx2` instead of `httpx` for tests (S
 and ARG_MAX; an empty directory means no CLAUDE.md is loaded. **Rollback.** Each one is local to
 `brain/`.
 
-## 2026-10-14: Proactive suggestions stay local by default
+## 2026-10-14: Proactive suggestions stay local by default (superseded 2026-10-16: one model)
 
 **Decision.** `idle`, bug, function-completed and save events go only to the local engine. A
 `proactive_cloud` setting (default `false`) can send them to Claude. With no local engine running,

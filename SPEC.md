@@ -22,8 +22,8 @@ It is **not** an autocomplete. It never edits my code. It talks; I write.
   about the code around that line.
 - **US2, theory.** I type `#!teoria context manager`. I get a short explanation of the concept
   (what it is, why it exists, a minimal example) tied to my code.
-- **US3, proactive.** I stop typing for a few seconds. Sprout, using the **local** model, peeks out
-  with **one** short hint on how to continue. It shows at most one hint every N minutes, and only if
+- **US3, proactive.** I stop typing for a few seconds. Sprout, using the model in the settings
+  (until 2026-10-16: the **local** model), peeks out with **one** short hint on how to continue. It shows at most one hint every N minutes, and only if
   the code changed since the last one.
 - **US4, demo.** I can run the notch app with no IDE and no model and see every state (hidden,
   peek, expanded with a streamed answer). I use this to work on the UI.
@@ -45,10 +45,9 @@ PyCharm plugin ──ws──▶ brain (Python daemon, 127.0.0.1:8790) ──ws�
   window of the file around the cursor (±60 lines), the enclosing function and class, and the
   project's symbol map (file tree + top-level signatures), which is cached and only resent when it
   changes.
-- **Routing**: `#?` and `#!teoria` go to Claude (Sonnet by default, configurable). The proactive
-  hint goes to the local engine that is running (detected via `/v1/models`, as AIStatus does). If
-  no local engine is up, the proactive hint is **off**. It never silently falls back to the paid
-  API.
+- **Routing** (changed by the user on 2026-10-16, docs/decisions.md): one model, the one in the
+  settings (Claude Sonnet by default), answers `#?`, `#!teoria`, the proactive hint and the review
+  on Ctrl+S. Until then the hint went only to a local engine.
 - **Notch**: a **selective extraction** from Coucou, not a full fork. Coucou has about 55k lines of
   Swift (Stripe, Spotify, voice, phone…). We take only the panel and geometry
   (`IslandWindowController`/`IslandPanel`, `IslandScreenGeometry`, `IslandStateMachine`) and
@@ -170,15 +169,17 @@ def build_question_prompt(trigger: Trigger, project: ProjectMap) -> list[Message
   and fixtures in sync; record measured latency in the devlog.
 - **Ask first:** new dependencies; changing the protocol (bump `v`); using a paid model in an
   automatic path; touching anything outside this folder.
-- **Never:** commit API keys; send code to the cloud without an explicit trigger (proactive =
-  local only); edit the user's code from the plugin; copy Coucou's Mochi, name, icons or sounds.
+- **Never:** commit API keys; send code anywhere the user didn't pick in the settings (since
+  2026-10-16 the picked model gets proactive hints too); edit the user's code from the plugin; copy Coucou's Mochi, name, icons or sounds.
 
 ## Success criteria (MVP)
 
 1. US1: from pressing Enter on `#?` to the **first answer token in the notch: ≤ 3 s** (p50 over 10
    runs, Claude, measured by the brain and written in `answer_end.first_token_ms`).
 2. US3: proactive hint with the local model **≤ 8 s**, at most **1 every 3 minutes**, never sent
-   to the cloud. A test proves that no cloud request leaves the brain for `idle` events.
+   to the cloud. A test proves that no cloud request leaves the brain for `idle` events. (Met on
+   2026-10-14. Since 2026-10-16 the hint uses the settings model, at the user's request; the rate
+   limit and the "only changed code" rule still hold and are tested.)
 3. Context sent per trigger is **≤ 8k input tokens** on this repo (the brain logs it).
 4. `#?` / `#!teoria` lines inside strings or normal comments (`# teoria …`) do **not** fire: the
    plugin has tests for this.

@@ -48,8 +48,8 @@ public enum BrainMessage: Equatable, Sendable {
 }
 
 public enum AnswerKind: String, Sendable {
-    case question, theory, hint
+    case question, theory, hint, review
 
-    /// Explicit requests open the panel; proactive hints only peek.
-    public var isExplicit: Bool { self != .hint }
+    /// Explicit requests open the panel; a proactive hint and the review after a save only peek.
+    public var isExplicit: Bool { self == .question || self == .theory }
 }

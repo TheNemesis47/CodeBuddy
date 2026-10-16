@@ -13,11 +13,12 @@ class AnswerKind(StrEnum):
     QUESTION = "question"
     THEORY = "theory"
     HINT = "hint"
+    REVIEW = "review"
 
     @property
     def is_explicit(self) -> bool:
-        """Explicit requests open the panel; proactive hints only peek."""
-        return self is not AnswerKind.HINT
+        """Explicit requests open the panel; a hint and the review after a save only peek."""
+        return self in (AnswerKind.QUESTION, AnswerKind.THEORY)
 
 
 @dataclass(frozen=True)

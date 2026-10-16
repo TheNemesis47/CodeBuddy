@@ -9,7 +9,7 @@ from buddy.prompting import Prompt
 
 type Message = dict[str, Any]
 type Emit = Callable[[Message], Awaitable[None]]
-type AnswerKind = Literal["question", "theory", "hint"]
+type AnswerKind = Literal["question", "theory", "hint", "review"]
 
 TITLE_CHARS = 80
 

@@ -17,12 +17,12 @@ Every OS needs:
    finds `claude` on your `PATH` (`claude.exe` or `claude.cmd` on Windows).
 2. **PyCharm 2026.2 or newer** with the plugin: Settings → Plugins → ⚙ → *Install Plugin from
    Disk…* → `codebuddy-pycharm-0.1.2.zip` (in the download) → restart PyCharm.
-3. *Optional:* a local model for proactive hints, `llama-server` (llama.cpp) on port 8080, e.g.
-   `llama-server -m Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf --port 8080 -ngl 999 -fa on -c 16384 --jinja`.
-   Without it there are no proactive hints; `#?` and `#!teoria` still work.
-4. *Optional:* **PyCharm → Settings → Tools → CodeBuddy** picks who answers `#?` (Claude Code,
-   OpenRouter with your key, or your own OpenAI-compatible server, e.g. your Mac over a VPN) and
-   where the hint engine runs. Addresses on other machines need "Allow servers on other machines".
+3. *Optional:* **PyCharm → Settings → Tools → CodeBuddy** picks the one model that answers
+   everything (`#?`, `#!teoria`, hints, the review on Ctrl+S): Claude Code (default), OpenRouter
+   with your key, or your own OpenAI-compatible server. For a fully local setup run `llama-server`
+   (llama.cpp) on port 8080, e.g. `llama-server -m Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf --port
+   8080 -ngl 999 -fa on -c 16384 --jinja`, and pick "OpenAI-compatible server" with
+   `http://127.0.0.1:8080`. Addresses on other machines need "Allow servers on other machines".
 
 Then, in a Python file: write `#? perché questo non funziona?` on its own line and press Enter. The
 panel at the top of the screen opens and the answer streams in. Hover the panel to peek at it, click

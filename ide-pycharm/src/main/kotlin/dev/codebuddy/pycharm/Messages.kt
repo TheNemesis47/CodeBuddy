@@ -25,11 +25,16 @@ object Messages {
             ),
         )
 
-    fun idle(id: String, context: CodeContext, projectHash: String?): String =
+    fun idle(id: String, context: CodeContext, projectHash: String?): String = event("idle", id, context, projectHash)
+
+    /** After Ctrl+S: [context]'s window is the whole file. */
+    fun review(id: String, context: CodeContext, projectHash: String?): String = event("review", id, context, projectHash)
+
+    private fun event(type: String, id: String, context: CodeContext, projectHash: String?): String =
         Json.encode(
             linkedMapOf(
                 "v" to VERSION,
-                "type" to "idle",
+                "type" to type,
                 "id" to id,
                 "file" to context.file,
                 "line" to context.line,

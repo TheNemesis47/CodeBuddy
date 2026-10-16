@@ -1,17 +1,13 @@
-"""The user's settings: who answers `#?` / `#!teoria`, where the hint engine is, and the network
-rule. One TOML file, written by the PyCharm settings page through the brain, readable by hand.
+"""The user's settings: the one model that answers everything (`#?`, `#!teoria`, proactive hints,
+the review on save) and the network rule. One TOML file, written by the PyCharm settings page
+through the brain, readable by hand.
 
     # ~/.config/CodeBuddy/config.toml (Linux); ~/Library/Application Support/CodeBuddy (macOS);
     # %LOCALAPPDATA%\\CodeBuddy (Windows). $BUDDY_CONFIG overrides the path.
-    [answers]                       # #? and #!teoria
+    [answers]                       # every request: #?, #!teoria, hints, review on save
     provider = "claude-code"        # "claude-code" | "openrouter" | "openai-compatible"
     model = "sonnet"                # a Claude alias, an OpenRouter id, or the server's model
     url = ""                        # openai-compatible only, e.g. "http://10.0.0.2:8080"
-
-    [hints]                         # proactive hints after 4 s of quiet
-    urls = ["http://127.0.0.1:8080", "http://127.0.0.1:8000"]
-    model = ""                      # "" = prefer Qwen3-Coder, else the engine's first model
-    proactive_cloud = false         # with no hint engine up, hints may use the answers provider
 
     [network]
     allow_remote = false            # needed for any address that is not this computer
@@ -19,28 +15,27 @@ rule. One TOML file, written by the PyCharm settings page through the brain, rea
     [overlay]                       # Linux/Windows panel, read by the overlay at start
     top_offset = "auto"             # or the pixels to leave above it
 
-Precedence: command-line flags > environment variables > this file > defaults. API keys never go
-in this file: they live in `keys.json` next to the brain's token (buddy.keys), or in env vars.
+A `[hints]` table from before 0.2 (a separate hint engine) is ignored: one model does everything
+(docs/decisions.md). Precedence: command-line flags > this file > defaults. API keys never go in
+this file: they live in `keys.json` next to the brain's token (buddy.keys), or in env vars.
 """
 
 import os
 import tomllib
-from collections.abc import Mapping, Sequence
-from dataclasses import asdict, dataclass, field, replace
+from collections.abc import Mapping
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
 import platformdirs
 
-from buddy.local import ENGINE_URLS, is_loopback, normalize_url
+from buddy.local import is_loopback, normalize_url
 
 PROVIDERS = ("claude-code", "openrouter", "openai-compatible")
 CLAUDE_MODELS = ("sonnet", "opus", "haiku")
 DEFAULT_CLAUDE_MODEL = "sonnet"
 OPENROUTER_URL = "https://openrouter.ai/api"
-TRUE_VALUES = {"1", "true", "yes", "on"}
-FALSE_VALUES = {"0", "false", "no", "off"}
 
 
 class SettingsError(ValueError):
@@ -52,13 +47,6 @@ class Answers:
     provider: str = "claude-code"
     model: str = DEFAULT_CLAUDE_MODEL
     url: str = ""
-
-
-@dataclass(frozen=True)
-class Hints:
-    urls: tuple[str, ...] = ENGINE_URLS
-    model: str = ""
-    proactive_cloud: bool = False
 
 
 @dataclass(frozen=True)
@@ -74,17 +62,14 @@ class Overlay:
 @dataclass(frozen=True)
 class Settings:
     answers: Answers = field(default_factory=Answers)
-    hints: Hints = field(default_factory=Hints)
     network: Network = field(default_factory=Network)
     overlay: Overlay = field(default_factory=Overlay)
 
     def remote_urls(self) -> list[str]:
         """Every address the code may be sent to that is not this computer (OpenRouter apart:
         picking it is the consent)."""
-        urls = list(self.hints.urls)
-        if self.answers.provider == "openai-compatible":
-            urls.append(self.answers.url)
-        return list(dict.fromkeys(u for u in urls if u and not is_loopback(u)))
+        url = self.answers.url if self.answers.provider == "openai-compatible" else ""
+        return [url] if url and not is_loopback(url) else []
 
 
 def config_path(env: Mapping[str, str] = os.environ) -> Path:
@@ -128,7 +113,7 @@ def _url(value: str, where: str) -> str:
 
 def from_dict(data: Mapping[str, Any]) -> Settings:
     """Parse and check. Unknown keys are ignored (a newer file read by an older brain)."""
-    answers_t, hints_t = _table(data, "answers"), _table(data, "hints")
+    answers_t = _table(data, "answers")
     network_t, overlay_t = _table(data, "network"), _table(data, "overlay")
 
     provider = _str(answers_t, "answers", "provider", Answers.provider)
@@ -148,19 +133,6 @@ def from_dict(data: Mapping[str, Any]) -> Settings:
     else:
         url = ""
 
-    raw_urls = hints_t.get("urls", list(ENGINE_URLS))
-    if not isinstance(raw_urls, Sequence) or isinstance(raw_urls, str):
-        raise SettingsError("hints.urls must be a list of addresses")
-    urls: list[str] = []
-    for i, item in enumerate(raw_urls):
-        if not isinstance(item, str):
-            raise SettingsError(f"hints.urls[{i}] must be text")
-        if item.strip():
-            urls.append(_url(item, f"hints.urls[{i}]"))
-    for i, item in enumerate(urls):
-        if urlsplit(item).hostname == urlsplit(OPENROUTER_URL).hostname:
-            raise SettingsError(f"hints.urls[{i}]: hints never go to OpenRouter (cloud)")
-
     top = overlay_t.get("top_offset", "auto")
     if top == "auto" or top is None:
         top_offset = None
@@ -171,11 +143,6 @@ def from_dict(data: Mapping[str, Any]) -> Settings:
 
     settings = Settings(
         Answers(provider, model, url),
-        Hints(
-            tuple(dict.fromkeys(urls)),
-            _str(hints_t, "hints", "model", ""),
-            _bool(hints_t, "hints", "proactive_cloud", False),
-        ),
         Network(_bool(network_t, "network", "allow_remote", False)),
         Overlay(top_offset),
     )
@@ -196,25 +163,9 @@ def check_network(settings: Settings) -> None:
 
 def to_dict(settings: Settings) -> dict[str, Any]:
     data = asdict(settings)
-    data["hints"]["urls"] = list(settings.hints.urls)
     top = settings.overlay.top_offset
     data["overlay"]["top_offset"] = "auto" if top is None else top
     return data
-
-
-# Environment overrides (precedence: flags > env > file > defaults).
-
-
-def with_env(settings: Settings, env: Mapping[str, str]) -> tuple[Settings, list[str]]:
-    """Apply the env vars the brain has always read; return what they overrode, for the log and
-    the settings page."""
-    overrides: list[str] = []
-    raw = env.get("BUDDY_PROACTIVE_CLOUD", "").strip().lower()
-    if raw in TRUE_VALUES | FALSE_VALUES:
-        value = raw in TRUE_VALUES
-        settings = replace(settings, hints=replace(settings.hints, proactive_cloud=value))
-        overrides.append(f"hints.proactive_cloud = {str(value).lower()} (BUDDY_PROACTIVE_CLOUD)")
-    return settings, overrides
 
 
 # TOML. tomllib reads; the writer below covers exactly what Settings holds.

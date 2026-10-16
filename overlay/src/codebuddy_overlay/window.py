@@ -33,6 +33,7 @@ KIND_LABEL = {
     AnswerKind.QUESTION: "DOMANDA",
     AnswerKind.THEORY: "TEORIA",
     AnswerKind.HINT: "SUGGERIMENTO",
+    AnswerKind.REVIEW: "REVISIONE",
 }
 STATUS_COLOR = {"✓": "#6bcc6b", "!": "#ff8a65", "off": "#ff8a65", "…": "#bbbbbb", "": "#bbbbbb"}
 # Qt marks markdown code with the generic "monospace" family, which some platforms resolve to a

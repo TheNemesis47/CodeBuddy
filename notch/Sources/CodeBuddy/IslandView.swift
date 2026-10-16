@@ -161,6 +161,7 @@ private struct ExpandedContent: View {
         case .question?: "domanda"
         case .theory?: "teoria"
         case .hint?: "suggerimento"
+        case .review?: "revisione"
         case nil: "CodeBuddy"
         }
     }

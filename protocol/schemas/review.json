@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "codebuddy/protocol/v0/review.json",
+  "title": "review",
+  "description": "ide → brain. The user saved a file with Ctrl+S / Cmd+S; the brain may review it. `window` is the whole file (start 1), `line` the caret.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "v",
+    "type",
+    "id",
+    "file",
+    "line",
+    "language",
+    "window",
+    "scope",
+    "project"
+  ],
+  "properties": {
+    "v": {
+      "const": 0
+    },
+    "type": {
+      "const": "review"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "file": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Path relative to the project root"
+    },
+    "line": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "1-based line of the cursor or trigger"
+    },
+    "language": {
+      "type": "string",
+      "minLength": 1
+    },
+    "window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "code"
+      ],
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "code": {
+          "type": "string",
+          "maxLength": 200000
+        }
+      },
+      "description": "The whole saved file: start is 1"
+    },
+    "scope": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Source of the enclosing function/class, or null"
+    },
+    "project": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Hash of the last project_map sent, or null"
+    }
+  }
+}

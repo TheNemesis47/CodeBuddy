@@ -6,9 +6,9 @@
     A tutor in your Mac's notch. Write <code>#? question</code> or <code>#!teoria topic</code> on its
     own line and press Enter: the question and the code around it go to the local CodeBuddy brain,
     and the answer shows up in the notch. When you stop typing in a Python file for 4 seconds, the
-    code around the cursor goes to the brain too, which may peek out with one short hint from a
-    local model. Settings → Tools → CodeBuddy picks who answers (Claude Code, OpenRouter or your own
-    OpenAI-compatible server) and where the hint engine runs. The plugin never edits your code,
+    code around the cursor goes to the brain too, which may peek out with one short hint. Press Ctrl+S (Cmd+S) and the buddy reviews the saved file. Settings → Tools →
+    CodeBuddy picks the one model that does all of it: Claude Code, OpenRouter or your own
+    OpenAI-compatible server. The plugin never edits your code,
     except for the "CodeBuddy: Clear Triggers" action.
     ]]></description>
 
@@ -25,6 +25,11 @@
         <applicationService serviceInterface="dev.codebuddy.pycharm.BrainSender"
                             serviceImplementation="dev.codebuddy.pycharm.BrainConnection"/>
     </extensions>
+
+    <applicationListeners>
+        <listener class="dev.codebuddy.pycharm.SaveReviewListener"
+                  topic="com.intellij.openapi.actionSystem.ex.AnActionListener"/>
+    </applicationListeners>
 
     <actions>
         <action id="CodeBuddy.ClearTriggers" class="dev.codebuddy.pycharm.ClearTriggersAction"

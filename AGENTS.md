@@ -77,8 +77,9 @@ reserved.
 - Floors in `quality/floors.json` only go up.
 - **Enforced by:** `scripts/ratchet` (run by `scripts/check`).
 
-Also binding (from SPEC.md → Boundaries): no API keys in the repo; proactive suggestions use the
-local model only unless `proactive_cloud` is turned on (see `docs/decisions.md`); a protocol change
+Also binding (from SPEC.md → Boundaries): no API keys in the repo; one model, the one in the
+settings, answers every request, proactive ones included (the user's call, `docs/decisions.md`
+2026-10-16); a protocol change
 bumps `v` and updates `protocol/examples/`.
 
 ## 4. Picking work

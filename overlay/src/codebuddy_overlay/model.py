@@ -7,7 +7,7 @@ from enum import StrEnum
 from codebuddy_overlay.answers import AnswerStore, Event, Status
 from codebuddy_overlay.island import IslandStateMachine, Scheduler, State
 from codebuddy_overlay.markdown import preview
-from codebuddy_overlay.protocol import AnswerKind, BrainMessage
+from codebuddy_overlay.protocol import BrainMessage
 
 PREVIEW_CHARS = 70
 
@@ -41,9 +41,9 @@ class OverlayModel:
 
     @property
     def peek_preview(self) -> str | None:
-        """A hint's opening words while the island peeks; a click opens the whole hint."""
+        """A hint's or a review's opening words while the island peeks; a click opens it."""
         current = self.answers.current
-        if current is None or current.kind is not AnswerKind.HINT:
+        if current is None or current.kind.is_explicit:
             return None
         if current.status is Status.FAILED:
             return None

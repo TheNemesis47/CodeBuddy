@@ -12,17 +12,17 @@ uv run buddy eval --repeat 3                 # score answers on ../evals/cases (
 uv run pytest                                # offline tests (fake models)
 ```
 
-Proactive hints: the plugin sends `idle` after 4 s without typing. The brain answers with one short
-hint (`prompts/hint.md`) from the local engine it finds on `127.0.0.1:8080` (llama.cpp) or `:8000`
-(MTPLX) via `/v1/models`, at most once every 3 minutes and only when the code changed. With no
-local engine there is no hint. `BUDDY_PROACTIVE_CLOUD=1` is the only way a hint can use Claude.
+One model, the one in the settings, answers everything (docs/decisions.md, 2026-10-16).
+Proactive hints: the plugin sends `idle` after 4 s without typing; the brain answers with one short
+hint (`prompts/hint.md`), at most once every 3 minutes and only when the code changed. Review on
+save: Ctrl+S sends `review` with the whole file; the brain answers with `prompts/review.md`, at most
+once every 30 s and only for a changed file. A trigger pauses both; a review pauses hints.
 
 Settings: `config.toml` in the user's config folder (`$BUDDY_CONFIG`; `src/buddy/settings.py`
 documents every key), edited from PyCharm → Settings → Tools → CodeBuddy through the brain.
-Answers come from Claude Code (default), OpenRouter or an OpenAI-compatible server; hint engines
-are a list of addresses. Any address that is not this computer needs `network.allow_remote`, and
+The model is Claude Code (default), OpenRouter or an OpenAI-compatible server. Any address that is not this computer needs `network.allow_remote`, and
 a broken file stops `buddy serve` with the reason. API keys: `keys.json` next to the token, or
-`OPENROUTER_API_KEY` / `BUDDY_ANSWERS_API_KEY` / `BUDDY_HINTS_API_KEY`.
+`OPENROUTER_API_KEY` / `BUDDY_ANSWERS_API_KEY`.
 
 Latency: every finished answer (triggers, hints, `buddy ask`) appends one JSON line (id, kind,
 model, first_token_ms, total_ms, input_tokens) to `$BUDDY_HOME/latency.jsonl`. `buddy latency`

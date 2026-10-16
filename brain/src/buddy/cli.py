@@ -288,7 +288,6 @@ def _serve(args: argparse.Namespace) -> int:
         store = SettingsStore(
             path,
             KeyStore(buddy_home() / KEYS_FILE),
-            os.environ,
             answers_override=answers_override_for(args.model, args.stub),
         )
     except SettingsError as error:

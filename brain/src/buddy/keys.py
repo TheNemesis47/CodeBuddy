@@ -11,12 +11,11 @@ import os
 from collections.abc import Mapping
 from pathlib import Path
 
-NAMES = ("openrouter", "answers_server", "hints_server")
-ENV = {
-    "openrouter": "OPENROUTER_API_KEY",
-    "answers_server": "BUDDY_ANSWERS_API_KEY",
-    "hints_server": "BUDDY_HINTS_API_KEY",
-}
+NAMES = ("openrouter", "answers_server")
+ENV = {"openrouter": "OPENROUTER_API_KEY", "answers_server": "BUDDY_ANSWERS_API_KEY"}
+LEGACY = {
+    "hints_server"
+}  # the hint engine's key before 0.2: an old settings page may still send it
 FILE_NAME = "keys.json"
 
 
@@ -43,6 +42,7 @@ class KeyStore:
 
     def update(self, changes: Mapping[str, str | None]) -> None:
         """Set (text) or clear (None or "") keys; unknown names are refused."""
+        changes = {k: v for k, v in changes.items() if k not in LEGACY}
         unknown = set(changes) - set(NAMES)
         if unknown:
             raise ValueError(f"unknown key: {', '.join(sorted(unknown))}")

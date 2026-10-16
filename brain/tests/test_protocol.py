@@ -9,7 +9,7 @@ EXAMPLES = sorted((REPO / "protocol" / "examples").glob("*.json"))
 
 
 def test_schemas_are_valid_and_found() -> None:
-    assert len(validators()) == 14
+    assert len(validators()) == 15
 
 
 @pytest.mark.parametrize("path", EXAMPLES, ids=lambda p: p.name)
@@ -54,3 +54,10 @@ def test_a_packaged_build_reads_its_bundled_schemas(monkeypatch, tmp_path) -> No
     assert protocol.schema_dir() == tmp_path / "protocol" / "schemas"
     monkeypatch.setenv("BUDDY_PROTOCOL_DIR", str(tmp_path / "x"))
     assert protocol.schema_dir() == tmp_path / "x"
+
+
+def test_a_review_carries_the_file_it_reviews() -> None:
+    review = json.loads((REPO / "protocol" / "examples" / "review.json").read_text("utf-8"))
+    for missing in ("window", "file", "line"):
+        with pytest.raises(ProtocolError, match="review"):
+            validate({k: v for k, v in review.items() if k != missing})

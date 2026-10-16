@@ -6,16 +6,13 @@ from collections.abc import Callable, Mapping
 from typing import Any
 
 HINT_INTERVAL_S = 180.0
-TRUE_VALUES = {"1", "true", "yes", "on"}
-
-
-def proactive_cloud_from_env(env: Mapping[str, str]) -> bool:
-    """`BUDDY_PROACTIVE_CLOUD=1` is the only way an `idle` event can reach Claude. Default off."""
-    return env.get("BUDDY_PROACTIVE_CLOUD", "").strip().lower() in TRUE_VALUES
+# Ctrl+S is pressed often: at most one review every 30 s, and only for a file that changed.
+REVIEW_INTERVAL_S = 30.0
 
 
 def window_key(idle: Mapping[str, Any]) -> str:
-    """What "the code changed" means: the same file and window text give the same key."""
+    """What "the code changed" means: the same file and window text give the same key (for a
+    `review`, the window is the whole file)."""
     text = f"{idle['file']}\0{idle['window']['start']}\0{idle['window']['code']}"
     return hashlib.sha256(text.encode()).hexdigest()
 
@@ -23,8 +20,7 @@ def window_key(idle: Mapping[str, Any]) -> str:
 class HintGate:
     """At most one hint every `interval_s`, and only for code that changed since the last hint.
 
-    `try_start` checks and records in one step, so two idle events can't both pass. `undo` gives
-    the slot back when no hint was produced after all (no local engine).
+    `try_start` checks and records in one step, so two idle events can't both pass.
     """
 
     def __init__(
@@ -43,9 +39,6 @@ class HintGate:
                 return False
         self._previous, self._last = self._last, (key, now)
         return True
-
-    def undo(self) -> None:
-        self._last = self._previous
 
     def pause(self) -> None:
         """An explicit answer just started: no hint on top of it for the next interval."""

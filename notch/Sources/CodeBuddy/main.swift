@@ -112,8 +112,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
             MainActor.assumeIsolated {
                 self?.snapshot(dir.appendingPathComponent("answer-\(id).png"))
-                // A hint only peeks: also click it open, as a person would, and save that too.
-                guard let model = self?.model, model.answers.current?.kind == .hint else { return }
+                // A hint or a review only peeks: also click it open, as a person would, and save that.
+                guard let model = self?.model, model.answers.current?.kind.isExplicit == false else { return }
                 model.click()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
                     MainActor.assumeIsolated { self?.snapshot(dir.appendingPathComponent("answer-\(id)-opened.png")) }
