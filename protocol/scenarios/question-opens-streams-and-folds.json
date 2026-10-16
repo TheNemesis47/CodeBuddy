@@ -1,6 +1,6 @@
 {
   "name": "question-opens-streams-and-folds",
-  "description": "An explicit answer opens the panel, stays open while streaming, folds to peek 20 s after it ends, hides 8 s later.",
+  "description": "An explicit answer peeks (Sprout thinking) until its first token, then opens the panel, stays open while streaming, folds to peek 20 s after it ends, hides 8 s later.",
   "delays": {
     "expanded_to_peek": 20,
     "peek_to_hidden": 8
@@ -26,9 +26,18 @@
     },
     {
       "expect": {
-        "state": "expanded",
+        "state": "peek",
         "mood": "thinking",
         "peek_status": "…"
+      }
+    },
+    {
+      "advance": 10
+    },
+    {
+      "expect": {
+        "state": "peek",
+        "text": ""
       }
     },
     {

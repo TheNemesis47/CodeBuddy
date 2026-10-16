@@ -75,7 +75,11 @@ class OverlayModel:
             self._machine.answer_started(explicit=True)
         elif event is Event.STARTED_HINT:
             self._machine.answer_started(explicit=False)
+        elif event is Event.UPDATED:
+            if self.answers.current is not None and self.answers.current.text:
+                self._machine.answer_has_content()
         elif event is Event.FINISHED:
+            self._machine.answer_has_content()
             self._machine.answer_finished()
         if event is not None:
             self._changed()

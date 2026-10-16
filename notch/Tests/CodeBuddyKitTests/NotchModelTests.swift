@@ -17,10 +17,13 @@ struct NotchModelTests {
     @Test func aQuestionOpensStreamsAndThenFolds() {
         #expect(model.mood == .idle)
         model.handle(.answerStart(id: "a", kind: .question, title: "perché?"))
-        #expect(model.islandState == .expanded)
+        #expect(model.islandState == .peek)  // nothing to read yet: Sprout thinks in the peek
         #expect(model.mood == .thinking)
-        #expect(model.layout == IslandLayout(state: .expanded, notch: notch))
+        model.handle(.answerDelta(id: "a", text: ""))
+        #expect(model.islandState == .peek)  // an empty delta is not a token
         model.handle(.answerDelta(id: "a", text: "Perché…"))
+        #expect(model.islandState == .expanded)
+        #expect(model.layout == IslandLayout(state: .expanded, notch: notch))
         clock.advance(by: 300)
         #expect(model.islandState == .expanded)  // still streaming
         model.handle(.answerEnd(id: "a", model: "m", firstTokenMs: 1, totalMs: 2))

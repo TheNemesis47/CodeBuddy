@@ -39,7 +39,7 @@ public enum DemoScript {
             (1.0, .hover(true)),   // hidden → peek
             (3.0, .hover(false)),
             (4.0, .message(.answerStart(id: answerID, kind: .question,
-                                        title: "perché non chiude il file?"))),  // → expanded
+                                        title: "perché non chiude il file?"))),  // → peek, expanded at the first token
         ]
         var t: TimeInterval = 4.5
         for chunk in chunks(of: answer, size: chunkSize) {

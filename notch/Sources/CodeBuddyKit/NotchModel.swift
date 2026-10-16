@@ -69,8 +69,12 @@ public final class NotchModel {
     public func handle(_ message: BrainMessage) {
         switch answers.apply(message) {
         case .started(let explicit)?: machine.answerStarted(explicit: explicit)
-        case .finished?: machine.answerFinished()
-        case .updated?, nil: break
+        case .updated?:
+            if answers.current?.text.isEmpty == false { machine.answerHasContent() }
+        case .finished?:
+            machine.answerHasContent()
+            machine.answerFinished()
+        case nil: break
         }
     }
 

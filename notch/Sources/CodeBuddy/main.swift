@@ -11,7 +11,7 @@ import CodeBuddyKit
 final class AppDelegate: NSObject, NSApplicationDelegate {
     /// (seconds into the demo, file name): one moment per state of DemoScript.
     static let snapshotMoments: [(TimeInterval, String)] = [
-        (0.5, "1-hidden"), (2.0, "2-peek"), (5.2, "3-expanded-streaming"),
+        (0.5, "1-hidden"), (2.0, "2-peek"), (4.25, "2b-thinking"), (5.2, "3-expanded-streaming"),
         (9.5, "4-expanded-done"), (15.0, "5-peek-after"), (20.0, "6-hidden-after"),
         (22.8, "7-hint-peek"), (25.0, "8-hint-expanded"),
     ]

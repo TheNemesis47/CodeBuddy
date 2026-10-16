@@ -22,6 +22,7 @@ def test_hover_peeks_and_leaving_hides_after_the_delay() -> None:
 def test_explicit_answer_stays_open_while_streaming() -> None:
     m, clock = machine()
     m.answer_started(explicit=True)
+    m.answer_has_content()
     clock.advance(1000)
     assert m.state is State.EXPANDED
     m.answer_finished()
@@ -29,6 +30,26 @@ def test_explicit_answer_stays_open_while_streaming() -> None:
     assert m.state is State.PEEK
     clock.advance(8)
     assert m.state is State.HIDDEN
+
+
+def test_explicit_answer_peeks_until_its_first_token() -> None:
+    m, clock = machine()
+    m.answer_started(explicit=True)
+    assert m.state is State.PEEK and m.waiting_to_open
+    clock.advance(30)  # a slow model: still a peek, never hidden, never an empty panel
+    assert m.state is State.PEEK
+    m.answer_has_content()
+    assert m.state is State.EXPANDED
+    m.collapse()
+    m.answer_has_content()  # later tokens don't reopen a panel the user closed
+    assert m.state is State.PEEK
+
+
+def test_a_click_while_waiting_opens_once() -> None:
+    m, _ = machine()
+    m.answer_started(explicit=True)
+    m.click()
+    assert m.state is State.EXPANDED and not m.waiting_to_open
 
 
 def test_hint_only_peeks() -> None:

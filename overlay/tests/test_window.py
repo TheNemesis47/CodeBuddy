@@ -121,6 +121,7 @@ def test_demo_snapshots_save_one_png_per_state(qapp: QApplication, tmp_path: Pat
     assert names == [
         "demo-1-hidden.png",
         "demo-2-peek.png",
+        "demo-2b-thinking.png",
         "demo-3-expanded-streaming.png",
         "demo-4-expanded-done.png",
         "demo-5-peek-after.png",

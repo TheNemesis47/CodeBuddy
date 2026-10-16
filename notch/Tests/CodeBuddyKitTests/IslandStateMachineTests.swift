@@ -49,6 +49,7 @@ struct IslandStateMachineTests {
 
     @Test func explicitAnswerOpensAndStaysOpenWhileStreaming() {
         machine.answerStarted(explicit: true)
+        machine.answerHasContent()
         #expect(machine.state == .expanded)
         machine.mouseEntered()
         machine.mouseLeft()
@@ -63,6 +64,7 @@ struct IslandStateMachineTests {
 
     @Test func pointerInsideWhenTheAnswerEndsKeepsItOpenUntilItLeaves() {
         machine.answerStarted(explicit: true)
+        machine.answerHasContent()
         machine.mouseEntered()
         machine.answerFinished()
         clock.advance(by: 120)
@@ -70,6 +72,26 @@ struct IslandStateMachineTests {
         machine.mouseLeft()
         clock.advance(by: 20)
         #expect(machine.state == .peek)
+    }
+
+    @Test func explicitAnswerPeeksUntilItsFirstToken() {
+        machine.answerStarted(explicit: true)
+        #expect(machine.state == .peek)
+        #expect(machine.isWaitingToOpen)
+        clock.advance(by: 30)  // Claude is slow today: still a peek, never hidden, never an empty panel
+        #expect(machine.state == .peek)
+        machine.answerHasContent()
+        #expect(machine.state == .expanded)
+        machine.collapse()
+        machine.answerHasContent()  // later tokens don't reopen a panel the user closed
+        #expect(machine.state == .peek)
+    }
+
+    @Test func aClickWhileWaitingOpensOnce() {
+        machine.answerStarted(explicit: true)
+        machine.click()
+        #expect(machine.state == .expanded)
+        #expect(!machine.isWaitingToOpen)
     }
 
     @Test func hintOnlyPeeks() {

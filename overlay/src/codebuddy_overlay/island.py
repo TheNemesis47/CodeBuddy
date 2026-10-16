@@ -74,6 +74,8 @@ class IslandStateMachine:
     ) -> None:
         self.state = State.HIDDEN
         self.mouse_inside = False
+        # An explicit answer has started but has nothing to read yet: it opens on its first token.
+        self.waiting_to_open = False
         self.expanded_to_peek_s = expanded_to_peek_s
         self.peek_to_hidden_s = peek_to_hidden_s
         self.on_transition: Callable[[State, State], None] | None = None
@@ -120,12 +122,14 @@ class IslandStateMachine:
 
     def click(self) -> None:
         """A click opens the island from any closed state."""
+        self.waiting_to_open = False
         if self.state is not State.EXPANDED:
             self._cancel_timers()
             self._transition(State.EXPANDED)
 
     def collapse(self) -> None:
         """The close button: fold to peek right away."""
+        self.waiting_to_open = False
         if self.state is State.EXPANDED:
             self._cancel_timers()
             self._transition(State.PEEK)
@@ -133,13 +137,22 @@ class IslandStateMachine:
                 self._schedule_hide()
 
     def answer_started(self, explicit: bool) -> None:
-        """An explicit answer opens the panel; a proactive hint only peeks."""
+        """Any answer first peeks (Sprout thinking). An explicit one opens the panel at its first
+        token (`answer_has_content`), so an empty panel never covers the code; a hint or a review
+        only peeks. An open panel stays open."""
         self._cancel_timers()
         self.held_open = True
-        if explicit:
-            self._transition(State.EXPANDED)
-        elif self.state is State.HIDDEN:
+        if self.state is State.HIDDEN:
             self._transition(State.PEEK)
+        self.waiting_to_open = explicit and self.state is not State.EXPANDED
+
+    def answer_has_content(self) -> None:
+        """The answer has something to read: its first token, its error, or its end."""
+        if not self.waiting_to_open:
+            return
+        self.waiting_to_open = False
+        self._cancel_timers()
+        self._transition(State.EXPANDED)
 
     def answer_finished(self) -> None:
         self.held_open = False

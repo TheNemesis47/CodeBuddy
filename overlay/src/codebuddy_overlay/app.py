@@ -68,6 +68,7 @@ def demo_snapshots(app: QApplication, out: Path) -> int:
     shots = {
         0.5: "1-hidden",
         2.0: "2-peek",
+        4.25: "2b-thinking",  # the question is sent, no token yet: a peek, not an empty panel
         6.0: "3-expanded-streaming",
         9.0: "4-expanded-done",
         14.5: "5-peek-after",

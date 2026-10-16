@@ -2,6 +2,21 @@
 
 Newest first. Terse. Written at the end of every task so the next agent can pick up.
 
+## 2026-10-16 11:50: the panel opens at the first token (branch feat/ui-open-on-first-token)
+
+- **From the user:** "quando premo invio mi si apre il pannello davanti anche se non ha generato
+  ancora la risposta": the panel should open when the first tokens arrive.
+- **Landed:** both state machines (`IslandStateMachine.swift`, `island.py`): any answer first
+  peeks with Sprout thinking and "…"; an explicit one opens at `answerHasContent` (first non-empty
+  delta, an error, or the end). A click or the close button while waiting cancels the pending
+  open, so later tokens never reopen a panel the user closed; an already open panel stays open.
+  Scenarios: `question-opens-streams-and-folds` now expects peek until the first token (an empty
+  delta is not one); new `an-explicit-answer-that-fails-before-any-token-opens-to-show-why`.
+- **Snapshots** (looked at): new `2b-thinking` moment in both demos, a peek with Sprout and "…"
+  before the first token, then `3-expanded-streaming` with text. Overlay e2e (stub brain) OK.
+- **Tests:** notch 42 → **44**, overlay 118 → **121**; floors raised. Gate green.
+- **Still open:** how it feels on the real screen (G11) with a slow model.
+
 ## 2026-10-16 11:40: one model for everything, review on Ctrl+S (branch feat/one-model-and-save-review)
 
 - **From the user (2026-10-16):** "il modello selezionato, che sia locale o che sia in cloud, è

@@ -32,6 +32,9 @@ public final class IslandStateMachine {
     /// peek → hidden.
     public var peekToHiddenDelay: TimeInterval = 8
 
+    /// An explicit answer has started but has nothing to read yet: it opens on its first token.
+    public private(set) var isWaitingToOpen = false
+
     private let scheduler: Scheduler
     private var hideWork: ScheduledWork?
     private var collapseWork: ScheduledWork?
@@ -67,6 +70,7 @@ public final class IslandStateMachine {
 
     /// A click on the island opens it from any closed state.
     public func click() {
+        isWaitingToOpen = false
         guard state != .expanded else { return }
         cancelTimers()
         transition(to: .expanded)
@@ -74,21 +78,29 @@ public final class IslandStateMachine {
 
     /// The close button: fold to peek right away.
     public func collapse() {
+        isWaitingToOpen = false
         guard state == .expanded else { return }
         cancelTimers()
         transition(to: .peek)
         if !mouseInside { scheduleHide() }
     }
 
-    /// An explicit answer (`#?`, `#!teoria`) opens the panel; a proactive hint only peeks.
+    /// Any answer first peeks (Sprout thinking). An explicit one (`#?`, `#!teoria`) opens the
+    /// panel at its first token ([answerHasContent]), so an empty panel never covers the code;
+    /// a proactive hint or review only peeks. An open panel stays open.
     public func answerStarted(explicit: Bool) {
         cancelTimers()
         isHeldOpen = true
-        if explicit {
-            transition(to: .expanded)
-        } else if state == .hidden {
-            transition(to: .peek)
-        }
+        if state == .hidden { transition(to: .peek) }
+        isWaitingToOpen = explicit && state != .expanded
+    }
+
+    /// The answer has something to read: its first token, its error, or its end.
+    public func answerHasContent() {
+        guard isWaitingToOpen else { return }
+        isWaitingToOpen = false
+        cancelTimers()
+        transition(to: .expanded)
     }
 
     /// Streaming is over (done or failed). The island stays until the user has had time to read.

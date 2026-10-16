@@ -1,0 +1,43 @@
+{
+  "name": "an-explicit-answer-that-fails-before-any-token-opens-to-show-why",
+  "description": "No token ever came (quota, network): the error is something to read, so the panel opens on it.",
+  "delays": {
+    "expanded_to_peek": 20,
+    "peek_to_hidden": 8
+  },
+  "steps": [
+    {
+      "connection": "connected"
+    },
+    {
+      "message": {
+        "v": 0,
+        "type": "answer_start",
+        "id": "a",
+        "kind": "theory",
+        "title": "context manager"
+      }
+    },
+    {
+      "expect": {
+        "state": "peek",
+        "mood": "thinking"
+      }
+    },
+    {
+      "message": {
+        "v": 0,
+        "type": "error",
+        "id": "a",
+        "message": "Claude: quota finita"
+      }
+    },
+    {
+      "expect": {
+        "state": "expanded",
+        "mood": "worried",
+        "peek_status": "!"
+      }
+    }
+  ]
+}
