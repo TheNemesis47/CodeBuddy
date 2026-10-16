@@ -22,6 +22,9 @@ struct IslandView: View {
             .opacity(model.islandState == .hidden && !model.notch.hasNotch ? 0 : 1)
             .contentShape(Rectangle())
             .onTapGesture { model.click() }
+            .contextMenu {
+                Button("Esci da CodeBuddy") { NSApp.terminate(nil) }
+            }
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)

@@ -2,6 +2,23 @@
 
 Newest first. One entry per non-obvious decision.
 
+## 2026-10-16: Real installers on every OS
+
+**Decision.** macOS: `CodeBuddy.app` (the Swift notch in `Contents/MacOS`, the PyInstaller brain
+in `Contents/Resources/brain`; the notch starts it, stops it on quit or SIGTERM, logs it to
+`~/Library/Logs/CodeBuddy/brain.log`; `LSUIElement`, right-click → Esci), ad-hoc signed, in a
+`.dmg` made with `dmgbuild` (build-time only, through `uv run --with`, like PyInstaller: it writes
+the window layout without Finder, so CI can build it). Windows: an Inno Setup 6 `Setup.exe`,
+per-user (no admin), Start menu, optional desktop icon and autostart, uninstaller. Linux: an
+AppImage (appimagetool 1.9.0, downloaded in CI) next to the tarball. The brain also looks for
+`claude` in the installers' folders, because an app opened from the Dock or a menu gets a short
+PATH. Images: `packaging/assets/` (the app icon and scenes from Draw Things, composed with text by
+`packaging/make_art.py`); without them, Sprout drawn by code.
+**Why.** The user asked for "un'applicazione" for every platform, with images.
+**Alternatives.** `create-dmg` (shell, needs Finder/AppleScript: flaky on CI); `.deb`/`.rpm`
+(one per distro family; the AppImage runs on all); MSI via WiX (heavier than Inno for one user).
+**Rollback.** The zip/tar.gz are still built; drop `--installer` in CI.
+
 ## 2026-10-16: Theory goes deep; `#!approfondisci` goes one level further
 
 **Decision.** `prompts/theory.md` asks for 25–45 lines in seven bold parts: in breve, perché

@@ -21,6 +21,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var controller: IslandWindowController?
     private var client: BrainClient?
     private var model: NotchModel?
+    private var brain: Process?
+    private var termSource: DispatchSourceSignal?
 
     init(demo: Bool, snapshotDir: URL?) {
         self.demo = demo
@@ -46,6 +48,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             playDemo(model, loop: snapshotDir == nil)
             if let snapshotDir { takeSnapshots(into: snapshotDir) }
         } else {
+            startBundledBrain()
             let client = BrainClient(endpoint: .fromEnvironment())
             client.onStatus = { [weak model] status in
                 model?.setConnection(status)
@@ -63,6 +66,46 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             client.start()
             self.client = client
         }
+    }
+
+    /// In CodeBuddy.app: start the brain it carries (see BundledBrain). If a brain already runs on
+    /// the port, this one fails to bind and exits, and the client talks to the running one.
+    private func startBundledBrain() {
+        let env = ProcessInfo.processInfo.environment
+        guard let executable = BundledBrain.executable(resources: Bundle.main.resourceURL, environment: env) else { return }
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        let process = Process()
+        process.executableURL = executable
+        process.arguments = ["serve"]
+        process.environment = BundledBrain.environment(env, home: home)
+        let logURL = BundledBrain.logFile(home: home)
+        try? FileManager.default.createDirectory(at: logURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        FileManager.default.createFile(atPath: logURL.path, contents: nil)
+        if let output = try? FileHandle(forWritingTo: logURL) {
+            process.standardOutput = output
+            process.standardError = output
+        }
+        // `kill`, logout, a shutdown: quit properly so the brain stops with the app.
+        signal(SIGTERM, SIG_IGN)
+        let source = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
+        source.setEventHandler { NSApp.terminate(nil) }
+        source.resume()
+        termSource = source
+        do {
+            try process.run()
+            brain = process
+            log("started the bundled brain (pid \(process.processIdentifier)), log in \(logURL.path)")
+        } catch {
+            log("could not start the bundled brain: \(error)")
+        }
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        guard let brain, brain.isRunning else { return }
+        brain.terminate()
+        let deadline = Date().addingTimeInterval(3)
+        while brain.isRunning && Date() < deadline { usleep(50_000) }
+        if brain.isRunning { kill(brain.processIdentifier, SIGKILL) }
     }
 
     /// Plays the demo script, then loops so a person can watch it again.

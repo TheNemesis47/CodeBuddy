@@ -2,6 +2,29 @@
 
 Newest first. Terse. Written at the end of every task so the next agent can pick up.
 
+## 2026-10-16 13:10: installers for macOS, Windows, Linux; 0.2.0 (branch feat/packaging-installers)
+
+- **From the user:** "un'applicazione, per tutte le piattaforme", real installers with images.
+- **Landed:** `packaging/build.py` per OS: macOS → `CodeBuddy.app` (notch release build + brain,
+  Info.plist, AppIcon.icns via iconutil, ad-hoc `codesign --deep`) in `CodeBuddy-macos-0.2.0.dmg`
+  (dmgbuild, background + @2x, Applications link, plugin zip); Windows → `--installer` builds
+  `CodeBuddy-Setup-0.2.0.exe` (`packaging/windows/CodeBuddy.iss`, Italian + English, per-user,
+  Start menu, autostart task, multi-size .ico written without Pillow, wizard BMPs via Qt); Linux →
+  `--installer` builds `CodeBuddy-0.2.0-x86_64.AppImage` (`packaging/linux/AppRun`). The demo
+  snapshot check counts 9 (2b-thinking). CI package job: + macos-latest, Inno via choco if
+  missing, appimagetool 1.9.0 download, uploads .dmg/.exe/.AppImage. Notch: `BundledBrain`
+  (Kit, tested), right-click → "Esci da CodeBuddy", SIGTERM quits cleanly. Brain: `find_claude`
+  falls back to `~/.local/bin`, `~/.claude/local`, `%APPDATA%\npm`, Homebrew. Version 0.2.0 everywhere.
+- **Verified here (macOS):** dmg built (23 MB); mounted: app, Applications link, plugin, Retina
+  background; `codesign -v` ok; the app's demo saved 9 snapshots; run from the bundle with
+  `BUDDY_PORT=8795`: the bundled brain listened, the notch connected, `kill` → app quit → brain
+  stopped ("Finished server process" in brain.log).
+- **Not verified here:** Setup.exe and the AppImage (no Windows/Linux on this Mac): CI builds them.
+  The art is a fallback gradient + Sprout until Draw Things runs (its HTTP API was off).
+- **Tests:** brain 283, notch 47; floors raised. Gate green.
+- **Still open:** Draw Things art (`packaging/assets/raw/`, then `make_art.py`); a CI run of the
+  package jobs; Gatekeeper/SmartScreen still warn (G15, signing is human).
+
 ## 2026-10-16 12:30: deep theory and #!approfondisci (branch feat/brain-deeper-theory)
 
 - **From the user:** a `#!` theory question ("dimmi la teoria che c'è dietro") came back like a

@@ -8,9 +8,10 @@ The prompt goes through stdin, never argv, so it doesn't show up in `ps`.
 
 import asyncio
 import json
+import os
 import shutil
 import tempfile
-from collections.abc import AsyncIterator, Sequence
+from collections.abc import AsyncIterator, Mapping, Sequence
 from pathlib import Path
 
 from buddy.models import Done, ModelError, ModelEvent, TextDelta
@@ -19,11 +20,22 @@ from buddy.prompting import Prompt
 TIMEOUT_S = 120
 
 
-def find_claude() -> list[str]:
-    """The `claude` CLI on PATH. On Windows that is `claude.exe` (native install) or `claude.cmd`
-    (npm); `shutil.which` tries PATHEXT, so both are found. Unresolved, the bare name is kept and
-    the spawn fails with a clear ModelError."""
-    return [shutil.which("claude") or "claude"]
+def install_dirs(home: Path, env: Mapping[str, str]) -> list[str]:
+    """Where Claude Code's installers put `claude`. An app started from the Dock, the Start menu
+    or a desktop entry gets a short PATH without them (macOS: /usr/bin:/bin:/usr/sbin:/sbin)."""
+    dirs = [home / ".local" / "bin", home / ".claude" / "local", home / ".npm-global" / "bin"]
+    if appdata := env.get("APPDATA"):
+        dirs.append(Path(appdata) / "npm")
+    dirs += [Path("/opt/homebrew/bin"), Path("/usr/local/bin")]
+    return [str(d) for d in dirs]
+
+
+def find_claude(home: Path | None = None, env: Mapping[str, str] = os.environ) -> list[str]:
+    """The `claude` CLI on PATH, else in the installers' folders. On Windows that is `claude.exe`
+    (native install) or `claude.cmd` (npm); `shutil.which` tries PATHEXT, so both are found.
+    Unresolved, the bare name is kept and the spawn fails with a clear ModelError."""
+    fallback = os.pathsep.join(install_dirs(home or Path.home(), env))
+    return [shutil.which("claude") or shutil.which("claude", path=fallback) or "claude"]
 
 
 def build_command(prompt: Prompt, model: str, executable: Sequence[str] = ("claude",)) -> list[str]:

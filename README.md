@@ -26,11 +26,11 @@ API keys in this repo.
 ## Install
 
 Download the latest release from
-[Releases](https://github.com/TheNemesis47/CodeBuddy/releases). It has builds for Windows and
-Linux and the PyCharm plugin. On a Mac you build from source.
+[Releases](https://github.com/TheNemesis47/CodeBuddy/releases). It has an installer for each OS
+(a `.dmg` for macOS, `Setup.exe` for Windows, an AppImage for Linux) and the PyCharm plugin.
 
-- **[INSTALL.md](INSTALL.md):** requirements (Claude Code CLI logged in, PyCharm 2026.2+, an
-  optional `llama-server` for hints)
+- **[INSTALL.md](INSTALL.md):** requirements (Claude Code CLI logged in, PyCharm 2026.2+, and
+  optionally a local model)
 - Step-by-step guides: [Windows](docs/install/windows.md) · [Linux](docs/install/linux.md) ·
   [macOS](docs/install/macos.md)
 

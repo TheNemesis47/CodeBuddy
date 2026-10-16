@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key><string>CodeBuddy</string>
+    <key>CFBundleDisplayName</key><string>CodeBuddy</string>
+    <key>CFBundleIdentifier</key><string>dev.codebuddy.notch</string>
+    <key>CFBundleExecutable</key><string>CodeBuddy</string>
+    <key>CFBundleIconFile</key><string>AppIcon</string>
+    <key>CFBundlePackageType</key><string>APPL</string>
+    <key>CFBundleVersion</key><string>@VERSION@</string>
+    <key>CFBundleShortVersionString</key><string>@VERSION@</string>
+    <key>LSMinimumSystemVersion</key><string>14.0</string>
+    <!-- A notch app: no Dock icon, no menu bar. Right-click the island → Esci to quit. -->
+    <key>LSUIElement</key><true/>
+    <key>NSHighResolutionCapable</key><true/>
+    <key>NSHumanReadableCopyright</key><string>CodeBuddy. Panel code adapted from Coucou (MIT), see THIRD_PARTY.md.</string>
+</dict>
+</plist>

@@ -96,8 +96,22 @@ async def test_live_claude() -> None:
 
 def test_claude_is_looked_up_on_path(monkeypatch: pytest.MonkeyPatch) -> None:
     found = str(Path("bin") / "claude.exe")
-    monkeypatch.setattr("shutil.which", lambda name: found if name == "claude" else None)
+    monkeypatch.setattr("shutil.which", lambda name, path=None: found if path is None else None)
     assert find_claude() == [found]
     assert build_command(PROMPT, "sonnet", find_claude())[0] == found
-    monkeypatch.setattr("shutil.which", lambda name: None)
+    monkeypatch.setattr("shutil.which", lambda name, path=None: None)
     assert find_claude() == ["claude"]  # unresolved: the spawn fails with "not installed"
+
+
+def test_claude_is_found_where_the_installer_puts_it_when_path_is_short(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """CodeBuddy.app started from the Dock has PATH=/usr/bin:/bin:/usr/sbin:/sbin."""
+    monkeypatch.setenv("PATH", "/usr/bin:/bin")
+    bin_dir = tmp_path / ".local" / "bin"
+    bin_dir.mkdir(parents=True)
+    claude = bin_dir / ("claude.exe" if os.name == "nt" else "claude")
+    claude.write_text("#!/bin/sh\n", encoding="utf-8")
+    claude.chmod(0o755)
+    found = find_claude(home=tmp_path, env={})
+    assert Path(found[0]).parent == bin_dir

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=CodeBuddy
+Comment=Coding tutor at the top of the screen
+Exec=codebuddy
+Icon=codebuddy
+Terminal=false
+Categories=Development;Education;
+StartupNotify=false

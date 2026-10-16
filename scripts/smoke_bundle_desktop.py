@@ -7,7 +7,7 @@ never read. This runs the built `codebuddy-overlay` with a fake `hyprctl` on PAT
 library path it was started with) and checks the log lines that say what the panel decided.
 
 Linux only, on an X server (CI: xvfb-run). Standard library only.
-Usage: python3 scripts/smoke_bundle_desktop.py dist/CodeBuddy-linux-0.1.2 OUTDIR
+Usage: python3 scripts/smoke_bundle_desktop.py dist/CodeBuddy-linux-0.2.0 OUTDIR
 """
 
 import json

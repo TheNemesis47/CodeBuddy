@@ -42,7 +42,7 @@ when a prompt changes and raise `eval_score` in `quality/floors.json`. Details: 
 - Notch: `swift run CodeBuddy --demo --snapshots /tmp/shots` saves a PNG of every state (no Screen
   Recording permission needed); look at them. `screencapture` needs that permission (G12).
 - Plugin: `./gradlew test` (18 tests, IDE fixture with Python PSI), `./gradlew buildPlugin` →
-  `build/distributions/codebuddy-pycharm-0.1.2.zip`, `./gradlew runIde` opens a sandbox PyCharm.
+  `build/distributions/codebuddy-pycharm-0.2.0.zip`, `./gradlew runIde` opens a sandbox PyCharm.
 - End to end without a human: start `buddy serve` and `swift run CodeBuddy --snapshots /tmp/e2e`
   with the same `BUDDY_PORT`/`BUDDY_HOME`, then
   `cd ide-pycharm && ./gradlew test -Pe2e --tests '*LiveBrainE2ETest*'`. The notch log shows
@@ -60,10 +60,10 @@ when a prompt changes and raise `eval_score` in `quality/floors.json`. Details: 
   running), `--demo`, or `--demo --snapshots DIR`. Headless: `QT_QPA_PLATFORM=offscreen`. Tests:
   `uv run pytest` (also replays `protocol/scenarios`, like the notch's `ScenarioTests`).
 - End to end without Claude: `uv run --project brain python scripts/e2e_overlay.py OUT` (fake trigger
-  client → `buddy serve --stub TEXT` → overlay); add `--bundle dist/CodeBuddy-<os>-0.1.2` to run it
+  client → `buddy serve --stub TEXT` → overlay); add `--bundle dist/CodeBuddy-<os>-0.2.0` to run it
   on a packaged build.
 - Packages: `uv run --project overlay python packaging/build.py --plugin <plugin zip>` →
-  `dist/CodeBuddy-<os>-0.1.2.{zip,tar.gz}` (smoke-tested). Install guides: `INSTALL.md`,
+  `dist/CodeBuddy-<os>-0.2.0.{zip,tar.gz}` (smoke-tested). Install guides: `INSTALL.md`,
   `docs/install/`.
 - CI: `.github/workflows/ci.yml` runs `scripts/check` on ubuntu/windows/macos (Linux under Xvfb),
   uploads overlay snapshots, the Linux e2e and the packages. Pushing a `v*` tag creates a **draft**

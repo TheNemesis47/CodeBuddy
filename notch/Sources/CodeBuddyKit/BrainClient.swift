@@ -42,7 +42,7 @@ public final class BrainClient {
     private var running = false
     private var backoff: TimeInterval = 1
     private static let maxBackoff: TimeInterval = 15
-    private static let client = "codebuddy-notch/0.1.2"
+    private static let client = "codebuddy-notch/0.2.0"
 
     public init(endpoint: BrainEndpoint) {
         self.endpoint = endpoint

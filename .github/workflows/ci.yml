@@ -135,7 +135,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -147,6 +147,15 @@ jobs:
         with:
           name: plugin-zip
           path: plugin
+      - name: Inno Setup (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          if [ ! -f "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" ]; then choco install innosetup -y --no-progress; fi
+      - name: appimagetool (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          curl -fsSL -o appimagetool https://github.com/AppImage/appimagetool/releases/download/1.9.0/appimagetool-x86_64.AppImage
+          chmod +x appimagetool
       - name: Qt and Xvfb (Linux)
         if: runner.os == 'Linux'
         run: |
@@ -158,9 +167,11 @@ jobs:
         env:
           QT_QPA_PLATFORM: ${{ runner.os == 'Linux' && 'xcb' || (runner.os == 'Windows' && 'windows' || 'offscreen') }}
         run: |
-          cmd="uv run --project overlay python packaging/build.py --plugin $(ls plugin/codebuddy-pycharm-*.zip)"
+          cmd="uv run --project overlay python packaging/build.py --plugin $(ls plugin/codebuddy-pycharm-*.zip) --installer"
+          if [ "${{ runner.os }}" = Linux ]; then cmd="$cmd --appimagetool $PWD/appimagetool"; fi
           if [ "${{ runner.os }}" = Linux ]; then xvfb-run -a --server-args="-screen 0 1920x1080x24" $cmd; else $cmd; fi
       - name: End to end on the packaged build
+        if: runner.os != 'macOS'
         env:
           QT_QPA_PLATFORM: ${{ runner.os == 'Linux' && 'xcb' || (runner.os == 'Windows' && 'windows' || 'offscreen') }}
         run: |
@@ -178,6 +189,9 @@ jobs:
           path: |
             dist/*.zip
             dist/*.tar.gz
+            dist/*.exe
+            dist/*.AppImage
+            dist/*.dmg
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -209,4 +223,4 @@ jobs:
         run: |
           gh release create "${GITHUB_REF_NAME}" release/* --repo "${GITHUB_REPOSITORY}" \
             --draft --title "CodeBuddy ${GITHUB_REF_NAME} (testers)" \
-            --notes "Unsigned tester builds for Linux and Windows, plus the PyCharm plugin. See INSTALL.md."
+            --notes "Installers: CodeBuddy-macos-*.dmg (Apple Silicon), CodeBuddy-Setup-*.exe (Windows), CodeBuddy-*-x86_64.AppImage (Linux), plus the portable zip/tar.gz and the PyCharm plugin. Not signed: see INSTALL.md."

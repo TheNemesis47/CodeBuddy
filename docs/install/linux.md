@@ -5,18 +5,27 @@ Wayland (GNOME, KDE, Hyprland, Sway and other wlroots compositors); see "Wayland
 below.
 
 1. Install and log in to the Claude Code CLI (see INSTALL.md); `claude -p "ciao"` must answer.
-2. Unpack and add it to your applications menu:
+2. Make the AppImage executable and start it:
 
    ```sh
-   mkdir -p ~/.local/opt && tar -xzf CodeBuddy-linux-0.1.2.tar.gz -C ~/.local/opt
-   ~/.local/opt/CodeBuddy-linux-0.1.2/install-desktop-entry.sh
+   chmod +x CodeBuddy-0.2.0-x86_64.AppImage && ./CodeBuddy-0.2.0-x86_64.AppImage
    ```
 
-3. Start **CodeBuddy** from the menu, or run `~/.local/opt/CodeBuddy-linux-0.1.2/codebuddy.sh`. A
-   small black pill with a seed appears at the top centre of the screen; the brain starts with it.
+   (or right-click → Properties → "Allow executing as program", then double-click). Without FUSE
+   2 on the system it still runs: `./CodeBuddy-0.2.0-x86_64.AppImage --appimage-extract-and-run`.
+   For a menu entry, use your AppImage manager (Gear Lever, AppImageLauncher) or the tarball
+   below.
+3. A small black pill with a seed appears at the top centre of the screen; the brain starts with it.
 4. Install the plugin in PyCharm: Settings → Plugins → ⚙ → *Install Plugin from Disk…* →
-   `codebuddy-pycharm-0.1.2.zip` → restart.
+   `codebuddy-pycharm-0.2.0.zip` → restart.
 5. In a `.py` file write `#? cosa fa questa riga?` and press Enter.
+
+Tarball instead, with a menu entry:
+
+```sh
+mkdir -p ~/.local/opt && tar -xzf CodeBuddy-linux-0.2.0.tar.gz -C ~/.local/opt
+~/.local/opt/CodeBuddy-linux-0.2.0/install-desktop-entry.sh
+```
 
 Quit: right-click the panel → *Esci da CodeBuddy*. If Qt complains about the `xcb` platform plugin,
 install `libxcb-cursor0` (Debian/Ubuntu), `xcb-util-cursor` (Fedora, Arch). Logs: run

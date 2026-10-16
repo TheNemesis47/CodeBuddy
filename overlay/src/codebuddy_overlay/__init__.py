@@ -4,4 +4,4 @@ Pure logic (protocol, island state machine, answers, preview, model) mirrors
 `notch/Sources/CodeBuddyKit`; `protocol/scenarios` keeps the two in step.
 """
 
-__version__ = "0.1.2"
+__version__ = "0.2.0"

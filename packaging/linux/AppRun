@@ -1,0 +1,5 @@
+#!/bin/sh
+# CodeBuddy AppImage: the overlay starts the brain and stops it when you quit (right-click → Esci).
+here="$(dirname "$(readlink -f "$0")")"
+exec "$here/usr/lib/codebuddy/overlay/codebuddy-overlay" \
+  --start-brain "\"$here/usr/lib/codebuddy/brain/buddy\" serve" "$@"

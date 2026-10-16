@@ -4,11 +4,11 @@ CodeBuddy has three parts: the **brain** (a local daemon that asks Claude or a l
 **panel** where answers appear (the notch on a Mac, a small overlay at the top of the screen on
 Linux and Windows) and the **PyCharm plugin** that sends your `#?` questions.
 
-| OS | Download | Guide |
-|---|---|---|
-| Windows 10/11 (x64) | `CodeBuddy-windows-0.1.2.zip` | [docs/install/windows.md](docs/install/windows.md) |
-| Linux (x64, glibc ≥ 2.34: Ubuntu 22.04+, Fedora 36+) | `CodeBuddy-linux-0.1.2.tar.gz` | [docs/install/linux.md](docs/install/linux.md) |
-| macOS 14+ | from source (Swift notch) | [docs/install/macos.md](docs/install/macos.md) |
+| OS | Installer | Portable | Guide |
+|---|---|---|---|
+| macOS 14+ (Apple Silicon) | `CodeBuddy-macos-0.2.0.dmg` | — | [docs/install/macos.md](docs/install/macos.md) |
+| Windows 10/11 (x64) | `CodeBuddy-Setup-0.2.0.exe` | `CodeBuddy-windows-0.2.0.zip` | [docs/install/windows.md](docs/install/windows.md) |
+| Linux (x64, glibc ≥ 2.34: Ubuntu 22.04+, Fedora 36+) | `CodeBuddy-0.2.0-x86_64.AppImage` | `CodeBuddy-linux-0.2.0.tar.gz` | [docs/install/linux.md](docs/install/linux.md) |
 
 Every OS needs:
 
@@ -16,7 +16,7 @@ Every OS needs:
    once and log in with your subscription. `claude -p "ciao"` in a terminal must answer. The brain
    finds `claude` on your `PATH` (`claude.exe` or `claude.cmd` on Windows).
 2. **PyCharm 2026.2 or newer** with the plugin: Settings → Plugins → ⚙ → *Install Plugin from
-   Disk…* → `codebuddy-pycharm-0.1.2.zip` (in the download) → restart PyCharm.
+   Disk…* → `codebuddy-pycharm-0.2.0.zip` (in the download) → restart PyCharm.
 3. *Optional:* **PyCharm → Settings → Tools → CodeBuddy** picks the one model that answers
    everything (`#?`, `#!teoria`, hints, the review on Ctrl+S): Claude Code (default), OpenRouter
    with your key, or your own OpenAI-compatible server. For a fully local setup run `llama-server`
@@ -26,9 +26,10 @@ Every OS needs:
 
 Then, in a Python file: write `#? perché questo non funziona?` on its own line and press Enter. The
 panel at the top of the screen opens and the answer streams in. Hover the panel to peek at it, click
-to open it, right-click → *Esci da CodeBuddy* to quit (Linux/Windows).
+to open it, right-click → *Esci da CodeBuddy* to quit (it stops the brain too).
 
 Data: the brain keeps its token and `latency.jsonl` in `~/.local/share/CodeBuddy` (Linux),
 `%LOCALAPPDATA%\CodeBuddy` (Windows) or `~/Library/Application Support/CodeBuddy` (macOS). It only
-listens on 127.0.0.1; see SECURITY.md. The builds are **not code-signed** yet: Windows SmartScreen
-and some Linux desktops will warn the first time.
+listens on 127.0.0.1; see SECURITY.md. The builds are **not code-signed** yet: macOS Gatekeeper,
+Windows SmartScreen and some Linux desktops will warn the first time (each guide says how to get
+past it).
