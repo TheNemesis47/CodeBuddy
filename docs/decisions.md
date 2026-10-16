@@ -2,6 +2,20 @@
 
 Newest first. One entry per non-obvious decision.
 
+## 2026-10-16: The trigger line goes once the brain has it
+
+**Decision.** After Enter on a `#?` / `#!cmd` line, the plugin erases that line once the brain
+has received the trigger (the delivery callback of `BrainSender.send`). The line is marked with a
+`RangeMarker` on the EDT at Enter, the context is built with it still in place (the brain sees
+the question in the code), and the erase runs on the EDT as its own undoable command. Nothing is
+erased when the brain is down, or when PSI no longer sees a trigger on that line.
+**Why.** The user asked for it (2026-10-16): lines left behind after several tries took a lot of
+room. Golden rule 2 is about the user's code; a trigger line is a message to the buddy, and the
+explicit Clear Triggers action already removed them.
+**Alternatives.** Erasing at Enter, before sending: a brain that is down would lose the question.
+A setting to keep the lines: not asked for; Ctrl+Z covers the "I wanted it back" case.
+**Rollback.** Pass no marker in `TriggerEnterHandler`.
+
 ## 2026-10-16: One model does everything; Ctrl+S asks for a review
 
 **Decision.** The model picked in the settings (Claude Code, OpenRouter or the user's own

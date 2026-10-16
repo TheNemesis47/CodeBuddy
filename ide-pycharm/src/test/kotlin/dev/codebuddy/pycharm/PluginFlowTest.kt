@@ -5,6 +5,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.testFramework.PlatformTestUtil
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.testFramework.replaceService
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import java.io.File
@@ -78,6 +79,54 @@ class PluginFlowTest : BasePlatformTestCase() {
         assertEmpty(pressEnterAfter("#!/usr/bin/env python3<caret>\n"))
         assertEquals(1, pressEnterAfter("#!teoria x<caret>\n").size) // a known command: a trigger, no hint
         assertEquals(1, hints.size)
+    }
+
+    // --- the trigger line goes once the brain has it ---------------------------------------
+
+    fun testTheTriggerLineIsErasedOnceSentAndTheCaretStaysOnTheNewLine() {
+        pressEnterAfter("def load(path):\n    #? perché non chiude il file?<caret>\n    return open(path)\n")
+        assertEquals("def load(path):\n    \n    return open(path)\n", myFixture.editor.document.text)
+        assertEquals(1, myFixture.editor.caretModel.logicalPosition.line)
+        assertEquals(1, sender.sent.size) // the question went with the line still in its context
+        assertTrue(sender.sent[0].second.contains("#? perché non chiude il file?"))
+    }
+
+    fun testCtrlZBringsTheTriggerLineBack() {
+        pressEnterAfter("#!teoria context manager<caret>\nx = 1\n")
+        assertEquals("\nx = 1\n", myFixture.editor.document.text)
+        myFixture.performEditorAction("\$Undo")
+        assertTrue(myFixture.editor.document.text.startsWith("#!teoria context manager"))
+    }
+
+    fun testWithTheBrainDownTheLineStays() {
+        ApplicationManager.getApplication().replaceService(
+            BrainSender::class.java,
+            object : BrainSender {
+                override fun send(map: ProjectMap, message: String) {}
+                override fun send(map: ProjectMap, message: String, delivered: (Boolean) -> Unit) = delivered(false)
+            },
+            testRootDisposable,
+        )
+        pressEnterAfter("#? perché?<caret>\nx = 1\n")
+        assertEquals("#? perché?\n\nx = 1\n", myFixture.editor.document.text)
+    }
+
+    fun testALineEditedBeforeTheEraseIsNotTouched() {
+        myFixture.configureByText("load.py", "#? perché?\nx = 1\n")
+        val document = myFixture.editor.document
+        val marker = document.createRangeMarker(0, document.getLineEndOffset(0))
+        WriteCommandAction.runWriteCommandAction(project) { document.replaceString(0, 2, "y =") }
+        TriggerEraser.erase(project, document, marker)
+        assertEquals("y = perché?\nx = 1\n", document.text)
+        assertFalse(marker.isValid)
+    }
+
+    fun testNormalLinesAreNeverErased() {
+        for (text in listOf("# teoria context manager<caret>\n", "x = 1  #? trailing<caret>\n", "s = \"\"\"\n#? in a string<caret>\n\"\"\"\n")) {
+            pressEnterAfter(text)
+            val line = text.substringBefore("<caret>").substringAfterLast('\n')
+            assertTrue(line, myFixture.editor.document.text.contains(line))
+        }
     }
 
     fun testEnterAfterNormalLinesSendsNothing() {

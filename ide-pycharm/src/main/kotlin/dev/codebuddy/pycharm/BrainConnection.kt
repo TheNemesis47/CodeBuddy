@@ -47,6 +47,12 @@ data class BrainConfig(val uri: URI, val tokenFile: Path) {
 interface BrainSender {
     /** Fire-and-forget, never blocks the caller. [map] goes first when the brain hasn't seen it. */
     fun send(map: ProjectMap, message: String)
+
+    /** Like [send]; then [delivered] runs, on a background thread, with whether the brain got it. */
+    fun send(map: ProjectMap, message: String, delivered: (Boolean) -> Unit) {
+        send(map, message)
+        delivered(true)
+    }
 }
 
 /** Decides when `project_map` must be (re)sent: when it changed, or on a new connection. */
@@ -80,15 +86,21 @@ class BrainConnection : BrainSender, Disposable {
         executor.execute { deliver(map, message) }
     }
 
-    private fun deliver(map: ProjectMap, message: String) {
+    override fun send(map: ProjectMap, message: String, delivered: (Boolean) -> Unit) {
+        executor.execute { delivered(deliver(map, message)) }
+    }
+
+    private fun deliver(map: ProjectMap, message: String): Boolean {
         try {
-            val ws = open() ?: return
+            val ws = open() ?: return false
             for (text in tracker.messagesFor(map, message)) {
                 ws.sendText(text, true).get(SEND_TIMEOUT_S, TimeUnit.SECONDS)
             }
+            return true
         } catch (e: Exception) {
             log.debug("brain unreachable, dropping message: ${e.message}")
             drop()
+            return false
         }
     }
 

@@ -59,9 +59,12 @@ The user is coding. A frozen PyCharm costs more than any hint is worth.
 ### 2. Never edit the user's code
 
 The buddy talks, the user writes. That is the whole teaching model.
-- The plugin reads documents. The only write is the explicit "CodeBuddy: clear triggers" action
-  (`ClearTriggersAction.kt`), which removes `#?` / `#!cmd` lines.
-- **Enforced by:** `scripts/guard-no-edits` (fails on document-write APIs outside that action).
+- The plugin reads documents. The only writes remove trigger lines (`#?` / `#!cmd`, found by
+  PSI), never code: the "CodeBuddy: clear triggers" action, and the erase of a trigger line once
+  the brain has received it (asked for by the user on 2026-10-16; undoable, skipped if the line
+  was edited or the brain is down). Both live in `ClearTriggersAction.kt`.
+- **Enforced by:** `scripts/guard-no-edits` (fails on document-write APIs outside that file) and
+  `PluginFlowTest` (normal comments, trailing comments and strings are never erased).
 
 ### 3. No Coucou name or assets
 

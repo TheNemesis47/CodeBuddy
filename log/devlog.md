@@ -2,6 +2,21 @@
 
 Newest first. Terse. Written at the end of every task so the next agent can pick up.
 
+## 2026-10-16 12:05: the trigger line goes once sent (branch feat/plugin-erase-trigger-line)
+
+- **From the user:** after Enter the `#?` line should go; several tries left many lines behind.
+- **Landed:** `TriggerEnterHandler` marks the line (`RangeMarker`), `TriggerDispatcher` sends with a
+  delivery callback (new `BrainSender.send(map, message, delivered)`; `BrainConnection` reports
+  whether the socket took it), then `TriggerEraser.erase` on the EDT removes the line as an
+  undoable command, only if PSI still sees a trigger there. Brain down → the line stays. All
+  document writes stay in `ClearTriggersAction.kt` (guard unchanged, comment updated). Golden
+  rule 2 reworded in AGENTS.md (the user's request), decision in docs/decisions.md.
+- **Tests:** plugin 53 → **58** (erased + caret on the new line + context still had the line,
+  Ctrl+Z restores it, brain down keeps it, an edited line is kept, normal/trailing/string comments
+  never erased). Floor raised. Gate green.
+- **Still open:** try it in the real PyCharm (G13): the erase lands ~10–50 ms after Enter on
+  localhost; check it doesn't fight fast typing.
+
 ## 2026-10-16 11:50: the panel opens at the first token (branch feat/ui-open-on-first-token)
 
 - **From the user:** "quando premo invio mi si apre il pannello davanti anche se non ha generato

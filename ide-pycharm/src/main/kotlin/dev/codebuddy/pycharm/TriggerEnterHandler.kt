@@ -10,7 +10,8 @@ import com.intellij.psi.PsiFile
 
 /**
  * After Enter, looks at the line just finished. On the EDT it does one cheap text check and no
- * PSI, no I/O. A possible trigger goes to [TriggerDispatcher], which does the rest off the EDT.
+ * PSI, no I/O. A possible trigger goes to [TriggerDispatcher], which does the rest off the EDT,
+ * with a marker on the line so it can be erased once the brain has it.
  * A `#!word` we don't know gets a small hint at the caret instead of silence.
  */
 class TriggerEnterHandler : EnterHandlerDelegateAdapter() {
@@ -20,7 +21,8 @@ class TriggerEnterHandler : EnterHandlerDelegateAdapter() {
         if (line < 0) return Result.Continue
         val text = document.charsSequence.subSequence(document.getLineStartOffset(line), document.getLineEndOffset(line))
         if (TriggerParser.parse(text.toString()) != null) {
-            file.project.service<TriggerDispatcher>().dispatch(document, line)
+            val marker = document.createRangeMarker(document.getLineStartOffset(line), document.getLineEndOffset(line))
+            file.project.service<TriggerDispatcher>().dispatch(document, line, marker)
         } else {
             TriggerParser.unknownCommand(text.toString())?.let {
                 service<EditorHints>().show(editor, unknownCommandHint(it))

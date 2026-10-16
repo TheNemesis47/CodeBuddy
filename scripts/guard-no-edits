@@ -1,5 +1,6 @@
 #!/usr/bin/env sh
-# Golden rule 2: the plugin never edits the user's code, except in ClearTriggersAction.kt.
+# Golden rule 2: the plugin never edits the user's code. The only writes remove trigger lines, and
+# they all live in ClearTriggersAction.kt (the clear action and the erase after Enter).
 set -eu
 cd "$(dirname "$0")/.."
 src=ide-pycharm/src/main

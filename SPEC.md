@@ -170,7 +170,7 @@ def build_question_prompt(trigger: Trigger, project: ProjectMap) -> list[Message
 - **Ask first:** new dependencies; changing the protocol (bump `v`); using a paid model in an
   automatic path; touching anything outside this folder.
 - **Never:** commit API keys; send code anywhere the user didn't pick in the settings (since
-  2026-10-16 the picked model gets proactive hints too); edit the user's code from the plugin; copy Coucou's Mochi, name, icons or sounds.
+  2026-10-16 the picked model gets proactive hints too); edit the user's code from the plugin (removing a trigger line once sent is not code, 2026-10-16); copy Coucou's Mochi, name, icons or sounds.
 
 ## Success criteria (MVP)
 
